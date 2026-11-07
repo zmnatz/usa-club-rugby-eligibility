@@ -24,6 +24,8 @@ import {
   serializeSeasonMatches,
 } from '@/utils/archive';
 import {
+  CLUB_FEED_BATCH_SIZE,
+  CLUB_PAGE_SIZE,
   clubIdsFromMatches,
   currentSeason,
   FEED_QUERY,
@@ -78,13 +80,15 @@ function prune(dir: string, keep: Set<string>): number {
 const log = (message: string) =>
   console.log(
     `[${((Date.now() - startedAt) / 1000).toFixed(0)}s] ${message} ` +
-      `(requests ${requestStats.requests}, budget left ${rateLimitState.remaining ?? '?'}, pauses ${rateLimitState.pauses})`,
+      `(requests ${requestStats.requests}, left ${rateLimitState.remaining ?? '?'} requests / ` +
+      `${rateLimitState.complexityRemaining ?? '?'} complexity, pauses ${JSON.stringify(rateLimitState.pausesBy)})`,
   );
 
 async function refreshArchive(manifest: ArchiveManifest | null, now: Date): Promise<ArchiveManifest> {
   const fields = createHash('sha256').update(FEED_QUERY).update(MATCH_CENTRE_QUERY).digest('hex').slice(0, 12);
   const council: FeedSource = { id: sources.council.id, type: sources.council.type };
-  const firstPage = await fetchFeedPage(council, 0);
+  // The newest result says which season is current; results come newest first.
+  const firstPage = await fetchFeedPage(council, 0, 100, 'results');
   const latest = firstPage.reduce((max, fixture) => (fixture.season > max ? fixture.season : max), '');
   const from = refreshFrom(manifest, latest, { fields, fullHistory });
   const fieldsChanged = manifest !== null && manifest.fields !== fields;
@@ -122,6 +126,7 @@ async function refreshArchive(manifest: ArchiveManifest | null, now: Date): Prom
     const clubFeeds = await fetchFeeds(
       toRead.map((id) => ({ id, type: 'club' })),
       from,
+      { pageSize: CLUB_PAGE_SIZE, batchSize: CLUB_FEED_BATCH_SIZE },
     );
     for (const id of toRead) readClubs.add(id);
     const before = fixtures.length;
@@ -216,5 +221,5 @@ publish(manifest, now);
 const minutes = ((Date.now() - startedAt) / 60000).toFixed(1);
 log(
   `Done in ${minutes} min: ${requestStats.requests} CMS requests, ${requestStats.retries} retries, ` +
-    `${(requestStats.waitMs / 1000).toFixed(0)}s waiting on the rate limit`,
+    `${(requestStats.waitMs / 1000).toFixed(0)}s with the rate limit gate closed`,
 );

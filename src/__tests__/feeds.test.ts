@@ -3,7 +3,7 @@ import {
   clubIdsFromMatches,
   currentSeason,
   type FeedFixture,
-  fetchFeed,
+  type FeedPageRequest,
   fetchFeeds,
   keepCompetitions,
   mergeFeeds,
@@ -79,52 +79,70 @@ describe('currentSeason', () => {
   });
 });
 
-describe('fetchFeed', () => {
-  const pageOf = (season: string, count = 100) =>
-    Array.from({ length: count }, (_, i) => fixture(`${season}-${i}`, { season }));
+describe('fetchFeeds', () => {
+  const pageOf = (prefix: string, season: string, count = 100) =>
+    Array.from({ length: count }, (_, i) => fixture(`${prefix}-${season}-${i}`, { season }));
+  type Lists = Record<string, { results: FeedFixture[][]; fixtures: FeedFixture[][] }>;
+  const serve = (lists: Lists, asked: string[][]) => async (batch: FeedPageRequest[]) => {
+    asked.push(batch.map(({ source, list, skip }) => `${source.id} ${list}@${skip}`));
+    return batch.map(({ source, list, skip, limit }) => lists[source.id][list][skip / limit] ?? []);
+  };
 
-  it('stops at the first page with nothing from the seasons being read, and keeps only those seasons', async () => {
-    const pages = [pageOf('2026/2027'), [...pageOf('2026/2027', 50), ...pageOf('2025/2026', 50)], pageOf('2025/2026'), pageOf('2024/2025')];
-    const requested: number[] = [];
-    const feed = await fetchFeed({ id: 1, type: 'council' }, '2026/2027', async (_, skip) => {
-      requested.push(skip);
-      return pages[skip / 100];
+  it("reads results back to the first page from an earlier season, since they come newest first", async () => {
+    const asked: string[][] = [];
+    const [feed] = await fetchFeeds([{ id: 1, type: 'council' }], '2026/2027', {
+      fetchPages: serve(
+        {
+          1: {
+            results: [pageOf('r', '2026/2027'), [...pageOf('r2', '2026/2027', 50), ...pageOf('r2', '2025/2026', 50)], pageOf('r3', '2025/2026'), pageOf('r4', '2024/2025')],
+            fixtures: [],
+          },
+        },
+        asked,
+      ),
     });
-    expect(requested).toEqual([0, 100, 200]);
+    expect(asked.flat()).toEqual(['1 results@0', '1 fixtures@0', '1 results@100', '1 results@200']);
     expect(feed).toHaveLength(150);
     expect(feed.every((f) => f.season === '2026/2027')).toBe(true);
   });
 
-  it('reads to the end when every season is wanted', async () => {
-    const pages = [pageOf('2026/2027'), pageOf('2025/2026', 30)];
-    const feed = await fetchFeed({ id: 1, type: 'council' }, '', async (_, skip) => pages[skip / 100]);
-    expect(feed).toHaveLength(130);
+  it("reads fixtures to the end of the list, since they come soonest first and an early page can be last season's", async () => {
+    const asked: string[][] = [];
+    const [feed] = await fetchFeeds([{ id: 2, type: 'club' }], '2026/2027', {
+      pageSize: 25,
+      fetchPages: serve(
+        { 2: { results: [], fixtures: [pageOf('f1', '2025/2026', 25), pageOf('f2', '2026/2027', 25), pageOf('f3', '2026/2027', 5)] } },
+        asked,
+      ),
+    });
+    expect(asked.flat()).toEqual(['2 results@0', '2 fixtures@0', '2 fixtures@25', '2 fixtures@50']);
+    expect(feed).toHaveLength(30);
   });
-});
 
-describe('fetchFeeds', () => {
-  const pageOf = (prefix: string, season: string, count = 100) =>
-    Array.from({ length: count }, (_, i) => fixture(`${prefix}-${season}-${i}`, { season }));
-
-  it("asks for a page of several feeds per request, and only the next page of those that aren't finished", async () => {
-    const pages: Record<string, FeedFixture[][]> = {
-      '1': [pageOf('one', '2026/2027'), pageOf('one', '2026/2027', 20)],
-      '2': [pageOf('two', '2026/2027', 40)],
-      '3': [pageOf('three', '2025/2026')],
-    };
-    const requests: string[][] = [];
+  it("asks for a page of several lists per request, and only the next page of those that aren't finished", async () => {
+    const asked: string[][] = [];
     const feeds = await fetchFeeds(
-      [1, 2, 3].map((id) => ({ id, type: 'club' })),
+      [1, 2].map((id) => ({ id, type: 'club' })),
       '2026/2027',
       {
-        fetchPages: async (batch) => {
-          requests.push(batch.map(({ source, skip }) => `${source.id}@${skip}`));
-          return batch.map(({ source, skip }) => pages[source.id][skip / 100] ?? []);
-        },
+        fetchPages: serve(
+          {
+            1: { results: [pageOf('one', '2026/2027'), pageOf('one-b', '2026/2027', 20)], fixtures: [pageOf('one-f', '2026/2027', 3)] },
+            2: { results: [pageOf('two', '2026/2027', 40)], fixtures: [] },
+          },
+          asked,
+        ),
       },
     );
-    expect(requests).toEqual([['1@0', '2@0', '3@0'], ['1@100']]);
-    expect(feeds.map((feed) => feed.length)).toEqual([120, 40, 0]);
+    expect(asked).toEqual([['1 results@0', '1 fixtures@0', '2 results@0', '2 fixtures@0'], ['1 results@100']]);
+    expect(feeds.map((feed) => feed.length)).toEqual([123, 40]);
+  });
+
+  it('reads every season when none is given', async () => {
+    const [feed] = await fetchFeeds([{ id: 1, type: 'council' }], '', {
+      fetchPages: serve({ 1: { results: [pageOf('a', '2026/2027'), pageOf('b', '2025/2026', 30)], fixtures: [] } }, []),
+    });
+    expect(feed).toHaveLength(130);
   });
 
   it('asks a page at a time when a batch is rejected', async () => {
@@ -133,12 +151,12 @@ describe('fetchFeeds', () => {
       fetchPages: async () => {
         throw new Error('batch rejected');
       },
-      fetchPage: async (source, skip) => {
-        single.push(`${source.id}@${skip}`);
-        return pageOf('seven', '2026/2027', 10);
+      fetchPage: async (source, skip, _limit, list) => {
+        single.push(`${source.id} ${list}@${skip}`);
+        return list === 'results' ? pageOf('seven', '2026/2027', 10) : [];
       },
     });
-    expect(single).toEqual(['7@0']);
+    expect(single).toEqual(['7 results@0', '7 fixtures@0']);
     expect(feeds[0]).toHaveLength(10);
   });
 
