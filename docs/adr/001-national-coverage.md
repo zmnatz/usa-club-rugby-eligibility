@@ -11,7 +11,7 @@ Feeds carry only a placeholder crest, so club ids can't come from them. Match re
 Decisions, so they are not "fixed" later:
 
 - **Team names**: the division is read from the end of the name in the forms the unions use: `MD1`, `WD2`, `W+D3`, `D2 1st XV`, `MD3 2nd`, `M D2 1st XVs`, `Womens D2 1st XV`. A name with no division (`NYAC ARP`, `... Festival`, `... Social`, `... W+NCP`) can't be ranked and isn't assessed. About 10% of names were like that in November 2026.
-- **American Rugby Premiership**: ARP sides have no division in their names and aren't assessed. Whether ARP matches count for a club's lower sides is a question for the league.
+- **American Rugby Premiership**: out of scope. ARP sides aren't assessed and their matches don't count towards a club's other sides. Add them only if someone asks.
 - **Two sides at one level**: the 1st XV is treated as the upper side.
 - **Approved 3.4.3 Matches**: a union listing approved Recognized Competitive Matches as a competition is counted, since Reg 3.4.3 counts them once approved.
 - **Socials, festivals and 7s qualifier rosters**: excluded by competition name, added to the list carried from Rocky Gorge.
