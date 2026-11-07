@@ -11,6 +11,8 @@ The page is static. Its data is calculated each night by `scripts/snapshot.ts` a
 | `public/data/fixtures.json` | The current season's fixtures | Yes |
 | `public/data/clubs/<club>.json` | One club's Match Participation rows, gaps and result ids | Yes |
 
+Each club's file becomes that club's page at `/<club-key>/` at build time, so a club's report can be linked to and shared. Pages that aren't a club (the home page, `csv` and `methodology`) keep their own paths; a club whose name would take one of those gets a `-club` suffix.
+
 ## What a night does
 
 `.github/workflows/pages.yml` runs at 06:00 UTC:

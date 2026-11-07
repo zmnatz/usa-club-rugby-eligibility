@@ -1,0 +1,45 @@
+import type { ComponentProps } from 'react';
+import NextLink from 'next/link';
+import { Box, Link as MuiLink, Typography } from '@mui/material';
+
+// The methodology page is MDX, so its headings and links are mapped to the same
+// MUI type scale as the report pages.
+export const mdxComponents = {
+  h1: (props: ComponentProps<'h1'>) => (
+    <Typography component="h1" variant="h4" gutterBottom {...props} />
+  ),
+  h2: (props: ComponentProps<'h2'>) => (
+    <Typography component="h2" variant="h5" gutterBottom sx={{ mt: 4 }} {...props} />
+  ),
+  h3: (props: ComponentProps<'h3'>) => (
+    <Typography component="h3" variant="h6" gutterBottom sx={{ mt: 3 }} {...props} />
+  ),
+  p: (props: ComponentProps<'p'>) => (
+    <Typography component="p" variant="body1" sx={{ mb: 1.5 }} {...props} />
+  ),
+  a: ({ href, children, ...props }: ComponentProps<'a'>) => {
+    const external =
+      typeof href === 'string' &&
+      (href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('//'));
+    if (external) {
+      return (
+        <MuiLink href={href} target="_blank" rel="noopener noreferrer" {...props}>
+          {children}
+        </MuiLink>
+      );
+    }
+    return (
+      <MuiLink component={NextLink} href={href ?? '/'} {...props}>
+        {children}
+      </MuiLink>
+    );
+  },
+  table: (props: ComponentProps<'table'>) => (
+    <Box sx={{ overflowX: 'auto', my: 2 }}>
+      <table {...props} />
+    </Box>
+  ),
+  pre: (props: ComponentProps<'pre'>) => (
+    <Box component="pre" sx={{ overflowX: 'auto' }} {...props} />
+  ),
+};

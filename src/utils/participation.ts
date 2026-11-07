@@ -229,6 +229,18 @@ export function listClubs(fixtures: FixtureSides[], rules: EligibilityRules): Cl
  *  league they belong to. */
 const divisionOf = (compName: string) => compName.replace(/\s+playoffs?$/i, '').toLowerCase();
 
+/** The fixtures a club's page needs: every fixture in the divisions its sides play
+ *  in, including playoff fixtures with no teams yet, which its possible matches
+ *  and round lists are worked out from. */
+export function clubFixtures<Fixture extends FixtureSides>(fixtures: Fixture[], club: Pick<Club, 'sides'>): Fixture[] {
+  const divisions = new Set(
+    fixtures
+      .filter((fixture) => isClubSide(club as Club, fixture.homeTeam.name) || isClubSide(club as Club, fixture.awayTeam.name))
+      .map((fixture) => divisionOf(fixture.compName)),
+  );
+  return fixtures.filter((fixture) => divisions.has(divisionOf(fixture.compName)));
+}
+
 /** A match a side could still play before the Super Regionals deadline. */
 export interface PossibleFixture {
   fixtureId?: string;

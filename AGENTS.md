@@ -5,7 +5,7 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 ## Commands
 
 - `bun install`
-- `bun run dev`: Vite dev server. Uses only the committed nightly data, no CMS requests.
+- `bun run dev`: Next.js dev server. Uses only the committed nightly data, no CMS requests.
 - `bun run build`: static build to `dist/`. `GITHUB_ACTIONS` or `BASE_PATH` sets the Pages base path.
 - `bun run test`, `bun run lint`, `bun run typecheck`
 - `bun run snapshot [--offline] [--full-history]`: see `docs/snapshots.md`.
@@ -17,7 +17,8 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 - `src/utils/teamSide.ts`: club and division from a team name.
 - `src/utils/feeds.ts`, `src/utils/archive.ts`, `scripts/snapshot.ts`: the nightly job.
 - `src/utils/api.ts`: CMS requests and the shared rate-limit gate.
-- `src/pages/`: the report and the methodology page (MDX). Routes are hash-based (`#/methodology`) for the static host.
+- `src/utils/published.ts`: reads the nightly data at build time for `getStaticPaths` and `getStaticProps`.
+- `pages/`: the report. `index.tsx` lists the clubs, `[club].tsx` is one club's page at `/<club-key>`, `csv.tsx` reads a Match Participation Report, and `methodology.mdx` explains the rules. Routes are ordinary paths, so they work on the static host.
 - `config/eligibility.yml`: thresholds and excluded competitions. `config/sources.yml`: the council and unions read each night.
 - `archive/`, `public/data/`: generated nightly. Never hand-edit; regenerate.
 

@@ -1,9 +1,22 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "paths": { "@/*": ["./src/*"], "@config/*": ["./config/*"] },
-    "types": ["vite/client", "bun"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@config/*": [
+        "./config/*"
+      ]
+    },
+    "types": [
+      "bun"
+    ],
     "skipLibCheck": true,
     "strict": false,
     "noEmit": true,
@@ -12,7 +25,26 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "module": "esnext"
+    "module": "esnext",
+    "allowJs": true,
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": ["src", "scripts", "vite.config.ts"]
+  "include": [
+    "next-env.d.ts",
+    "src",
+    "pages",
+    "scripts",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "out",
+    ".next"
+  ]
 }

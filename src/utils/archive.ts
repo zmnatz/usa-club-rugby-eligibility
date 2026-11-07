@@ -131,6 +131,9 @@ export async function fetchMatchRecords(
   return records;
 }
 
+/** The site's own pages, which a club's page path mustn't take. */
+export const RESERVED_PATHS = new Set(['csv', 'methodology', '404', 'data', 'index']);
+
 /** What the site publishes: the current season's fixtures, its clubs, and each
  *  club's Match Participation. */
 export interface PublishedData {
@@ -156,7 +159,8 @@ export function buildPublished(
   // Two names can make one file name ("St. Louis", "St Louis"), so a repeat is numbered.
   const used = new Map<string, number>();
   const clubs = listClubs(seasonFixtures, rules).map((club) => {
-    const base = clubKey(club.name);
+    const key = clubKey(club.name);
+    const base = RESERVED_PATHS.has(key) ? `${key}-club` : key;
     const count = (used.get(base) ?? 0) + 1;
     used.set(base, count);
     return { ...club, key: count === 1 ? base : `${base}-${count}` };

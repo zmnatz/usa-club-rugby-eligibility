@@ -3,6 +3,7 @@ import eligibilityConfig from '@config/eligibility.yml';
 import { computeBreakdown } from '@/utils/eligibility';
 import {
   buildParticipationSnapshot,
+  clubFixtures,
   clubGaps,
   listClubs,
   loadClubRecord,
@@ -355,6 +356,33 @@ describe('listClubs', () => {
 
   it('ignores unnamed sides', () => {
     expect(listClubs([fixtureOf('', '')], baseConfig)).toEqual([]);
+  });
+});
+
+describe('clubFixtures', () => {
+  it("keeps every fixture in the club's divisions, including open playoff slots", () => {
+    const fixture = (id: string, compName: string, home: string, away: string) => ({
+      id,
+      compName,
+      homeTeam: { name: home },
+      awayTeam: { name: away },
+    });
+    const fixtures = [
+      fixture('1', 'MAC Men D1', 'Rocky Gorge MD1', 'NOVA MD1'),
+      fixture('2', 'MAC Men D1', 'Washington MD1', 'Baltimore Chesapeake MD1'),
+      fixture('3', 'MAC Men D1 Playoffs', '', ''),
+      fixture('4', 'MAC Men D3', 'Rocky Gorge MD3', 'BARC MD3'),
+      fixture('5', 'MAC Women D1', 'NOVA WD1', 'DC Furies WD1'),
+    ];
+    const club: Club = {
+      name: 'Rocky Gorge',
+      sides: [
+        { teamName: 'Rocky Gorge MD1', label: 'D1' },
+        { teamName: 'Rocky Gorge MD3', label: 'D3' },
+      ],
+    };
+
+    expect(clubFixtures(fixtures, club).map((entry) => entry.id)).toEqual(['1', '2', '3', '4']);
   });
 });
 

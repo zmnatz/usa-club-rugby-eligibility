@@ -4,7 +4,7 @@
 
 Which players are eligible for the National Championship Series, for every USA Club Rugby senior club, worked out from the lineups and substitutions entered in Rugby Xplorer. Pick a club, and click any player to check their count round by round against the Rugby Xplorer match reports. A Match Participation Report CSV can be checked too.
 
-It applies the 2026-27 Senior Club Regulations (§3.4.2, §3.5) to clubs with any number of sides. The page's [methodology](https://zmnatz.github.io/usa-club-rugby-eligibility/#/methodology) explains the rules, the data and its limits.
+It applies the 2026-27 Senior Club Regulations (§3.4.2, §3.5) to clubs with any number of sides. Each club has its own page at `/<club-key>` (for example `/rocky-gorge/`), and the page's [methodology](https://zmnatz.github.io/usa-club-rugby-eligibility/methodology/) explains the rules, the data and its limits.
 
 **This is a guide, not an official tool.** The Rugby Xplorer Match Participation Report is the official count, and registration isn't checked.
 

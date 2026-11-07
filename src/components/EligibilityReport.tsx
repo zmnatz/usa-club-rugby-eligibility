@@ -1,4 +1,5 @@
 import { useMemo, useState, type ChangeEvent } from 'react';
+import NextLink from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import {
   Alert,
@@ -55,13 +56,16 @@ import {
   remainingMatches,
   type ParticipationGap,
 } from '@/utils/participation';
-import { loadClubSnapshot, loadFixtures, loadIndex, type PublishedClub } from '@/utils/data';
-import { COUNCIL_FIXTURES_URL } from '@/utils/rugbyXplorer';
+import { loadFixtures } from '@/utils/data';
+import type { FeedFixture } from '@/utils/feeds';
+import type { ParticipationSnapshot } from '@/utils/participation';
 import { fetchMatchCentre } from '@/utils/playerHistory';
+import { formatDate, formatDateTime } from '@/utils/dates';
 import { compareValues, type SortDirection } from '@/utils/sort';
 import eligibility from '@config/eligibility.yml';
 
 import type {
+  Club,
   EligibilityBreakdown,
   PlayerEligibility,
   PlayerRow,
@@ -69,20 +73,14 @@ import type {
 
 // Deployed pages pull live; dev uses the saved snapshot so working on the page
 // doesn't hit the CMS.
-const LIVE_RECORD = import.meta.env.PROD;
+const LIVE_RECORD = process.env.NODE_ENV === 'production';
 const LIVE_RECORD_STALE_MS = 10 * 60 * 1000;
 
-/** The club in the address, so a club's report can be linked to. */
-function clubFromUrl(): string {
-  return new URLSearchParams(window.location.search).get('club') ?? '';
-}
-
-function setClubInUrl(key: string): void {
-  const url = new URL(window.location.href);
-  if (key) url.searchParams.set('club', key);
-  else url.searchParams.delete('club');
-  window.history.replaceState(null, '', url);
-}
+/** A club's page: its saved match record and fixtures, from the nightly data at
+ *  build time, topped up live. A CSV page: whatever report is uploaded. */
+export type EligibilityReportProps =
+  | { source: 'record'; club: Club; saved: ParticipationSnapshot; fixtures: FeedFixture[] }
+  | { source: 'csv' };
 
 type StatusFilter = 'all' | 'eligible' | 'ineligible';
 
@@ -398,9 +396,8 @@ function reportPlayerLine(player: PlayerEligibility, source: ReportSource, share
 
 /** A gap in the match record, in the words shown on the page and in the export. */
 function gapText(gap: ParticipationGap): string {
-  const date = new Date(gap.dateTime).toLocaleDateString(undefined, { timeZone: 'UTC' });
   const problem = gap.kind === 'no-lineup' ? 'no lineup recorded' : 'no substitutions recorded';
-  return `${gap.teamName} v ${gap.opponent} (${date}): ${problem}`;
+  return `${gap.teamName} v ${gap.opponent} (${formatDate(gap.dateTime)}): ${problem}`;
 }
 
 interface ReportMeta {
@@ -517,10 +514,9 @@ function CsvForm({ csvText, fileName, canClear, onFile, onTextChange, onRun, onC
   );
 }
 
-export default function EligibilityPage() {
-  const [source, setSource] = useState<ReportSource>('record');
-  // A club's file key for the match record, its name for a CSV report.
-  const [clubName, setClubName] = useState(clubFromUrl);
+export function EligibilityReport(props: EligibilityReportProps) {
+  const source: ReportSource = props.source;
+  const [csvClubName, setCsvClubName] = useState('');
   const [fileName, setFileName] = useState('');
   const [csvText, setCsvText] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -530,35 +526,40 @@ export default function EligibilityPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [hiddenColumns, setHiddenColumns] = useState<string[]>(['lastRegistered', 'played', 'sub']);
 
-  const index = useQuery({ queryKey: ['eligibility-index'], queryFn: loadIndex });
-  const schedule = useQuery({ queryKey: ['eligibility-fixtures'], queryFn: loadFixtures });
-  const fixtures = schedule.data;
-  const clubs: PublishedClub[] = index.data?.clubs ?? [];
-  const csvClubs = useMemo(
-    () => (csvRows ? clubsInRows(csvRows).map((club) => ({ ...club, key: club.name })) : []),
-    [csvRows],
-  );
-  const pickableClubs = source === 'record' ? clubs : csvClubs;
-  // No club is chosen until someone picks one, except in a CSV report with one club.
-  const club =
-    pickableClubs.find((candidate) => candidate.key === clubName) ??
-    (source === 'csv' && pickableClubs.length === 1 ? pickableClubs[0] : null);
+  // A CSV report can be for any club, so its page loads the national fixture list
+  // for possible fixtures; a club's page has its fixtures already.
+  const csvSchedule = useQuery({
+    queryKey: ['eligibility-fixtures'],
+    queryFn: loadFixtures,
+    enabled: props.source === 'csv',
+  });
+  const fixtures: FeedFixture[] | undefined = props.source === 'record' ? props.fixtures : csvSchedule.data;
+  const csvClubs = useMemo(() => (csvRows ? clubsInRows(csvRows) : []), [csvRows]);
+  const club: Club | null =
+    props.source === 'record'
+      ? props.club
+      : (csvClubs.find((candidate) => candidate.name === csvClubName) ?? (csvClubs.length === 1 ? csvClubs[0] : null));
   const record = useQuery({
-    queryKey: ['eligibility-record', club?.key],
+    queryKey: ['eligibility-record', club?.name],
     queryFn: () =>
-      loadClubRecord(club as NonNullable<typeof club>, {
-        live: LIVE_RECORD,
-        fixtures: fixtures ?? [],
-        fetchMatch: fetchMatchCentre,
-        loadSaved: () => loadClubSnapshot((club as NonNullable<typeof club>).key),
-      }),
-    enabled: source === 'record' && club !== null && fixtures !== undefined,
+      props.source === 'record'
+        ? loadClubRecord(props.club, {
+            live: LIVE_RECORD,
+            fixtures: props.fixtures,
+            fetchMatch: fetchMatchCentre,
+            loadSaved: async () => props.saved,
+          })
+        : Promise.reject(new Error('No match record for a CSV report.')),
+    enabled: props.source === 'record',
     staleTime: LIVE_RECORD_STALE_MS,
     retry: false,
   });
+  // The saved data shows straight away; a live pull replaces it when it lands.
   const clubRecord = record.data ?? null;
-  const clubSlug: string | null = null;
-  const snapshot = clubRecord?.snapshot ?? null;
+  // Rugby Xplorer's own club slug, for match-report links. The national data
+  // doesn't publish one per club, so links fall back to the council's path.
+  const xplorerClubSlug: string | null = null;
+  const snapshot = clubRecord?.snapshot ?? (props.source === 'record' ? props.saved : null);
 
   const breakdown = useMemo(() => {
     if (!club) return null;
@@ -578,9 +579,16 @@ export default function EligibilityPage() {
   const sameNames = source === 'record' && breakdown ? sameNamePlayers(breakdown.sides) : [];
   const accounting: RoundAccounting | null =
     source === 'record' && snapshot && club
-      ? { snapshot, fixtures: fixtures ?? [], clubSlug, sides: club.sides.map((side) => side.teamName) }
+      ? {
+          snapshot,
+          fixtures: fixtures ?? [],
+          clubSlug: xplorerClubSlug,
+          sides: club.sides.map((side) => side.teamName),
+        }
       : null;
-  const clubSchedule: ClubSchedule | null = club ? { club, fixtures: fixtures ?? [], clubSlug } : null;
+  const clubSchedule: ClubSchedule | null = club
+    ? { club, fixtures: fixtures ?? [], clubSlug: xplorerClubSlug }
+    : null;
   const activeSide = breakdown?.sides[Math.min(activeTab, breakdown.sides.length - 1)] ?? null;
 
   const matchesFilters = (player: PlayerEligibility) => {
@@ -646,111 +654,64 @@ export default function EligibilityPage() {
     URL.revokeObjectURL(url);
   };
 
-  const chooseClub = (next: PublishedClub | null) => {
-    setClubName(next?.key ?? '');
-    if (source === 'record') setClubInUrl(next?.key ?? '');
-    setActiveTab(0);
-  };
+  const savedAsOf = props.source === 'record' ? props.saved.generatedAt : undefined;
+  const shownSource = clubRecord?.source ?? 'saved';
+  const shownAsOf = clubRecord?.asOf ?? savedAsOf;
 
   return (
     <>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2, maxWidth: 800 }}>
         {source === 'record'
-          ? `Pick a club to see which players are NCS-eligible, counted from the lineups and
-             substitutions entered in Rugby Xplorer for every senior club league and local
-             playoff match. Super Regionals, National Championships, 7s, friendlies, crossovers,
-             Men's Division IV and Women's Division III don't count. Fixtures still to play
-             before Super Regionals count towards the two-match minimums, shown as on track
-             (experimental). Click a player to check their count round by round against the
-             Rugby Xplorer match reports. This is a guide: the Rugby Xplorer Match Participation
-             Report is the official count, and registration isn't checked.`
+          ? `Counted from the lineups and substitutions entered in Rugby Xplorer for every
+             senior club league and local playoff match. Fixtures still to play before Super
+             Regionals count towards the two-match minimums, shown as on track (experimental).
+             Click a player to check their count round by round against the Rugby Xplorer match
+             reports. This is a guide: the Rugby Xplorer Match Participation Report is the
+             official count, and registration isn't checked.`
           : `Paste or upload a Rugby Xplorer Match Participation Report for any club to see
              which players are NCS-eligible for each of its sides. Participation counts as
              Played + Substitute. Players are assumed registered, since the report only lists
              registered players, and the registration date is shown for reference.`}{' '}
-        <MuiLink href="#/methodology">How this report is worked out</MuiLink>
+        <MuiLink component={NextLink} href="/methodology">
+          How this report is worked out
+        </MuiLink>
       </Typography>
 
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap', mb: 3 }}>
-        <ToggleButtonGroup
-          exclusive
-          size="small"
-          value={source}
-          onChange={(_, next) => {
-            if (!next) return;
-            setSource(next as ReportSource);
-            setClubName(next === 'record' ? clubFromUrl() : '');
-            setActiveTab(0);
-          }}
-          aria-label="Report source"
-        >
-          <ToggleButton value="record">Match record</ToggleButton>
-          <ToggleButton value="csv">CSV report</ToggleButton>
-        </ToggleButtonGroup>
-        {pickableClubs.length > 0 && (
+        {source === 'csv' && csvClubs.length > 1 && (
           <Autocomplete
             size="small"
             sx={{ minWidth: 280, flex: '1 1 280px', maxWidth: 420 }}
-            options={pickableClubs}
+            options={csvClubs}
             value={club}
-            onChange={(_, next) => chooseClub(next)}
-            getOptionLabel={(option) => option.name}
-            getOptionKey={(option) => option.key}
-            isOptionEqualToValue={(option, value) => option.key === value.key}
-            renderOption={(props, option) => {
-              const { key, ...rest } = props as typeof props & { key: string };
-              return (
-                <li key={key} {...rest}>
-                  <ListItemText
-                    primary={option.name}
-                    secondary={option.sides.map((side) => side.teamName).join(', ')}
-                  />
-                </li>
-              );
+            onChange={(_, next) => {
+              setCsvClubName(next?.name ?? '');
+              setActiveTab(0);
             }}
-            renderInput={(params) => <TextField {...params} label={`Club (${pickableClubs.length})`} />}
+            getOptionLabel={(option) => option.name}
+            isOptionEqualToValue={(option, value) => option.name === value.name}
+            renderInput={(params) => <TextField {...params} label={`Club in this report (${csvClubs.length})`} />}
           />
         )}
-        {source === 'record' && clubRecord && (
+        {source === 'record' && snapshot && (
           <Typography variant="body2" color="text.secondary">
-            {clubRecord.snapshot.season} season ·{' '}
-            {clubRecord.source === 'live' ? 'Live data' : 'Nightly data'}
-            {clubRecord.asOf &&
-              ` ${clubRecord.source === 'live' ? 'from' : 'last changed'} ${new Date(clubRecord.asOf).toLocaleString()}`}
+            {snapshot.season} season · {shownSource === 'live' ? 'Live data' : 'Nightly data'}
+            {shownAsOf &&
+              ` ${shownSource === 'live' ? 'from' : 'last changed'} ${formatDateTime(shownAsOf)}`}
+            {record.isFetching && ' · checking for newer matches…'}
           </Typography>
         )}
       </Box>
 
-      {source === 'record' && !club && index.isSuccess && (
-        <Typography color="text.secondary" sx={{ mb: 3 }}>
-          Choose a club to see its players. All senior club fixtures are on{' '}
-          <MuiLink href={COUNCIL_FIXTURES_URL} target="_blank" rel="noopener noreferrer">
-            Rugby Xplorer
-          </MuiLink>
-          .
-        </Typography>
-      )}
-
-      {source === 'record' && (index.isPending || schedule.isPending || (club && record.isPending)) && (
-        <Typography color="text.secondary">Loading the match record…</Typography>
-      )}
-
-      {source === 'record' && (index.isError || schedule.isError || record.isError) && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Could not load the match record
-          {record.error ? `: ${record.error.message}` : '.'} Try again, or use a CSV report.
+      {source === 'record' && record.isError && (
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          Couldn&apos;t check for matches since the nightly data, so this shows the nightly data.
         </Alert>
       )}
 
       {source === 'record' && clubRecord?.liveFailed && (
         <Alert severity="warning" sx={{ mb: 3 }}>
           The live pull failed, so this report uses saved data and may miss recent matches.
-        </Alert>
-      )}
-
-      {source === 'record' && index.isSuccess && clubs.length === 0 && (
-        <Alert severity="info" sx={{ mb: 3 }}>
-          The fixture list has no clubs yet. Use a CSV report instead.
         </Alert>
       )}
 

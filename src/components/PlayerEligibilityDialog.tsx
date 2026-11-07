@@ -24,6 +24,7 @@ import {
   type ScheduledFixture,
 } from '@/utils/participation';
 import { matchUrl } from '@/utils/rugbyXplorer';
+import { formatDate } from '@/utils/dates';
 import eligibility from '@config/eligibility.yml';
 import type { Club, PlayerEligibility, PlayerRow } from '@/types/eligibility';
 
@@ -133,7 +134,7 @@ const ROUND_STATUS: Record<PlayerRoundStatus, string> = {
 };
 
 function roundDate(dateTime: string): string {
-  return new Date(dateTime).toLocaleDateString(undefined, { timeZone: 'UTC' });
+  return formatDate(dateTime);
 }
 
 /** One team's fixtures for one player, each linked to its Rugby Xplorer report. */

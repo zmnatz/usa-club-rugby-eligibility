@@ -1,6 +1,6 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
-  "files": { "includes": ["**", "!**/dist", "!**/public/data"] },
+  "files": { "includes": ["**", "!**/out", "!**/dist", "!**/.next", "!**/public/data", "!**/archive"] },
   "formatter": { "enabled": false },
   "assist": { "enabled": false },
   "linter": {
