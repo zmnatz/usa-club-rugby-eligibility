@@ -1,0 +1,14 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
+  "files": { "includes": ["**", "!**/dist", "!**/public/data"] },
+  "formatter": { "enabled": false },
+  "assist": { "enabled": false },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "correctness": { "useExhaustiveDependencies": "warn" },
+      "suspicious": { "noArrayIndexKey": "warn" }
+    }
+  }
+}

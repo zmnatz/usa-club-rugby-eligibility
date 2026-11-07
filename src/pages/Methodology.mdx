@@ -1,0 +1,115 @@
+# How the eligibility report is worked out
+
+This page explains how the [eligibility report](#/) reaches each verdict: the rules, the data, how the data stays current, and how to check any result yourself.
+
+**The report is a guide.** The Rugby Xplorer Match Participation Report remains the official count. The report doesn't check registration, because the match data has no registration details or USA IDs. It is not an official USA Rugby or USA Club Rugby tool.
+
+## Checking a result
+
+1. Open the [eligibility report](#/) and choose a club.
+2. Click a player. The dialog lists every round of each side's season, what the player did in it, and whether it counted.
+3. Follow the Rugby Xplorer link on a round to compare it with the match report.
+
+The number of rounds marked as counted is the player's Match Participation for that side.
+
+## The rules applied
+
+These come from the [USA Club Rugby Senior Club Regulations 2026-27](https://usaclub.rugby/wp-content/uploads/2026/07/2026-27-Regulations.pdf), §3.4.2 and §3.5. The same rules apply to every club, by how many sides it fields.
+
+**What counts as a match.** Match Participation is the number of NCS Qualifying Matches a player entered, as a starter or as a substitute who came on (Reg 3.4.2(e)).
+
+- **Counts:** every senior club match in the fixture lists, unless its competition is excluded below. This is meant to be league and local playoff matches, and matches approved under Reg 3.4.3 where a union lists them as a competition.
+- **Doesn't count:** competitions whose name marks them as Super Regionals, National Championships, 7s, friendlies, crossovers, socials or festivals.
+- **Doesn't count:** Men's Division IV and Women's Division III matches, because those divisions aren't part of the National Championship Series (Terms and Definitions, 34). Those sides aren't assessed, and a club with only those sides isn't listed.
+- **Doesn't count:** a forfeit, because it wasn't played.
+- **Doesn't count:** being listed as a substitute without coming on.
+
+**A club with one side.** At least two NCS Qualifying Matches with the club (Reg 3.4.2(e)). A club counts as one-side when only one of its sides appears in the data.
+
+**The top side of a club with several sides.** At least two NCS Qualifying Matches at any level with the club (Reg 3.5.2(b)).
+
+**Any lower side.** All three of these must hold, where "this side or lower" includes every side below it:
+
+- At least two matches for this side or lower (Reg 3.5.2(a)).
+- Fewer than four matches for each side above, because a fourth match for any upper side forfeits eligibility for the sides below it (Reg 3.5(d)(i)).
+- At least as many matches for this side or lower as for all the sides above combined (Reg 3.5(d)(ii)).
+
+For example, at a club with divisions 1, 2 and 3, a player with two matches in each is eligible for divisions 1 and 2, but not 3. These rules give the same answer as all 20 examples in the regulations' Figure 1, which are part of the report's automated tests.
+
+**On track (experimental).** Future playoff matches aren't always entered in Rugby Xplorer, so the possible fixtures may be incomplete. Players must be able to reach the two-match minimum by the start of the National Championship Series (Reg 3.5.1(a)), so a player passes if enough possible matches remain. These players appear as "on track" rather than "eligible", and their dialog lists the possible fixtures behind that. This means they could still qualify, not that they will: remaining fixtures aren't checked against availability, and they include playoff dates the side may not reach. Remaining fixtures never affect the four-match limit or the comparison with upper sides.
+
+**Interpretations to review:**
+
+- Competitions are excluded by name, so a new kind of competition counts until it is added to the list.
+- A side's division comes from the end of its team name, such as "MD2", "W+D3" or "D2 1st XV". A team name without one, such as an American Rugby Premiership side ("ARP"), a festival or social side, can't be ranked and isn't assessed.
+- Where a club has two sides at one level ("MD3" and "MD3 2nd XV"), the 1st XV is treated as the upper side.
+
+**Not checked:**
+
+- Registration, including the April 1 deadline, residency and international clearance (Reg 3.4(a) to (d)).
+- Playing for another club in the same season (Reg 3.4(e)).
+- Recognized Competitive Matches not entered as a competition in Rugby Xplorer (Reg 3.4.3).
+- Waivers.
+
+## How we get data from Rugby Xplorer
+
+Everything entered in Rugby Xplorer is stored in its content management system (CMS), which has a public GraphQL API at `https://rugby-au-cms.graphcdn.app`. We read the same data entered for Rugby Xplorer rather than retyping it, and we don't copy anything from the xplorer.rugby website. We know of no published documentation for the API, so it could change without notice.
+
+**The API can't return a player's history.** It can only return fixture lists and the details of one match at a time. So every player's participation is worked out by us:
+
+1. We load the fixture lists.
+2. We load the lineup, substitutes and timeline of every played match, one match at a time.
+3. We go through those matches and count each player's participation.
+
+**No one list has every fixture.** The [Senior Club Council's list](https://xplorer.rugby/senior-club-council/fixtures-results?team=All&comp=All&season=All&tab=Fixtures) is the root for club teams, but it misses fixtures that its unions list, and a union's list misses some of its own fixtures, which appear only on the lists of the clubs playing them. So we read the council's list, every geographical union's list, and then each playing club's own list. A club's list also holds college, 7s and other matches, so from it we keep only the competitions the council and unions list. Clubs are found from the match records, which name each side's club.
+
+**What we request:**
+
+- **Fixture lists:** `getEntityFixturesAndResults`, 100 fixtures at a time, for the council, each union and each playing club.
+- **Match details:** `getFixtureItem` for the score and clubs, `allMatchStatsSummary` for the lineup, substitutes and coaches, and `allMatchCommentary` for the timeline. Each request names the match by its competition, season and fixture id.
+
+The API limits how many requests one address can make, so we pace our requests and wait when it asks us to slow down.
+
+## The data used
+
+- **Fixture lists:** every senior club fixture this season in the lists above.
+- **Match details:** for each match, the score, lineup, listed substitutes and timeline of events.
+- **Player identity:** the CMS player id, which stays the same for a player across matches. It links a player's appearances across a club's sides.
+
+**How a substitute is counted.** Lineups list substitutes whether or not they played, so a substitute counts only if a substitution event in the match timeline names them coming on. A different spelling is accepted only when the surname matches exactly one listed substitute. Coaches listed on a team sheet aren't counted.
+
+**Players with the same name.** Each CMS player id is treated as one player, because a shared name doesn't prove two records are one person. Where two players at a club share a name, the report lists them with each one's CMS id. If they are the same person with two Rugby Xplorer profiles, their matches stay split until the profiles are merged there, so each count may be low.
+
+**Hidden profiles.** The CMS shows a player whose profile isn't public as "Name Withheld". Profiles should be public for qualifying matches and must be for playoffs and the National Championship Series (Reg 3.2(i), 3.4.1(i), 3.4.2(d)), although a player can hold an approved exemption. We can't tell who a hidden profile belongs to, so it isn't included in the report. A player with an exemption won't appear, so their club needs to check them separately.
+
+**Known gaps.** The report flags two problems beside the verdicts, because either can make a count too low:
+
+- **No lineup recorded:** a match has a result but no lineup for that side.
+- **No substitutions recorded:** a side listed substitutes but none came on, which usually means substitutions weren't entered.
+
+A correction in Rugby Xplorer clears these gaps. They don't catch everything, so a count can be low with no flag: a side may have entered only some of its substitutions, or a substitution may name a player who can't be matched to exactly one listed substitute.
+
+## How the data stays current
+
+**Every night (06:00 UTC).** An automated job re-reads the current season and republishes the report:
+
+1. It collects the current season's fixture lists.
+2. It re-reads every match with a score this season, including earlier ones, so corrections made in Rugby Xplorer are picked up by the next run.
+3. It saves each match's full record in an archive, then works out each club's participation and gaps from the archive.
+4. It publishes the result with the page.
+
+**Results before the current season are locked.** A season gets a last read as the next one begins, and is then kept as archived, so a later change to it in Rugby Xplorer doesn't appear here. Past seasons don't affect the current verdicts.
+
+Each update is all or nothing. If any request fails, the previous night's data stays in place, because a partial count could wrongly pass or fail a player. If the CMS answers but holds no details for a match, that isn't a failure, and the match shows as "No lineup recorded".
+
+**When the report is opened.** The nightly data can miss matches played since it ran, so the report goes back for the selected club's fixtures that have kicked off but had no result in the nightly data, and requests only those matches. A match counts only once it has a score. If any of those requests fail, the report uses the nightly data and says so. The report shows which data it used, and when.
+
+**What this doesn't catch until the next nightly run:** corrections to a match that already had a result, and fixtures added or rescheduled since the last run.
+
+## The CSV report
+
+The report can also read a Rugby Xplorer Match Participation Report for any club. It works out the club and its sides from the Team Name column, and applies the same rules. That report is the union's official count and carries USA IDs and registration dates, so its totals are taken as given, using Played + Substitute. Its rounds aren't linked to match reports.
+
+## Source
+
+The code, the rules configuration and the archived match data are on [GitHub](https://github.com/zmnatz/usa-club-rugby-eligibility). Corrections and questions are welcome as issues there.

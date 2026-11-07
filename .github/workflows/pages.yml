@@ -1,0 +1,92 @@
+name: Snapshot and deploy
+
+# Nightly: refresh the raw match archive from the CMS, recalculate the published
+# data, commit both if anything changed, then build and deploy GitHub Pages.
+# A push to main redeploys without touching the CMS. See docs/snapshots.md.
+on:
+  schedule:
+    - cron: "0 6 * * *" # daily 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      full_history:
+        description: "Also read every past season the feeds list (slow; for filling in the archive)"
+        type: boolean
+        default: false
+      offline:
+        description: "Rebuild the published data from the archive only, with no CMS requests"
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    name: Refresh snapshot
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - run: bun install --frozen-lockfile
+
+      - name: Refresh the archive and published data
+        run: bun scripts/snapshot.ts ${{ inputs.full_history && '--full-history' || '' }} ${{ inputs.offline && '--offline' || '' }}
+
+      - name: Commit changes to main
+        run: |
+          git add archive public/data
+          if git diff --cached --quiet; then
+            echo "Snapshot unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Nightly snapshot update"
+          # main may have moved during the run
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+  deploy:
+    name: Build and deploy
+    needs: snapshot
+    # Runs after a snapshot, and on a push when the snapshot job is skipped.
+    if: ${{ !cancelled() && (needs.snapshot.result == 'success' || needs.snapshot.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - run: bun install --frozen-lockfile
+      - run: bun run test
+      - run: bun run build
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v4
