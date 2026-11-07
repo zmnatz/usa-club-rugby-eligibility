@@ -5,8 +5,8 @@ The page is static. Its data is calculated each night by `scripts/snapshot.ts` a
 | Path | What | Published |
 | --- | --- | --- |
 | `archive/manifest.json` | Seasons archived, the current season, a hash of the queries, and the club ids whose feeds are read | No |
-| `archive/<season>/fixtures.json` | Every senior club fixture that season, from all feeds | No |
-| `archive/<season>/matches/<id>.json` | One played match's full CMS record, or `null` when the CMS has none | No |
+| `archive/fixtures/<season>.json` | Every senior club fixture that season, from all feeds, one per line | No |
+| `archive/matches/<season>.json` | Every played match's full CMS record, one per line, `null` when the CMS has none | No |
 | `public/data/index.json` | The current season's clubs and their sides, and when the data last changed | Yes |
 | `public/data/fixtures.json` | The current season's fixtures | Yes |
 | `public/data/clubs/<club>.json` | One club's Match Participation rows, gaps and result ids | Yes |
@@ -46,5 +46,5 @@ Editing `FEED_QUERY` or `MATCH_CENTRE_QUERY` changes the hash in the manifest, s
 ## Notes
 
 - Don't hand-edit `archive/` or `public/data/`; regenerate them.
-- The CMS rate limit is per IP: about 500 requests at once, then about 4 a second. The job waits it out; see ADR 001.
+- The CMS rate limit is per IP: about 500 requests at once, then about 4 a second. The job batches 100 match records or 20 feed pages per request and waits the limit out; see ADR 001. A local run shares your IP's budget with anything else you're running against the CMS, such as the Rocky Gorge snapshots.
 - GitHub disables a scheduled workflow after 60 days with no commits to the repository. The nightly commits keep it alive during the season; after a quiet off-season, re-enable it from the Actions tab.

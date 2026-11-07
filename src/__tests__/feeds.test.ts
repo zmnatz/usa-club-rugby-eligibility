@@ -4,6 +4,7 @@ import {
   currentSeason,
   type FeedFixture,
   fetchFeed,
+  fetchFeeds,
   keepCompetitions,
   mergeFeeds,
 } from '@/utils/feeds';
@@ -98,5 +99,59 @@ describe('fetchFeed', () => {
     const pages = [pageOf('2026/2027'), pageOf('2025/2026', 30)];
     const feed = await fetchFeed({ id: 1, type: 'council' }, '', async (_, skip) => pages[skip / 100]);
     expect(feed).toHaveLength(130);
+  });
+});
+
+describe('fetchFeeds', () => {
+  const pageOf = (prefix: string, season: string, count = 100) =>
+    Array.from({ length: count }, (_, i) => fixture(`${prefix}-${season}-${i}`, { season }));
+
+  it("asks for a page of several feeds per request, and only the next page of those that aren't finished", async () => {
+    const pages: Record<string, FeedFixture[][]> = {
+      '1': [pageOf('one', '2026/2027'), pageOf('one', '2026/2027', 20)],
+      '2': [pageOf('two', '2026/2027', 40)],
+      '3': [pageOf('three', '2025/2026')],
+    };
+    const requests: string[][] = [];
+    const feeds = await fetchFeeds(
+      [1, 2, 3].map((id) => ({ id, type: 'club' })),
+      '2026/2027',
+      {
+        fetchPages: async (batch) => {
+          requests.push(batch.map(({ source, skip }) => `${source.id}@${skip}`));
+          return batch.map(({ source, skip }) => pages[source.id][skip / 100] ?? []);
+        },
+      },
+    );
+    expect(requests).toEqual([['1@0', '2@0', '3@0'], ['1@100']]);
+    expect(feeds.map((feed) => feed.length)).toEqual([120, 40, 0]);
+  });
+
+  it('asks a page at a time when a batch is rejected', async () => {
+    const single: string[] = [];
+    const feeds = await fetchFeeds([{ id: 7, type: 'club' }], '2026/2027', {
+      fetchPages: async () => {
+        throw new Error('batch rejected');
+      },
+      fetchPage: async (source, skip) => {
+        single.push(`${source.id}@${skip}`);
+        return pageOf('seven', '2026/2027', 10);
+      },
+    });
+    expect(single).toEqual(['7@0']);
+    expect(feeds[0]).toHaveLength(10);
+  });
+
+  it('fails when a page still fails one at a time, rather than undercounting', async () => {
+    await expect(
+      fetchFeeds([{ id: 7, type: 'club' }], '2026/2027', {
+        fetchPages: async () => {
+          throw new Error('batch rejected');
+        },
+        fetchPage: async () => {
+          throw new Error('page failed');
+        },
+      }),
+    ).rejects.toThrow('page failed');
   });
 });

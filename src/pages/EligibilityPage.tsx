@@ -51,6 +51,7 @@ import {
   clubGaps,
   loadClubRecord,
   participationRows,
+  qualifyingRows,
   remainingMatches,
   type ParticipationGap,
 } from '@/utils/participation';
@@ -563,7 +564,7 @@ export default function EligibilityPage() {
     if (!club) return null;
     const remaining = remainingMatches(fixtures ?? [], club, eligibility);
     if (source === 'csv') {
-      return csvRows && computeBreakdown(csvRows, club.sides, eligibility, remaining);
+      return csvRows && computeBreakdown(qualifyingRows(csvRows, eligibility), club.sides, eligibility, remaining);
     }
     return snapshot
       ? computeBreakdown(participationRows(snapshot, club, eligibility), club.sides, eligibility, remaining)
@@ -812,8 +813,8 @@ export default function EligibilityPage() {
 
       {breakdown && breakdown.ignoredTeamNames.length > 0 && (
         <Alert severity="info" sx={{ mb: 3 }}>
-          Ignored {breakdown.ignoredTeamNames.length} row(s) for team(s) not in
-          this club: {breakdown.ignoredTeamNames.join(', ')}.
+          Ignored rows for team(s) that aren&apos;t one of this club&apos;s NCS sides:{' '}
+          {breakdown.ignoredTeamNames.join(', ')}.
         </Alert>
       )}
 

@@ -18,7 +18,7 @@ Each night a GitHub Action reads every senior club fixture from the Senior Club 
 bun install
 bun run dev        # uses the committed nightly data
 bun run test
-bun run snapshot   # refresh the data from the CMS (about 10 minutes)
+bun run snapshot   # refresh the data from the CMS
 ```
 
 ## Corrections

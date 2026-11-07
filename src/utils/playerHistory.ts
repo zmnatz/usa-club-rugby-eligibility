@@ -1,4 +1,4 @@
-import { postWithRetry, sleep } from '@/utils/api';
+import { mapConcurrent, postWithRetry, sleep } from '@/utils/api';
 import { scoringKind } from '@/utils/scoring';
 import type { FixtureItem, MatchPlayer } from '@/types/match';
 
@@ -159,7 +159,7 @@ export function aggregatePlayerHistory(
       if (!history) {
         history = {
           id: key,
-          name: player.name,
+          name: player.name.trim().replace(/\s+/g, ' '),
           teamName: player.isHome ? fixture.homeTeam.name : fixture.awayTeam.name,
           games: [],
           scoringEvents: [],
@@ -233,8 +233,8 @@ function matchResult(
   return 'D';
 }
 
-export const MATCH_CENTRE_QUERY = `query PlayerHistoryMatchCentreQuery($comp: CompInput) {
-  getFixtureItem(comp: $comp) {
+// The fields read for each match, shared by the single and batched queries.
+const MATCH_FIXTURE_FIELDS = `{
     id
     compId
     compName
@@ -244,15 +244,9 @@ export const MATCH_CENTRE_QUERY = `query PlayerHistoryMatchCentreQuery($comp: Co
     homeTeam { id name teamId score crest __typename }
     awayTeam { id name teamId score crest __typename }
     __typename
-  }
-  allMatchCommentary(comp: $comp) {
-    id
-    minute
-    type
-    comment
-    __typename
-  }
-  allMatchStatsSummary(comp: $comp) {
+  }`;
+const MATCH_COMMENTARY_FIELDS = `{ id minute type comment __typename }`;
+const MATCH_STATS_FIELDS = `{
     id
     lineUp {
       players { id name position shirtNumber isHome __typename }
@@ -261,7 +255,12 @@ export const MATCH_CENTRE_QUERY = `query PlayerHistoryMatchCentreQuery($comp: Co
       __typename
     }
     __typename
-  }
+  }`;
+
+export const MATCH_CENTRE_QUERY = `query PlayerHistoryMatchCentreQuery($comp: CompInput) {
+  getFixtureItem(comp: $comp) ${MATCH_FIXTURE_FIELDS}
+  allMatchCommentary(comp: $comp) ${MATCH_COMMENTARY_FIELDS}
+  allMatchStatsSummary(comp: $comp) ${MATCH_STATS_FIELDS}
 }`;
 
 interface MatchCentreResponse {
@@ -348,22 +347,108 @@ export async function fetchMatches<Fixture, Match>(
   return { matches, failed };
 }
 
+type MatchCentreFixture = { id: string; compId: string; season: string; sourceType?: string };
+
+const compInput = (fixture: MatchCentreFixture) => ({
+  id: fixture.compId,
+  season: fixture.season,
+  fixture: fixture.id,
+  sourceType: fixture.sourceType ?? '2',
+});
+
+function toMatchCentreData(
+  fixture: MatchCentreFixture,
+  { getFixtureItem, allMatchCommentary, allMatchStatsSummary }: MatchCentreResponse
+): MatchCentreData | null {
+  if (!getFixtureItem || !allMatchStatsSummary) {
+    return null;
+  }
+  return {
+    fixture: { ...getFixtureItem, season: fixture.season },
+    commentary: allMatchCommentary ?? [],
+    players: allMatchStatsSummary.lineUp.players,
+    substitutes: allMatchStatsSummary.lineUp.substitutes,
+    coaches: allMatchStatsSummary.lineUp.coaches,
+  };
+}
+
+/** Matches per request. The CMS answers several in one request, which counts
+ *  once against its rate limit; batches of 25 to 150 all worked, taking 2 to 31
+ *  seconds. See docs/snapshots.md. */
+export const MATCH_BATCH_SIZE = 100;
+
+/** Several matches in one request, each under its own alias. A match the CMS has
+ *  no details for is null. Throws if the CMS reports any error, so a caller can
+ *  fall back to asking one at a time. */
+export async function fetchMatchCentres(
+  fixtures: MatchCentreFixture[]
+): Promise<Map<string, MatchCentreData | null>> {
+  const declarations = fixtures.map((_, index) => `$c${index}: CompInput`).join(', ');
+  const selections = fixtures
+    .map(
+      (_, index) =>
+        `m${index}: getFixtureItem(comp: $c${index}) ${MATCH_FIXTURE_FIELDS}
+  e${index}: allMatchCommentary(comp: $c${index}) ${MATCH_COMMENTARY_FIELDS}
+  s${index}: allMatchStatsSummary(comp: $c${index}) ${MATCH_STATS_FIELDS}`
+    )
+    .join('\n  ');
+  const response = await postWithRetry<{
+    data: Record<string, unknown> | null;
+    errors?: { message: string }[];
+  }>(SCORES_URL, {
+    query: `query MatchCentreBatch(${declarations}) {\n  ${selections}\n}`,
+    variables: Object.fromEntries(fixtures.map((fixture, index) => [`c${index}`, compInput(fixture)])),
+  });
+  if (response.errors?.length || !response.data) {
+    throw new Error(`Match centre batch failed: ${response.errors?.[0]?.message ?? 'no data'}`);
+  }
+  const data = response.data;
+  return new Map(
+    fixtures.map((fixture, index) => [
+      fixture.id,
+      toMatchCentreData(fixture, {
+        getFixtureItem: data[`m${index}`] as MatchCentreResponse['getFixtureItem'],
+        allMatchCommentary: data[`e${index}`] as MatchCentreResponse['allMatchCommentary'],
+        allMatchStatsSummary: data[`s${index}`] as MatchCentreResponse['allMatchStatsSummary'],
+      }),
+    ])
+  );
+}
+
+/** fetchMatches in batches: each batch is one request, and a batch the CMS
+ *  rejects is asked again one match at a time, so only a bad match fails. */
+export async function fetchMatchesInBatches<Fixture extends MatchCentreFixture>(
+  fixtures: Fixture[],
+  { batchSize = MATCH_BATCH_SIZE, concurrency = 2, ...options }: FetchMatchesOptions & { batchSize?: number } = {}
+): Promise<{ matches: MatchCentreData[]; failed: Fixture[] }> {
+  const batches: Fixture[][] = [];
+  for (let start = 0; start < fixtures.length; start += batchSize) {
+    batches.push(fixtures.slice(start, start + batchSize));
+  }
+  const matches: MatchCentreData[] = [];
+  const rejected: Fixture[] = [];
+  await mapConcurrent(batches, concurrency, async (batch) => {
+    try {
+      for (const match of (await fetchMatchCentres(batch)).values()) {
+        if (match) matches.push(match);
+      }
+    } catch {
+      rejected.push(...batch);
+    }
+  });
+  const retried = await fetchMatches<Fixture, MatchCentreData>(rejected, (fixture) => fetchMatchCentre(fixture), options);
+  return { matches: [...matches, ...retried.matches], failed: retried.failed };
+}
+
 export async function fetchMatchCentre(
-  fixture: { id: string; compId: string; season: string; sourceType?: string }
+  fixture: MatchCentreFixture
 ): Promise<MatchCentreData | null> {
   const response = await postWithRetry<{
     data: MatchCentreResponse;
     errors?: { message: string }[];
   }>(SCORES_URL, {
     operationName: 'PlayerHistoryMatchCentreQuery',
-    variables: {
-      comp: {
-        id: fixture.compId,
-        season: fixture.season,
-        fixture: fixture.id,
-        sourceType: fixture.sourceType ?? '2',
-      },
-    },
+    variables: { comp: compInput(fixture) },
     query: MATCH_CENTRE_QUERY,
   });
 
@@ -373,17 +458,5 @@ export async function fetchMatchCentre(
     throw new Error(`Match centre query failed: ${response.errors[0].message}`);
   }
 
-  const { getFixtureItem, allMatchCommentary, allMatchStatsSummary } =
-    response.data;
-  if (!getFixtureItem || !allMatchStatsSummary) {
-    return null;
-  }
-
-  return {
-    fixture: { ...getFixtureItem, season: fixture.season },
-    commentary: allMatchCommentary ?? [],
-    players: allMatchStatsSummary.lineUp.players,
-    substitutes: allMatchStatsSummary.lineUp.substitutes,
-    coaches: allMatchStatsSummary.lineUp.coaches,
-  };
+  return toMatchCentreData(fixture, response.data);
 }

@@ -31,13 +31,26 @@ export interface FeedSource {
   type: string;
 }
 
-export const FEED_QUERY = `query EligibilityFeed($entityId: Int, $entityType: String, $type: String, $skip: Int, $limit: Int) {
-  getEntityFixturesAndResults(type: $type, entityId: $entityId, entityType: $entityType, limit: $limit, skip: $skip) {
+const FEED_FIELDS = `{
     id compId compName season dateTime round status sourceType
     homeTeam { name score }
     awayTeam { name score }
-  }
+  }`;
+
+export const FEED_QUERY = `query EligibilityFeed($entityId: Int, $entityType: String, $type: String, $skip: Int, $limit: Int) {
+  getEntityFixturesAndResults(type: $type, entityId: $entityId, entityType: $entityType, limit: $limit, skip: $skip) ${FEED_FIELDS}
 }`;
+
+/** Feed pages per request. The CMS answers several in one request, each under its
+ *  own alias, which counts once against its rate limit, as match batches do. Twenty
+ *  pages is about 2,000 fixtures, near a 100-match batch in size. */
+export const FEED_BATCH_SIZE = 20;
+
+/** One page of one entity's feed. */
+export interface FeedPageRequest {
+  source: FeedSource;
+  skip: number;
+}
 
 interface RawFixture extends Omit<FeedFixture, 'homeTeam' | 'awayTeam' | 'round' | 'status' | 'sourceType'> {
   round: string | null;
@@ -102,9 +115,80 @@ export async function fetchFeed(
   return all.filter((fixture) => fixture.season >= fromSeason);
 }
 
-/** Club feeds, several at a time; the rate-limit gate in api.ts sets the pace. */
-export function fetchClubFeeds(clubIds: number[], fromSeason: string, concurrency: number): Promise<FeedFixture[][]> {
-  return mapConcurrent(clubIds, concurrency, (id) => fetchFeed({ id, type: 'club' }, fromSeason));
+/** Several feed pages in one request. Throws if the CMS reports any error, so a
+ *  caller can fall back to asking one page at a time. */
+export async function fetchFeedPages(requests: FeedPageRequest[]): Promise<FeedFixture[][]> {
+  const declarations = requests.map((_, i) => `$e${i}: Int, $t${i}: String, $s${i}: Int`).join(', ');
+  const selections = requests
+    .map(
+      (_, i) =>
+        `f${i}: getEntityFixturesAndResults(type: "all", entityId: $e${i}, entityType: $t${i}, limit: ${PAGE_SIZE}, skip: $s${i}) ${FEED_FIELDS}`,
+    )
+    .join('\n  ');
+  const response = await postWithRetry<{
+    data: Record<string, RawFixture[] | null> | null;
+    errors?: { message: string }[];
+  }>(CMS_URL, {
+    query: `query EligibilityFeedBatch(${declarations}) {\n  ${selections}\n}`,
+    variables: Object.fromEntries(
+      requests.flatMap(({ source, skip }, i) => [
+        [`e${i}`, source.id],
+        [`t${i}`, source.type],
+        [`s${i}`, skip],
+      ]),
+    ),
+  });
+  if (response.errors?.length || !response.data) {
+    throw new Error(`Feed batch failed: ${response.errors?.[0]?.message ?? 'no data'}`);
+  }
+  const data = response.data;
+  return requests.map((_, i) => (data[`f${i}`] ?? []).map(normalizeFixture));
+}
+
+interface FeedsOptions {
+  batchSize?: number;
+  concurrency?: number;
+  fetchPages?: (requests: FeedPageRequest[]) => Promise<FeedFixture[][]>;
+  fetchPage?: (source: FeedSource, skip: number) => Promise<FeedFixture[]>;
+}
+
+/** Many entities' fixtures from `fromSeason` on, a page of each per alias. Each
+ *  round asks for the next page of every feed that isn't finished. A batch the CMS
+ *  rejects is asked again a page at a time; a page that still fails throws, because
+ *  a missing fixture would undercount players without any sign. */
+export async function fetchFeeds(
+  sources: FeedSource[],
+  fromSeason: string,
+  {
+    batchSize = FEED_BATCH_SIZE,
+    concurrency = 2,
+    fetchPages = fetchFeedPages,
+    fetchPage = fetchFeedPage,
+  }: FeedsOptions = {},
+): Promise<FeedFixture[][]> {
+  const feeds = sources.map(() => [] as FeedFixture[]);
+  let pending = sources.map((_, index) => ({ index, skip: 0 }));
+  while (pending.length > 0) {
+    const batches: (typeof pending)[] = [];
+    for (let start = 0; start < pending.length; start += batchSize) {
+      batches.push(pending.slice(start, start + batchSize));
+    }
+    const next: typeof pending = [];
+    await mapConcurrent(batches, concurrency, async (batch) => {
+      const requests = batch.map(({ index, skip }) => ({ source: sources[index], skip }));
+      const pages = await fetchPages(requests).catch(() =>
+        Promise.all(requests.map(({ source, skip }) => fetchPage(source, skip))),
+      );
+      batch.forEach(({ index, skip }, i) => {
+        const page = pages[i];
+        feeds[index].push(...page);
+        const more = page.length === PAGE_SIZE && !isPastPage(page, fromSeason) && skip + PAGE_SIZE < MAX_FIXTURES;
+        if (more) next.push({ index, skip: skip + PAGE_SIZE });
+      });
+    });
+    pending = next;
+  }
+  return feeds.map((feed) => feed.filter((fixture) => fixture.season >= fromSeason));
 }
 
 /** Feeds merged and deduplicated by fixture id. An earlier feed's copy wins. */

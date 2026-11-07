@@ -1,7 +1,15 @@
 import type { Club, EligibilityRules } from '@/types/eligibility';
 import { currentSeason, type FeedFixture, isResult, sortFixtures } from '@/utils/feeds';
 import { buildParticipationSnapshot, clubSnapshot, listClubs, type ParticipationSnapshot } from '@/utils/participation';
-import { aggregatePlayerHistory, type MatchCentreData } from '@/utils/playerHistory';
+import {
+  aggregatePlayerHistory,
+  fetchMatchCentre,
+  fetchMatchCentres,
+  fetchMatches,
+  MATCH_BATCH_SIZE,
+  type MatchCentreData,
+} from '@/utils/playerHistory';
+import { mapConcurrent } from '@/utils/api';
 import { clubKey } from '@/utils/teamSide';
 
 // The raw match archive (archive/, committed but not published). The nightly job
@@ -21,14 +29,39 @@ export interface ArchiveManifest {
   clubIds: number[];
 }
 
-/** One played match as the CMS returned it, or null when it holds no record. */
-export interface ArchivedMatch {
-  fixtureId: string;
-  match: MatchCentreData | null;
+/** A season's match records by fixture id. null records a match the CMS has no
+ *  details for, so a locked season doesn't ask for it again. */
+export type SeasonMatches = Record<string, MatchCentreData | null>;
+
+export function seasonFile(season: string): string {
+  return `${season.replace(/[^0-9A-Za-z]+/g, '-')}.json`;
 }
 
-export function seasonDir(season: string): string {
-  return season.replace(/[^0-9A-Za-z]+/g, '-');
+/** One line per entry in id order, so a night's diff shows only what changed and
+ *  git stores it as a small delta. */
+function linesById<T>(open: string, entries: [string, T][], close: string): string {
+  const sorted = [...entries].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  return `${open}\n${sorted.map(([id, value]) => `${JSON.stringify(id)}:${JSON.stringify(value)}`).join(',\n')}\n${close}\n`;
+}
+
+export function serializeSeasonMatches(season: string, matches: SeasonMatches): string {
+  return linesById(`{"season":${JSON.stringify(season)},"matches":{`, Object.entries(matches), '}}');
+}
+
+export function serializeSeasonFixtures(season: string, fixtures: FeedFixture[]): string {
+  return linesById(
+    `{"season":${JSON.stringify(season)},"fixtures":{`,
+    fixtures.map((fixture) => [fixture.id, fixture]),
+    '}}',
+  );
+}
+
+export function parseSeasonFixtures(text: string): FeedFixture[] {
+  return Object.values((JSON.parse(text) as { fixtures: Record<string, FeedFixture> }).fixtures);
+}
+
+export function parseSeasonMatches(text: string): SeasonMatches {
+  return (JSON.parse(text) as { matches: SeasonMatches }).matches;
 }
 
 /** The earliest season to read from the CMS; anything before it stays as archived.
@@ -47,12 +80,55 @@ export function refreshFrom(
   return saved < latestSeason ? saved : latestSeason;
 }
 
-/** The fixtures whose match records a run reads: played, not forfeited, in a
- *  season being refreshed. */
+/** The fixtures whose match records a run reads: played, in a season being
+ *  refreshed. A forfeit is read too, since the winning side's roster counts
+ *  (Reg 3.4(h)). */
 export function matchesToRead(fixtures: FeedFixture[], fromSeason: string, now: Date): FeedFixture[] {
-  return fixtures.filter(
-    (fixture) => fixture.season >= fromSeason && isResult(fixture, now) && fixture.status !== 'Forfeit',
+  return fixtures.filter((fixture) => fixture.season >= fromSeason && isResult(fixture, now));
+}
+
+interface MatchRecordFetchers {
+  fetchBatch?: typeof fetchMatchCentres;
+  fetchOne?: typeof fetchMatchCentre;
+  batchSize?: number;
+  concurrency?: number;
+}
+
+/** Match records by fixture id, a batch of up to 100 per request. A batch the CMS
+ *  rejects is asked again a match at a time. Throws if any match still fails, since
+ *  a partial pull could wrongly pass or fail a player. */
+export async function fetchMatchRecords(
+  fixtures: FeedFixture[],
+  {
+    fetchBatch = fetchMatchCentres,
+    fetchOne = fetchMatchCentre,
+    batchSize = MATCH_BATCH_SIZE,
+    concurrency = 2,
+  }: MatchRecordFetchers = {},
+): Promise<Map<string, MatchCentreData | null>> {
+  const batches: FeedFixture[][] = [];
+  for (let start = 0; start < fixtures.length; start += batchSize) {
+    batches.push(fixtures.slice(start, start + batchSize));
+  }
+  const records = new Map<string, MatchCentreData | null>();
+  const rejected: FeedFixture[] = [];
+  await mapConcurrent(batches, concurrency, async (batch) => {
+    try {
+      for (const [id, match] of await fetchBatch(batch)) records.set(id, match);
+    } catch {
+      rejected.push(...batch);
+    }
+  });
+  const { matches, failed } = await fetchMatches(
+    rejected,
+    async (fixture) => ({ id: fixture.id, match: await fetchOne(fixture) }),
+    { gapMs: 0 },
   );
+  if (failed.length > 0) {
+    throw new Error(`${failed.length} of ${fixtures.length} match records failed: ${failed.map((f) => f.id).join(', ')}`);
+  }
+  for (const { id, match } of matches) records.set(id, match);
+  return records;
 }
 
 /** What the site publishes: the current season's fixtures, its clubs, and each

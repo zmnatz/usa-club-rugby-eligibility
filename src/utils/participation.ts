@@ -23,8 +23,17 @@ export interface ResultFixture {
   dateTime: string;
   round?: string;
   status?: string;
-  homeTeam: { name: string };
-  awayTeam: { name: string };
+  homeTeam: { name: string; score?: string };
+  awayTeam: { name: string; score?: string };
+}
+
+/** The side that didn't forfeit, which takes the win: the higher score. Null when
+ *  the scores don't say. */
+export function forfeitWinner(fixture: ResultFixture): string | null {
+  const home = Number(fixture.homeTeam.score);
+  const away = Number(fixture.awayTeam.score);
+  if (!fixture.homeTeam.score || !fixture.awayTeam.score || home === away) return null;
+  return home > away ? fixture.homeTeam.name : fixture.awayTeam.name;
 }
 
 /** A result whose record can't be trusted to give a side's full participation:
@@ -103,7 +112,12 @@ export function buildParticipationSnapshot(
   for (const history of histories) {
     for (const game of history.games) {
       const fixture = seasonResults.get(game.fixtureId);
-      if (!fixture || game.coach || fixture.status === 'Forfeit') continue;
+      if (!fixture || game.coach) continue;
+      // Reg 3.4(h): a forfeit counts for the non-forfeiting side's rostered players,
+      // starters and replacements alike as nobody took the field, and for no one else.
+      const isForfeit = fixture.status === 'Forfeit';
+      if (isForfeit && forfeitWinner(fixture) !== game.teamName) continue;
+      const counted = isForfeit ? { ...game, played: true } : game;
 
       const rowKey = `${game.teamName}\0${game.compName}\0${history.id}`;
       const row = rows.get(rowKey) ?? {
@@ -117,17 +131,17 @@ export function buildParticipationSnapshot(
         substitute: 0,
         rounds: {},
       };
-      if (game.played) row.appearances += 1;
-      if (game.starter) row.played += 1;
-      else if (game.played) row.substitute += 1;
-      row.rounds[fixture.id] = roundCode(game);
+      if (counted.played) row.appearances += 1;
+      if (counted.starter) row.played += 1;
+      else if (counted.played) row.substitute += 1;
+      row.rounds[fixture.id] = roundCode(counted);
       rows.set(rowKey, row);
 
       const sideKey = `${game.fixtureId}\0${game.teamName}`;
       const side = listed.get(sideKey) ?? { substitutes: 0, cameOn: 0 };
-      if (!game.starter) {
+      if (!counted.starter) {
         side.substitutes += 1;
-        if (game.played) side.cameOn += 1;
+        if (counted.played) side.cameOn += 1;
       }
       listed.set(sideKey, side);
     }
@@ -135,12 +149,13 @@ export function buildParticipationSnapshot(
 
   const gaps: ParticipationGap[] = [];
   for (const fixture of seasonResults.values()) {
-    // A forfeit was never played, so it has no lineup to miss.
-    if (fixture.status === 'Forfeit') continue;
+    // A forfeit counts only through the non-forfeiting side's roster, so only that
+    // side can be missing one.
+    const winner = fixture.status === 'Forfeit' ? forfeitWinner(fixture) : undefined;
     const sides = [
       { teamName: fixture.homeTeam.name, opponent: fixture.awayTeam.name },
       { teamName: fixture.awayTeam.name, opponent: fixture.homeTeam.name },
-    ];
+    ].filter(({ teamName }) => winner === undefined || teamName === winner);
     for (const { teamName, opponent } of sides) {
       const side = listed.get(`${fixture.id}\0${teamName}`);
       const kind = !side
@@ -193,6 +208,12 @@ interface FixtureSides {
   compName: string;
   homeTeam: { name: string };
   awayTeam: { name: string };
+}
+
+/** A report's rows from competitions that count, so a CSV report follows the same
+ *  rules as the match record. */
+export function qualifyingRows(rows: PlayerRow[], rules: EligibilityRules): PlayerRow[] {
+  return rows.filter((row) => isQualifying(row.competition, rules));
 }
 
 /** Clubs and their sides in qualifying competitions, by name. */
@@ -379,6 +400,7 @@ export type PlayerRoundStatus =
   | 'not-listed'
   | 'no-lineup'
   | 'forfeit'
+  | 'forfeit-rostered'
   | 'postponed'
   | 'not-qualifying'
   | 'awaiting-result'
@@ -436,10 +458,10 @@ export function playerRounds({
 
   const statusOf = (fixture: PlayerRoundsInput['fixtures'][number]): PlayerRoundStatus => {
     if (!isQualifying(fixture.compName, rules)) return 'not-qualifying';
-    if (fixture.status === 'Forfeit') return 'forfeit';
     if (fixture.status === 'Postponed') return 'postponed';
     const code = rows.find((row) => row.teamName === teamName && row.competition === fixture.compName)
       ?.rounds[fixture.id];
+    if (fixture.status === 'Forfeit') return code && code !== 'R' ? 'forfeit-rostered' : 'forfeit';
     if (code === 'Start') return 'started';
     if (code === 'Sub') return 'substitute';
     if (code === 'R') return 'unused';
@@ -470,7 +492,7 @@ export function playerRounds({
         scoreFor: own.score,
         scoreAgainst: other.score,
         status,
-        counted: status === 'started' || status === 'substitute',
+        counted: status === 'started' || status === 'substitute' || status === 'forfeit-rostered',
         substitutionsMissing: hasGap(fixture.id, 'no-substitutions'),
       };
     });
@@ -535,7 +557,7 @@ async function pullClubParticipation(
   if (base && own.length === 0) {
     return null;
   }
-  const toFetch = own.filter((fixture) => fixture.status !== 'Forfeit');
+  const toFetch = own;
 
   const { matches, failed } = await fetchMatches(toFetch, fetchMatch, {
     concurrency: 2,

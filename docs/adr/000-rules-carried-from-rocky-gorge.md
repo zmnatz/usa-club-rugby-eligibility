@@ -11,7 +11,9 @@ Decisions:
 - **CSV reports**: Played + Substitute only (Reserve and per-round codes don't count), taken as given. Registration dates are shown, not enforced. Rows with no USA ID are excluded; a player's rows for one team across competitions are summed.
 - **Match Record join key**: the CMS player id, since the record has no USA ID.
 - **Substitutes**: count only if a substitution event names them coming on. A different spelling is accepted only when the surname points to exactly one listed substitute. Where a side lists substitutes and none came on, the match is flagged as a gap rather than guessed at, as is a result with no lineup.
-- **Coaches and forfeits**: neither counts, and a forfeit doesn't flag as a missing lineup.
+- **Coaches**: not playing appearances, so they don't count.
+- **Forfeits (Reg 3.4(h))**: count for the non-forfeiting side's rostered players, starters and replacements, and for no one on the forfeiting side. The non-forfeiting side is the one with the higher score; when the scores don't say, the forfeit counts for nobody. The 48-hour roster lock can't be seen in the data, so a roster entered late still counts. A forfeit whose winning side has no roster is flagged as a gap.
+- **CSV reports follow the same exclusions**: rows from non-qualifying competitions are dropped, as in the match record.
 - **Same name, two ids**: never merged, because combining two people could wrongly pass one. Both ids are shown.
 - **Name Withheld**: a hidden profile, not a player, so it gets no row.
 - **Divisions outside the NCS**: Men's IV and Women's III sides aren't assessed and don't affect a club's other sides.

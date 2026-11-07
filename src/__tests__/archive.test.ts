@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import eligibility from '@config/eligibility.yml';
-import { type ArchiveManifest, buildPublished, matchesToRead, refreshFrom, seasonDir } from '@/utils/archive';
+import {
+  type ArchiveManifest,
+  buildPublished,
+  fetchMatchRecords,
+  matchesToRead,
+  parseSeasonFixtures,
+  parseSeasonMatches,
+  refreshFrom,
+  seasonFile,
+  serializeSeasonFixtures,
+  serializeSeasonMatches,
+} from '@/utils/archive';
 import type { FeedFixture } from '@/utils/feeds';
 import type { MatchCentreData } from '@/utils/playerHistory';
 
@@ -52,20 +63,65 @@ function fixture(id: string, overrides: Partial<FeedFixture> = {}): FeedFixture 
 }
 
 describe('matchesToRead', () => {
-  it('reads played matches in the refreshed seasons, not forfeits, future fixtures or locked seasons', () => {
+  it('reads played matches and forfeits in the refreshed seasons, not future fixtures or locked seasons', () => {
     const fixtures = [
       fixture('played'),
       fixture('forfeit', { status: 'Forfeit' }),
       fixture('upcoming', { dateTime: '2026-12-01T15:00:00Z', homeTeam: { name: 'A MD3', score: '' }, awayTeam: { name: 'B MD3', score: '' } }),
       fixture('locked', { season: '2025/2026' }),
     ];
-    expect(matchesToRead(fixtures, '2026/2027', NOW).map((f) => f.id)).toEqual(['played']);
+    expect(matchesToRead(fixtures, '2026/2027', NOW).map((f) => f.id)).toEqual(['played', 'forfeit']);
   });
 });
 
-describe('seasonDir', () => {
-  it('makes a directory name from a season', () => {
-    expect(seasonDir('2026/2027')).toBe('2026-2027');
+describe('season files', () => {
+  it('names a file from a season', () => {
+    expect(seasonFile('2026/2027')).toBe('2026-2027.json');
+  });
+
+  it('writes a match per line in id order, so a night only changes the lines that changed', () => {
+    const text = serializeSeasonMatches('2026/2027', { b: null, a: null });
+    expect(text).toBe('{"season":"2026/2027","matches":{\n"a":null,\n"b":null\n}}\n');
+    expect(parseSeasonMatches(text)).toEqual({ a: null, b: null });
+  });
+
+  it('reads back the fixtures it writes', () => {
+    const fixtures = [fixture('m2'), fixture('m1')];
+    const text = serializeSeasonFixtures('2026/2027', fixtures);
+    expect(text.split('\n')).toHaveLength(5);
+    expect(parseSeasonFixtures(text).map((f) => f.id)).toEqual(['m1', 'm2']);
+  });
+});
+
+describe('fetchMatchRecords', () => {
+  const fixtures = ['a', 'b', 'c'].map((id) => fixture(id));
+
+  it('asks for matches in batches and keeps a match the CMS has no record for as null', async () => {
+    const batches: string[][] = [];
+    const records = await fetchMatchRecords(fixtures, {
+      batchSize: 2,
+      fetchBatch: async (batch) => {
+        batches.push(batch.map((f) => f.id));
+        return new Map(batch.map((f) => [f.id, null]));
+      },
+    });
+    expect(batches).toEqual([['a', 'b'], ['c']]);
+    expect([...records.keys()].sort()).toEqual(['a', 'b', 'c']);
+  });
+
+  it('asks again a match at a time when a batch is rejected', async () => {
+    const one: string[] = [];
+    const records = await fetchMatchRecords(fixtures, {
+      fetchBatch: async () => {
+        throw new Error('batch rejected');
+      },
+      fetchOne: async (f) => {
+        one.push(f.id);
+        return null;
+      },
+    });
+    expect(one.sort()).toEqual(['a', 'b', 'c']);
+    expect(records.size).toBe(3);
   });
 });
 

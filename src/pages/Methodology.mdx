@@ -22,7 +22,7 @@ These come from the [USA Club Rugby Senior Club Regulations 2026-27](https://usa
 - **Doesn't count:** competitions whose name marks them as Super Regionals, National Championships, 7s, friendlies, crossovers, socials or festivals.
 - **Doesn't count:** American Rugby Premiership matches, which this report doesn't cover. ARP sides aren't assessed.
 - **Doesn't count:** Men's Division IV and Women's Division III matches, because those divisions aren't part of the National Championship Series (Terms and Definitions, 34). Those sides aren't assessed, and a club with only those sides isn't listed.
-- **Doesn't count:** a forfeit, because it wasn't played.
+- **Forfeits (Reg 3.4(h)):** a forfeit counts for every player on the non-forfeiting side's roster, starters and replacements, provided the roster was entered. It counts for no one on the forfeiting side. A forfeit whose winning side entered no roster is flagged with the gaps, because it then counts for nobody.
 - **Doesn't count:** being listed as a substitute without coming on.
 
 **A club with one side.** At least two NCS Qualifying Matches with the club (Reg 3.4.2(e)). A club counts as one-side when only one of its sides appears in the data.
@@ -41,6 +41,9 @@ For example, at a club with divisions 1, 2 and 3, a player with two matches in e
 
 **Interpretations to review:**
 
+- Forfeits: the side with the higher score is taken as the non-forfeiting side. The 48-hour deadline for locking the roster isn't visible in the data, so a roster entered late still counts. Replacements on the roster count as well as starters.
+- The four-match limit applies to each upper side separately, not to their total. Figure 1's row with 3, 4 and 1 matches, eligible for divisions 1 and 2 only, requires this.
+- The two-match minimum must be reachable before Super Regionals, which we take as the start of the National Championship Series.
 - Competitions are excluded by name, so a new kind of competition counts until it is added to the list.
 - A side's division comes from the end of its team name, such as "MD2", "W+D3" or "D2 1st XV". A team name without one, such as a festival or social side, can't be ranked and isn't assessed.
 - Where a club has two sides at one level ("MD3" and "MD3 2nd XV"), the 1st XV is treated as the upper side.
@@ -56,20 +59,20 @@ For example, at a club with divisions 1, 2 and 3, a player with two matches in e
 
 Everything entered in Rugby Xplorer is stored in its content management system (CMS), which has a public GraphQL API at `https://rugby-au-cms.graphcdn.app`. We read the same data entered for Rugby Xplorer rather than retyping it, and we don't copy anything from the xplorer.rugby website. We know of no published documentation for the API, so it could change without notice.
 
-**The API can't return a player's history.** It can only return fixture lists and the details of one match at a time. So every player's participation is worked out by us:
+**The API can't return a player's history.** It can only return fixture lists and the details of individual matches. So every player's participation is worked out by us:
 
 1. We load the fixture lists.
-2. We load the lineup, substitutes and timeline of every played match, one match at a time.
+2. We load the lineup, substitutes and timeline of every played match. Each match is its own query, though one request can carry up to 100 of them.
 3. We go through those matches and count each player's participation.
 
 **No one list has every fixture.** The [Senior Club Council's list](https://xplorer.rugby/senior-club-council/fixtures-results?team=All&comp=All&season=All&tab=Fixtures) is the root for club teams, but it misses fixtures that its unions list, and a union's list misses some of its own fixtures, which appear only on the lists of the clubs playing them. So we read the council's list, every geographical union's list, and then each playing club's own list. A club's list also holds college, 7s and other matches, so from it we keep only the competitions the council and unions list. Clubs are found from the match records, which name each side's club.
 
 **What we request:**
 
-- **Fixture lists:** `getEntityFixturesAndResults`, 100 fixtures at a time, for the council, each union and each playing club.
+- **Fixture lists:** `getEntityFixturesAndResults`, 100 fixtures at a time, for the council, each union and each playing club, with up to 20 of those lists in one request.
 - **Match details:** `getFixtureItem` for the score and clubs, `allMatchStatsSummary` for the lineup, substitutes and coaches, and `allMatchCommentary` for the timeline. Each request names the match by its competition, season and fixture id.
 
-The API limits how many requests one address can make, so we pace our requests and wait when it asks us to slow down.
+The API allows each address about 500 requests, refilling at about 4 a second, and reports what's left with every answer. We ask for up to 100 matches in one request, slow down when the allowance runs low, and wait when the API asks us to. We keep every match we've loaded, so a season before the current one is downloaded once and then kept as it is.
 
 ## The data used
 
