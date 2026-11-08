@@ -2,7 +2,7 @@ import NextLink from 'next/link';
 import { Breadcrumbs, Link as MuiLink, Typography } from '@mui/material';
 import { EligibilityStatusChip } from '@/components/EligibilityStatusChip';
 import { PlayerDetailBody } from '@/components/PlayerEligibilityDialog';
-import { Panel, Row, Section } from '@/theme';
+import { Note, Panel, Row, Section } from '@/theme';
 import { clubPath } from '@/utils/paths';
 import type { PlayerClubEntry, PlayerProfile } from '@zmnatz/usa-club-rugby-data';
 
@@ -52,9 +52,9 @@ export function PlayerPage({ data }: { data: PlayerProfile }) {
         {data.name}
       </Typography>
       {data.clubs.length > 1 && (
-        <Typography variant="note">
+        <Note>
           Listed {data.clubs.length} times in the record, for different clubs or sides. Each is assessed on its own.
-        </Typography>
+        </Note>
       )}
       {data.clubs.map((entry) => (
         <PlayerInClub key={`${entry.clubKey}-${entry.player.teamName}`} entry={entry} />

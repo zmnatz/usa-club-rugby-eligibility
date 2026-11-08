@@ -27,7 +27,7 @@ import {
   type PossibleFixture,
 } from '@zmnatz/usa-club-rugby-data';
 
-import { Block, Dim, EmptyCell, FactRow, FactValue, LinkLine, NoWrapCell, RoundsTable, Row } from '@/theme';
+import { Aside, Block, Dim, EmptyCell, FactRow, FactValue, LinkLine, NoWrapCell, Note, RoundsTable, Row } from '@/theme';
 import { formatDate } from '@/utils/dates';
 
 /** Where a report's rows came from. Only a CSV report carries USA IDs and
@@ -41,7 +41,7 @@ function Fact({ label, value }: { label: string; value: ReactNode }) {
       <Typography variant="body2" color="text.secondary">
         {label}
       </Typography>
-      <FactValue variant="emphasis">{value ?? '—'}</FactValue>
+      <FactValue>{value ?? '—'}</FactValue>
     </FactRow>
   );
 }
@@ -204,9 +204,9 @@ function PlayedRounds({ sides }: { sides: SideRounds[] }) {
           <TeamRounds key={teamName} teamName={teamName} rounds={rounds} />
         ))}
       {notPlayed.length > 0 && (
-        <Typography variant="aside">
+        <Aside>
           No matches played this season for {notPlayed.map(({ teamName }) => teamName).join(', ')}.
-        </Typography>
+        </Aside>
       )}
     </>
   );
@@ -303,19 +303,19 @@ export function PlayerDetailBody({ player, source, ownLabel, fixtures, footer }:
   return (
     <>
       {player.reasons.length > 0 && (
-        <Typography variant="note" color="error">
+        <Note color="error">
           {player.reasons.join(' · ')}
-        </Typography>
+        </Note>
       )}
       {player.cautions.length > 0 && (
-        <Typography variant="note" color="warning">
+        <Note color="warning">
           {player.cautions.join(' · ')}. {CAUTION_ADVICE}
-        </Typography>
+        </Note>
       )}
       {player.pending.length > 0 && (
-        <Typography variant="note" color="text.primary">
+        <Note color="text.primary">
           {player.pending.join(' · ')}
-        </Typography>
+        </Note>
       )}
       <div>
         {source === 'csv' && <Fact label="Last registered" value={player.lastRegistered} />}
@@ -331,9 +331,9 @@ export function PlayerDetailBody({ player, source, ownLabel, fixtures, footer }:
       {fixtures ? (
         <>
           <PlayedRounds sides={fixtures.sides} />
-          <Typography variant="aside">
+          <Aside>
             Open a report to check a line against Rugby Xplorer.
-          </Typography>
+          </Aside>
         </>
       ) : (
         <>

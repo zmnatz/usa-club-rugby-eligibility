@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react';
 import NextLink from 'next/link';
 import { Link as MuiLink, Typography } from '@mui/material';
-import { Pre, ScrollX } from '@/theme';
+import { Paragraph, Pre, ScrollX, SectionHeading, SubsectionHeading } from '@/theme';
 
 // The methodology page is MDX, so its headings and links are mapped to the same
 // MUI type scale as the report pages.
@@ -10,13 +10,13 @@ export const mdxComponents = {
     <Typography component="h1" variant="h4" gutterBottom {...props} />
   ),
   h2: (props: ComponentProps<'h2'>) => (
-    <Typography component="h2" variant="section" {...props} />
+    <SectionHeading {...props} />
   ),
   h3: (props: ComponentProps<'h3'>) => (
-    <Typography component="h3" variant="subsection" {...props} />
+    <SubsectionHeading {...props} />
   ),
   p: (props: ComponentProps<'p'>) => (
-    <Typography component="p" variant="paragraph" {...props} />
+    <Paragraph {...props} />
   ),
   a: ({ href, children, ...props }: ComponentProps<'a'>) => {
     const external =
