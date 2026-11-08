@@ -30,8 +30,22 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 
 ## Docs
 
-- `CONTEXT.md`: domain terms. Use them.
+- `GLOSSARY.md`: domain terms. Use them.
 - `docs/adr/`: decisions, including ones carried from the Rocky Gorge tool (000). Read before changing a rule, the nightly job or the package.
 - `docs/reproducing.md`: the pipeline from CMS to verdict and how to check each stage.
 - Keep `pages/methodology.mdx` in step with any change to the rules or data.
 - A change to the shape of the published JSON, or to an export of the package, is a breaking change to the npm package: bump its version. The same goes for the exports of the component package.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues on this repo, using the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
