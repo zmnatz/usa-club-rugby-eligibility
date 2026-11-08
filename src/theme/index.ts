@@ -4,6 +4,9 @@ import { createTheme } from '@mui/material/styles';
 // All styling lives here (the theme) or in ./primitives; components don't use `sx`.
 
 export const theme = createTheme({
+  // The static HTML carries both schemes behind prefers-color-scheme, so the browser
+  // picks the visitor's before any JavaScript runs and there's no light flash.
+  cssVariables: { colorSchemeSelector: 'media' },
   colorSchemes: { light: true, dark: true },
   palette: { primary: { main: '#1f4e8c' } },
   typography: { h4: { fontWeight: 600 } },
