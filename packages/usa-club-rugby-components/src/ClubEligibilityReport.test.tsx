@@ -354,3 +354,59 @@ describe('player detail', () => {
     expect(links.some((link) => link.getAttribute('href')?.includes('/harbor-city-rfc/'))).toBe(false);
   });
 });
+
+describe('opening a player from the keyboard', () => {
+  const playerButton = (name: string) => screen.getByRole('button', { name: new RegExp(name) });
+
+  const tabTo = async (target: HTMLElement) => {
+    for (let presses = 0; presses < 60 && document.activeElement !== target; presses++) await user.tab();
+    expect(document.activeElement).toBe(target);
+  };
+
+  it('reaches every player with Tab', async () => {
+    await renderClubReport();
+    await openD3();
+    for (const name of Object.values(NAMES)) await tabTo(playerButton(name));
+  });
+
+  it('tells assistive technology it opens the detail', async () => {
+    await renderClubReport();
+    await openD3();
+    const button = screen.getByRole('button', { name: `${NAMES.caution}: open eligibility details` });
+    expect(button.getAttribute('aria-haspopup')).toBe('dialog');
+  });
+
+  it('opens with Enter', async () => {
+    await renderClubReport();
+    await openD3();
+    await tabTo(playerButton(NAMES.caution));
+    await user.keyboard('{Enter}');
+    expect(within(await screen.findByRole('dialog')).getByText('CAUTION')).toBeTruthy();
+  });
+
+  it('opens with Space', async () => {
+    await renderClubReport();
+    await openD3();
+    await tabTo(playerButton(NAMES.eligible));
+    await user.keyboard(' ');
+    expect(within(await screen.findByRole('dialog')).getByText('ELIGIBLE')).toBeTruthy();
+  });
+
+  it('returns focus to the player when the dialog closes', async () => {
+    await renderClubReport();
+    await openD3();
+    const button = playerButton(NAMES.onTrack);
+    await tabTo(button);
+    await user.keyboard('{Enter}');
+    await screen.findByRole('dialog');
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(button));
+  });
+
+  it('still opens from a click anywhere on the row', async () => {
+    await renderClubReport();
+    await openD3();
+    await user.click(within(rowOf(NAMES.onTrack)).getByText('ON TRACK'));
+    expect(within(await screen.findByRole('dialog')).getByText('Ona Track')).toBeTruthy();
+  });
+});

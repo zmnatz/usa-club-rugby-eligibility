@@ -44,6 +44,7 @@ import {
   EmptyCell,
   Panel,
   PlainList,
+  PlayerButton,
   ReportAlert,
   Row,
 } from './primitives.tsx';
@@ -136,9 +137,13 @@ function renderCell(player: PlayerEligibility, key: SortKey, source: ReportSourc
     case 'name':
       return (
         <>
-          <Typography variant="body2" component="strong">
-            {player.name}
-          </Typography>
+          {/* A real button, so the player can be reached and opened from the keyboard.
+              Its click reaches the row, which opens the detail. */}
+          <PlayerButton type="button" aria-haspopup="dialog" aria-label={`${player.name}: open eligibility details`}>
+            <Typography variant="body2" component="strong">
+              {player.name}
+            </Typography>
+          </PlayerButton>
           {source === 'csv' && (
             <Typography variant="caption" color="text.secondary">
               USA ID {player.playerId}
