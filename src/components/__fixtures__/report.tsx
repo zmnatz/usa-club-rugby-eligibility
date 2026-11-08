@@ -7,6 +7,8 @@ import type {
   PlayerRow,
   PublishedClub,
 } from '@zmnatz/usa-club-rugby-data';
+import { EligibilityLinksProvider } from '@zmnatz/usa-club-rugby-components';
+import { routes } from '@/utils/paths';
 import { EligibilityReport } from '../EligibilityReport';
 
 // One fictional two-side club, with a player in each verdict on its D3 side.
@@ -100,7 +102,11 @@ export const NAMES = { ineligible: 'Ina Over', caution: 'Cal Careful', onTrack: 
 /** Renders with a fresh query client and lets the first queries settle. */
 export async function withQueryClient(ui: ReactElement) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const view = render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
+  const view = render(<QueryClientProvider client={client}>
+      <EligibilityLinksProvider Link="a" routes={routes}>
+        {ui}
+      </EligibilityLinksProvider>
+    </QueryClientProvider>);
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
   });

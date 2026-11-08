@@ -1,5 +1,14 @@
 import type { ComponentProps, ComponentType } from 'react';
-import { Link, Paper, type PaperProps, TextField, Typography } from '@mui/material';
+import {
+  Link,
+  Paper,
+  type PaperProps,
+  TableCell,
+  TableContainer,
+  TextField,
+  Typography,
+  type TypographyProps,
+} from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 // Themed building blocks. Spacing, colours and breakpoints come from the host's
@@ -31,6 +40,69 @@ export const Panel = styled(Paper, { shouldForwardProp: notForwarded('pad', 'bel
   padding: theme.spacing(pad),
   marginBottom: theme.spacing(below),
 })) as ComponentType<PaperProps & { pad?: number; below?: number }>;
+
+/** A block with theme-spaced margins. */
+export const Block = styled('div', { shouldForwardProp: notForwarded('above', 'below') })<{
+  above?: number;
+  below?: number;
+}>(({ theme, above = 0, below = 0 }) => ({
+  marginTop: theme.spacing(above),
+  marginBottom: theme.spacing(below),
+})) as ComponentType<ComponentProps<'div'> & { above?: number; below?: number }>;
+
+/** Something shown in place of a value. */
+export const Dim = styled('span')(({ theme }) => ({
+  color: (theme.vars || theme).palette.text.disabled,
+})) as ComponentType<ComponentProps<'span'>>;
+
+// Text
+
+const Body2 = (props: TypographyProps) => <Typography variant="body2" {...props} />;
+const Body2Inline = (props: TypographyProps) => <Typography variant="body2" component="span" {...props} />;
+
+/** Secondary small print that ends a block. */
+export const Note = styled(Body2)(({ theme }) => ({
+  color: (theme.vars || theme).palette.text.secondary,
+  margin: theme.spacing(0, 0, 2),
+})) as ComponentType<TypographyProps>;
+
+/** Secondary small print that follows content. */
+export const Aside = styled(Body2)(({ theme }) => ({
+  color: (theme.vars || theme).palette.text.secondary,
+  margin: theme.spacing(2, 0, 0),
+})) as ComponentType<TypographyProps>;
+
+/** Small text with weight. */
+export const Emphasis = styled(Body2Inline)(({ theme }) => ({
+  fontWeight: theme.typography.fontWeightMedium,
+})) as ComponentType<TypographyProps>;
+
+// Tables
+
+export const RoundsTable = styled(TableContainer)(({ theme }) => ({
+  marginTop: theme.spacing(1),
+})) as typeof TableContainer;
+
+export const NoWrapCell = styled(TableCell)({ whiteSpace: 'nowrap' }) as typeof TableCell;
+
+export const EmptyCell = styled(TableCell)(({ theme }) => ({
+  color: (theme.vars || theme).palette.text.secondary,
+})) as typeof TableCell;
+
+// Detail facts
+
+export const FactRow = styled('div')(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: theme.spacing(2),
+  padding: theme.spacing(0.5, 0),
+})) as ComponentType<ComponentProps<'div'>>;
+
+export const FactValue = styled(Emphasis)({ textAlign: 'right' }) as ComponentType<TypographyProps>;
+
+export const LinkLine = styled(Typography)(({ theme }) => ({
+  marginTop: theme.spacing(0.5),
+})) as ComponentType<TypographyProps>;
 
 // Club directory
 
