@@ -37,6 +37,10 @@ A league or local-playoff match that counts toward a player's Match Participatio
 A player who hasn't yet met a two-match minimum but can still reach it, because enough of the side's possible matches remain before Super Regionals. Counted as eligible and shown separately.
 _Avoid_: provisionally eligible, pending
 
+**Caution**:
+A player eligible for a lower side who would lose it for the rest of the season with one more upper-side match: one match short of the limit on any Upper Side, or level with the Upper Sides' total with no fixtures left at or below the side. Counted as eligible and shown separately. Experimental, so users are told to check the official record for uncounted matches.
+_Avoid_: at risk
+
 **One-Side Club**:
 A club with only one side in the fixture lists, assessed under the two-match minimum.
 

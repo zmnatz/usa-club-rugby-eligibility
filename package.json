@@ -12,7 +12,7 @@
     "verify": "bun run lib && node packages/usa-club-rugby-data/dist/cli.js verify",
     "lint": "biome check .",
     "typecheck": "bun run lib && tsc --noEmit && bun run --cwd packages/usa-club-rugby-data typecheck",
-    "test": "bun run --cwd packages/usa-club-rugby-data test"
+    "test": "bun run --cwd packages/usa-club-rugby-data test && bun test ./src"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
