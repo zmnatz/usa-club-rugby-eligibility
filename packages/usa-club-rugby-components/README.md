@@ -63,8 +63,10 @@ Components take their colours and spacing from your MUI `ThemeProvider`, or from
 Every club, filtered as the user types.
 
 ```tsx
-<ClubDirectory clubs={clubs} />
+<ClubDirectory clubs={clubs} autoFocus />
 ```
+
+Pass `autoFocus` to put the cursor in the filter when the directory appears, on a page that is mainly the directory. Off by default.
 
 ### `ClubEligibilityReport`
 
@@ -89,6 +91,16 @@ Upload or paste a Match Participation Report, for any club.
 ```
 
 Leave `fixtures` undefined until they load. Players short of a minimum can only be on track once the fixtures are known.
+
+### `SkipToFirstPlayer`
+
+A skip link to the first player in the report on the page, for keyboard users. It stays off screen until focused, so render it before anything else on the page that can take focus, such as your site's header.
+
+```tsx
+<SkipToFirstPlayer />
+```
+
+A client-side route change can leave focus partway down the new page. Pass a `ref` and focus the link when your router arrives on a report, so the link is the next stop.
 
 ### Lower-level pieces
 

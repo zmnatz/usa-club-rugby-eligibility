@@ -63,7 +63,7 @@ export default function HomePage({ clubs, season, generatedAt }: HomeProps) {
           Check a Match Participation Report (CSV)
         </Button>
       </Row>
-      <ClubDirectory clubs={clubs} />
+      <ClubDirectory clubs={clubs} autoFocus />
     </>
   );
 }

@@ -48,6 +48,7 @@ import {
   ReportAlert,
   Row,
 } from './primitives.tsx';
+import { FIRST_PLAYER_ID } from './SkipToFirstPlayer.tsx';
 import { compareValues, type SortDirection } from './sort.ts';
 
 type StatusFilter = 'all' | 'eligible' | 'caution' | 'ineligible';
@@ -132,14 +133,25 @@ interface DivisionTableProps {
   allPlayers: PlayerEligibility[];
 }
 
-function renderCell(player: PlayerEligibility, key: SortKey, source: ReportSource, showCmsId: boolean) {
+function renderCell(
+  player: PlayerEligibility,
+  key: SortKey,
+  source: ReportSource,
+  showCmsId: boolean,
+  buttonId: string | undefined,
+) {
   switch (key) {
     case 'name':
       return (
         <>
           {/* A real button, so the player can be reached and opened from the keyboard.
               Its click reaches the row, which opens the detail. */}
-          <PlayerButton type="button" aria-haspopup="dialog" aria-label={`${player.name}: open eligibility details`}>
+          <PlayerButton
+            id={buttonId}
+            type="button"
+            aria-haspopup="dialog"
+            aria-label={`${player.name}: open eligibility details`}
+          >
             <Typography variant="body2" component="strong">
               {player.name}
             </Typography>
@@ -305,13 +317,19 @@ function DivisionTable({
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((player) => (
+            {rows.map((player, index) => (
               <ClickableRow key={player.playerId} hover onClick={() => setDetail(player)}>
                 {visibleColumns.map((col) => {
                   const Cell = col.key === 'participation' ? BoldCell : TableCell;
                   return (
                     <Cell key={col.key} align={col.numeric ? 'right' : 'left'}>
-                      {renderCell(player, col.key, source, hasSharedName(player, shared))}
+                      {renderCell(
+                        player,
+                        col.key,
+                        source,
+                        hasSharedName(player, shared),
+                        index === 0 ? FIRST_PLAYER_ID : undefined,
+                      )}
                     </Cell>
                   );
                 })}
@@ -319,7 +337,7 @@ function DivisionTable({
             ))}
             {rows.length === 0 && (
               <TableRow>
-                <EmptyCell colSpan={visibleColumns.length} align="center">
+                <EmptyCell id={FIRST_PLAYER_ID} tabIndex={-1} colSpan={visibleColumns.length} align="center">
                   {filtered
                     ? 'No players match the current filters.'
                     : `No players in this team's report.`}

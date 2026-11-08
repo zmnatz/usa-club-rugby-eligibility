@@ -92,6 +92,24 @@ export const PlayerButton = styled('button')(({ theme }) => ({
   },
 })) as ComponentType<ComponentProps<'button'>>;
 
+/** Above the top of the page until focused from the keyboard. */
+export const SkipLink = styled('a')(({ theme }) => ({
+  position: 'absolute',
+  top: theme.spacing(1),
+  left: theme.spacing(1),
+  zIndex: theme.zIndex.tooltip,
+  padding: theme.spacing(1, 2),
+  borderRadius: theme.shape.borderRadius,
+  background: (theme.vars || theme).palette.background.paper,
+  color: (theme.vars || theme).palette.primary.main,
+  transform: 'translateY(-200%)',
+  '&:focus-visible': {
+    transform: 'none',
+    outline: `2px solid ${(theme.vars || theme).palette.primary.main}`,
+    outlineOffset: 2,
+  },
+})) as ComponentType<ComponentProps<'a'>>;
+
 export const BoldCell = styled(TableCell)(({ theme }) => ({
   fontWeight: theme.typography.fontWeightBold,
 })) as typeof TableCell;

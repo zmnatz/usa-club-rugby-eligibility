@@ -1,5 +1,5 @@
 export { EligibilityStatusChip, type EligibilityStatusChipProps } from './EligibilityStatusChip.tsx';
-export { ClubDirectory } from './ClubDirectory.tsx';
+export { ClubDirectory, type ClubDirectoryProps } from './ClubDirectory.tsx';
 export {
   type EligibilityLinks,
   EligibilityLinksProvider,
@@ -18,3 +18,4 @@ export {
 export { ClubEligibilityReport, type ClubEligibilityReportProps } from './ClubEligibilityReport.tsx';
 export { EligibilityReportView, type EligibilityReportViewProps } from './EligibilityReportView.tsx';
 export { MatchParticipationReport, type MatchParticipationReportProps } from './MatchParticipationReport.tsx';
+export { SkipToFirstPlayer } from './SkipToFirstPlayer.tsx';
