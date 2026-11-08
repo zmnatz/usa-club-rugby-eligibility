@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { clubsInRows, computeBreakdown, sameNamePlayers, sharedNames } from '@/utils/eligibility';
-import type { PlayerRow, Side } from '@/types/eligibility';
+import { clubsInRows, computeBreakdown, sameNamePlayers, sharedNames } from '../eligibility.ts';
+import type { PlayerRow, Side } from '../types.ts';
 
 const rules = { minimumMatches: 2, upperMatchLimit: 4, nonQualifyingCompetitions: [] };
 const side = (level: number): Side => ({ teamName: `Club MD${level}`, label: `D${level}` });

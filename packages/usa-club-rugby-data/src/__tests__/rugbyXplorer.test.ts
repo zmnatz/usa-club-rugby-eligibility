@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { crestEntityId, matchUrl } from '@/utils/rugbyXplorer';
+import { crestEntityId, matchUrl } from '../rugbyXplorer.ts';
 
 describe('matchUrl', () => {
   it('links to the match report under the Senior Club Council, since a report loads under any entity', () => {

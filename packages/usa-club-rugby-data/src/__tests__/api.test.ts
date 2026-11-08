@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { pauseAfter, postWithRetry, rateLimitBudget, rateLimitRules } from '@/utils/api';
+import { pauseAfter, postWithRetry, rateLimitBudget, rateLimitRules } from '../api.ts';
 
 afterEach(() => {
   vi.unstubAllGlobals();

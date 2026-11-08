@@ -9,21 +9,28 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 - `bun run build`: static build to `dist/`. `GITHUB_ACTIONS` or `BASE_PATH` sets the Pages base path.
 - `bun run test`, `bun run lint`, `bun run typecheck`
 - `bun run snapshot [--offline] [--full-history]`: see `docs/snapshots.md`.
+- `bun run verify`: recalculates `public/data` from `archive` and fails on any difference. Run it after any change to the rules or the calculation.
+- `bun run lib`: builds `packages/usa-club-rugby-data` to `dist/`. `dev`, `build` and `typecheck` do it first; `test` runs the package's tests.
 
 ## Structure
 
-- `src/utils/eligibility.ts`: the rules. `src/__tests__/eligibility-regulation.test.ts` holds the regulations' Figure 1; a change that breaks a row is wrong.
-- `src/utils/participation.ts`: Match Participation from match records, possible fixtures, the live pull.
-- `src/utils/teamSide.ts`: club and division from a team name.
-- `src/utils/feeds.ts`, `src/utils/archive.ts`, `scripts/snapshot.ts`: the nightly job.
-- `src/utils/api.ts`: CMS requests and the shared rate-limit gate.
+- `packages/usa-club-rugby-data/`: the engine, published to npm as `@zmnatz/usa-club-rugby-data`. Framework-free (no React, Next or `@/` aliases); relative imports end in `.ts`. The site imports it by that name, so it must be built (`bun run lib`) first.
+  - `src/eligibility.ts`: the rules. `src/__tests__/eligibility-regulation.test.ts` holds the regulations' Figure 1; a change that breaks a row is wrong.
+  - `src/rules.ts`, `src/sources.ts`: `DEFAULT_RULES` (thresholds, excluded competitions) and `DEFAULT_SOURCES` (the council and unions read each night).
+  - `src/participation.ts`: Match Participation from match records, possible fixtures, the live pull.
+  - `src/teamSide.ts`: club and division from a team name.
+  - `src/feeds.ts`, `src/archive.ts`, `src/live.ts`: the nightly pull. `src/api.ts`: CMS requests and the shared rate-limit gate.
+  - `src/published.ts`: the client for the published data. Its file shapes are a public interface.
+  - `src/node/`: the only filesystem code: `runSnapshot`, `verifyPublished`. `src/cli.ts` is the `usa-club-rugby-data` command.
 - `src/utils/published.ts`: reads the nightly data at build time for `getStaticPaths` and `getStaticProps`.
 - `pages/`: the report. `index.tsx` lists the clubs, `[club].tsx` is one club's page at `/<club-key>`, `csv.tsx` reads a Match Participation Report, and `methodology.mdx` explains the rules. Routes are ordinary paths, so they work on the static host.
-- `config/eligibility.yml`: thresholds and excluded competitions. `config/sources.yml`: the council and unions read each night.
 - `archive/`, `public/data/`: generated nightly. Never hand-edit; regenerate.
+- `notebooks/reproduce-eligibility.ipynb`: an independent Python recount of a club from `archive/`.
 
 ## Docs
 
 - `CONTEXT.md`: domain terms. Use them.
-- `docs/adr/`: decisions, including ones carried from the Rocky Gorge tool (000). Read before changing a rule or the nightly job.
-- Keep `src/pages/Methodology.mdx` in step with any change to the rules or data.
+- `docs/adr/`: decisions, including ones carried from the Rocky Gorge tool (000). Read before changing a rule, the nightly job or the package.
+- `docs/reproducing.md`: the pipeline from CMS to verdict and how to check each stage.
+- Keep `pages/methodology.mdx` in step with any change to the rules or data.
+- A change to the shape of the published JSON, or to an export of the package, is a breaking change to the npm package: bump its version.

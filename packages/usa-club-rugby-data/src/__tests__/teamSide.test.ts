@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { clubsFromTeamNames } from '@/utils/eligibility';
-import { clubKey, isNcsSide, parseTeamSide } from '@/utils/teamSide';
+import { clubsFromTeamNames } from '../eligibility.ts';
+import { clubKey, isNcsSide, parseTeamSide } from '../teamSide.ts';
 
 describe('parseTeamSide', () => {
   it.each([

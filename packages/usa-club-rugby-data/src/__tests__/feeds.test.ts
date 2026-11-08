@@ -7,8 +7,8 @@ import {
   fetchFeeds,
   keepCompetitions,
   mergeFeeds,
-} from '@/utils/feeds';
-import type { MatchCentreData } from '@/utils/playerHistory';
+} from '../feeds.ts';
+import type { MatchCentreData } from '../playerHistory.ts';
 
 const NOW = new Date('2026-11-07T12:00:00Z');
 

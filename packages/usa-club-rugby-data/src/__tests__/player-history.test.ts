@@ -7,7 +7,7 @@ import {
   isNameWithheld,
   isScoreEventType,
   playerKey,
-} from '@/utils/playerHistory';
+} from '../playerHistory.ts';
 
 describe('playerKey', () => {
   it('strips the shirt-number suffix', () => {

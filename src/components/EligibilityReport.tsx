@@ -40,36 +40,32 @@ import {
 } from '@/components/PlayerEligibilityDialog';
 import { EligibilityStatusChip } from '@/components/EligibilityStatusChip';
 import {
+  type Club,
+  clubGaps,
   clubsInRows,
   computeBreakdown,
+  DEFAULT_RULES as eligibility,
   divisionLabel,
+  type EligibilityBreakdown,
+  type FeedFixture,
+  fetchMatchCentre,
   hasSharedName,
-  parsePlayerRows,
-  sameNamePlayers,
-  sharedNames,
-} from '@/utils/eligibility';
-import {
-  clubGaps,
   loadClubRecord,
+  parsePlayerRows,
+  type ParticipationGap,
   participationRows,
+  type ParticipationSnapshot,
+  type PlayerEligibility,
+  type PlayerRow,
   qualifyingRows,
   remainingMatches,
-  type ParticipationGap,
-} from '@/utils/participation';
+  sameNamePlayers,
+  sharedNames,
+} from '@zmnatz/usa-club-rugby-data';
 import { loadFixtures } from '@/utils/data';
-import type { FeedFixture } from '@/utils/feeds';
-import type { ParticipationSnapshot } from '@/utils/participation';
-import { fetchMatchCentre } from '@/utils/playerHistory';
 import { formatDate, formatDateTime } from '@/utils/dates';
 import { compareValues, type SortDirection } from '@/utils/sort';
-import eligibility from '@config/eligibility.yml';
 
-import type {
-  Club,
-  EligibilityBreakdown,
-  PlayerEligibility,
-  PlayerRow,
-} from '@/types/eligibility';
 
 // Deployed pages pull live; dev uses the saved snapshot so working on the page
 // doesn't hit the CMS.

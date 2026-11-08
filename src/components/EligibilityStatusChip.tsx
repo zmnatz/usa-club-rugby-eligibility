@@ -1,5 +1,5 @@
 import Chip from '@mui/material/Chip';
-import type { PlayerEligibility } from '@/types/eligibility';
+import type { PlayerEligibility } from '@zmnatz/usa-club-rugby-data';
 
 interface EligibilityStatusChipProps {
   player: Pick<PlayerEligibility, 'eligible' | 'pending'>;

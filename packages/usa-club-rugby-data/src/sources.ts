@@ -1,0 +1,44 @@
+/** An entity whose fixture list the CMS serves. */
+export interface SourceEntity {
+  id: number;
+  name: string;
+}
+
+export interface SourcesConfig {
+  /** The Senior Club Council: xplorer.rugby/senior-club-council. */
+  council: { id: number; type: string; slug: string };
+  /** Geographical unions with senior club fixtures in the CMS. */
+  unions: SourceEntity[];
+}
+
+/**
+ * Where the nightly job reads fixtures from. No one feed lists every senior club
+ * fixture, so the job reads all of these, then each playing club's own feed, and
+ * keeps only competitions that appear in the council and union feeds.
+ * See docs/adr/001-national-coverage.md.
+ */
+export const DEFAULT_SOURCES: SourcesConfig = {
+  // The root for club teams, but it misses some fixtures its unions list.
+  council: { id: 90001, type: 'council', slug: 'senior-club-council' },
+
+  // Found by scanning ids 90067-90084 in November 2026; an id with no fixtures is
+  // left out.
+  unions: [
+    { id: 90067, name: 'Capital' },
+    { id: 90068, name: 'Carolinas' },
+    { id: 90069, name: 'Eastern Pennsylvania' },
+    { id: 90070, name: 'Empire' },
+    { id: 90071, name: 'Florida' },
+    { id: 90072, name: 'Georgia' },
+    { id: 90074, name: 'Alaska' },
+    { id: 90075, name: 'Mid-Atlantic' },
+    { id: 90077, name: 'New England' },
+    { id: 90078, name: 'Northern California' },
+    { id: 90079, name: 'Pacific Northwest' },
+    { id: 90080, name: 'Rocky Mountain' },
+    { id: 90081, name: 'Southern California' },
+    { id: 90082, name: 'Southwest' },
+    { id: 90083, name: 'Texas' },
+    { id: 90084, name: 'True South' },
+  ],
+};

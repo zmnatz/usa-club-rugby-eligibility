@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parsePlayerRows, computeBreakdown } from '@/utils/eligibility';
-import type { PlayerRow } from '@/types/eligibility';
+import { parsePlayerRows, computeBreakdown } from '../eligibility.ts';
+import type { PlayerRow } from '../types.ts';
 
 const HEADER_CSV = `"USA ID","First Name","Last Name","Player Last Registered","Player Rego Active","Club Name","Team Name","Competition","Appearances","Played","Reserve","Substitute","Round 1","Round 2","Round 3","Round 4","Round 5","Round 6","Round 7","Round 8","Round 9","Round 10","Round 11","Round 12","Round 13"`;
 

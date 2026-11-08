@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import eligibilityConfig from '@config/eligibility.yml';
-import { computeBreakdown } from '@/utils/eligibility';
+import { DEFAULT_RULES as eligibilityConfig } from '../rules.ts';
+import { computeBreakdown } from '../eligibility.ts';
 import {
   buildParticipationSnapshot,
   clubFixtures,
@@ -16,9 +16,9 @@ import {
   leagueResults,
   type ParticipationSnapshot,
   type ResultFixture,
-} from '@/utils/participation';
-import type { Club, EligibilityRules, PlayerRow } from '@/types/eligibility';
-import type { PlayerGameLog, PlayerHistory } from '@/utils/playerHistory';
+} from '../participation.ts';
+import type { Club, EligibilityRules, PlayerRow } from '../types.ts';
+import type { PlayerGameLog, PlayerHistory } from '../playerHistory.ts';
 
 const SEASON = '2026/2027';
 

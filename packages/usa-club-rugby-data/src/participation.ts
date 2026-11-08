@@ -1,11 +1,11 @@
-import { clubsFromTeamNames, computeBreakdown } from '@/utils/eligibility';
+import { clubsFromTeamNames, computeBreakdown } from './eligibility.ts';
 import type {
   Club,
   EligibilityRules,
   PlayerEligibility,
   PlayerRow,
   RemainingMatches,
-} from '@/types/eligibility';
+} from './types.ts';
 import {
   aggregatePlayerHistory,
   fetchMatches,
@@ -13,7 +13,7 @@ import {
   type MatchCentreData,
   type PlayerGameLog,
   type PlayerHistory,
-} from '@/utils/playerHistory';
+} from './playerHistory.ts';
 
 /** A fixture with a final score, as the player-history feed reports it. */
 export interface ResultFixture {

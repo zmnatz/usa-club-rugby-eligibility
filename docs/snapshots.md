@@ -1,6 +1,6 @@
 # Nightly snapshot
 
-The page is static. Its data is calculated each night by `scripts/snapshot.ts` and committed, then GitHub Pages is rebuilt.
+The page is static. Its data is calculated each night by `usa-club-rugby-data snapshot` (`runSnapshot` in `packages/usa-club-rugby-data/src/node/snapshot.ts`) and committed, then GitHub Pages is rebuilt.
 
 | Path | What | Published |
 | --- | --- | --- |
@@ -20,7 +20,8 @@ Each club's file becomes that club's page at `/<club-key>/` at build time, so a 
 1. Reads the council and union feeds from the current season (ADR 001).
 2. Fetches the record of every played match this season, finds clubs from their crests, reads those clubs' feeds, and repeats for any new results.
 3. Writes the archive, then calculates `public/data/` from it. Files are written only when their content changes, so a quiet night makes no commit.
-4. Commits `archive` and `public/data` to `main` if anything changed, then builds and deploys Pages.
+4. Runs `bun run verify` to check the published data reproduces from the archive.
+5. Commits `archive` and `public/data` to `main` if anything changed, then builds and deploys Pages.
 
 Every request has to succeed or nothing is written, so a failed night leaves the previous data in place. The log ends with the number of requests, rate-limit waits and total time.
 
@@ -31,7 +32,7 @@ A push to `main` only builds and deploys.
 ```bash
 bun run snapshot                      # what the nightly job does
 bun run snapshot --offline            # recalculate public/data from the archive, no CMS requests
-bun run snapshot --full-history       # also read every past season the feeds list
+bun run snapshot --full-history   # also read every past season the feeds list
 SNAPSHOT_CONCURRENCY=8 bun run snapshot
 ```
 
@@ -39,7 +40,7 @@ The same options are inputs on the workflow's manual run (Actions, "Snapshot and
 
 ## Changing what's published
 
-Change the calculation, run `bun run snapshot --offline`, and commit `public/data`. No CMS requests are needed, because the archive holds the raw records.
+Change the calculation, run `bun run snapshot --offline`, check `bun run verify`, and commit `public/data`. No CMS requests are needed, because the archive holds the raw records.
 
 ## Changing what's requested
 
