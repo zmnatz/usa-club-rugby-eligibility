@@ -1,6 +1,7 @@
-import type { Club, EligibilityRules } from '@/types/eligibility';
-import { currentSeason, type FeedFixture, isResult, sortFixtures } from '@/utils/feeds';
-import { buildParticipationSnapshot, clubSnapshot, listClubs, type ParticipationSnapshot } from '@/utils/participation';
+import type { ArchiveFixturesFile, ArchiveMatchesFile } from './data.ts';
+import type { Club, EligibilityRules } from './types.ts';
+import { currentSeason, type FeedFixture, isResult, sortFixtures } from './feeds.ts';
+import { buildParticipationSnapshot, clubSnapshot, listClubs, type ParticipationSnapshot } from './participation.ts';
 import {
   aggregatePlayerHistory,
   fetchMatchCentre,
@@ -8,9 +9,9 @@ import {
   fetchMatches,
   MATCH_BATCH_SIZE,
   type MatchCentreData,
-} from '@/utils/playerHistory';
-import { mapConcurrent } from '@/utils/api';
-import { clubKey } from '@/utils/teamSide';
+} from './playerHistory.ts';
+import { mapConcurrent } from './api.ts';
+import { clubKey } from './teamSide.ts';
 
 // The raw match archive (archive/, committed but not published). The nightly job
 // saves every played match's full CMS record here, and everything published is
@@ -57,11 +58,11 @@ export function serializeSeasonFixtures(season: string, fixtures: FeedFixture[])
 }
 
 export function parseSeasonFixtures(text: string): FeedFixture[] {
-  return Object.values((JSON.parse(text) as { fixtures: Record<string, FeedFixture> }).fixtures);
+  return Object.values((JSON.parse(text) as ArchiveFixturesFile).fixtures);
 }
 
 export function parseSeasonMatches(text: string): SeasonMatches {
-  return (JSON.parse(text) as { matches: SeasonMatches }).matches;
+  return (JSON.parse(text) as ArchiveMatchesFile).matches;
 }
 
 /** The earliest season to read from the CMS; anything before it stays as archived.

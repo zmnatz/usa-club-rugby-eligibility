@@ -15,11 +15,6 @@ const nextConfig: NextConfig = {
   images: { unoptimized: true },
   pageExtensions: ['ts', 'tsx', 'mdx'],
   env: { NEXT_PUBLIC_BASE_PATH: basePath },
-  turbopack: {
-    rules: {
-      '*.yml': { loaders: ['yaml-loader'], as: '*.js' },
-    },
-  },
 };
 
 const withMDX = createMDX({

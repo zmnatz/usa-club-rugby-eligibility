@@ -1,6 +1,6 @@
-import { mapConcurrent, postWithRetry } from '@/utils/api';
-import type { MatchCentreData } from '@/utils/playerHistory';
-import { crestEntityId } from '@/utils/rugbyXplorer';
+import { mapConcurrent, postWithRetry } from './api.ts';
+import type { MatchCentreData } from './playerHistory.ts';
+import { crestEntityId } from './rugbyXplorer.ts';
 
 // Reading fixture lists from the CMS behind Rugby Xplorer. No one feed lists every
 // senior club fixture: the council's misses some its unions list, a union's misses

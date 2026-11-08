@@ -1,0 +1,61 @@
+{
+  "name": "@zmnatz/usa-club-rugby-data",
+  "version": "0.1.0",
+  "description": "USA Club Rugby senior club teams, players and NCS eligibility from the Rugby Xplorer match record: typed readers for the nightly published data, a rate-limited CMS client, and the reproducible eligibility rules.",
+  "keywords": [
+    "rugby",
+    "usa-club-rugby",
+    "rugby-xplorer",
+    "eligibility",
+    "ncs"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zmnatz/usa-club-rugby-eligibility.git",
+    "directory": "packages/usa-club-rugby-data"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node/index.d.ts",
+      "default": "./dist/node/index.js"
+    },
+    "./types": {
+      "types": "./dist/data.d.ts",
+      "default": "./dist/data.js"
+    }
+  },
+  "bin": {
+    "usa-club-rugby-data": "./dist/cli.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/cli.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prepublishOnly": "bun run build && bun run test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

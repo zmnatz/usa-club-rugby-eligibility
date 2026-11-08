@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import eligibility from '@config/eligibility.yml';
+import { DEFAULT_RULES as eligibility } from '../rules.ts';
 import {
   type ArchiveManifest,
   buildPublished,
@@ -11,9 +11,9 @@ import {
   seasonFile,
   serializeSeasonFixtures,
   serializeSeasonMatches,
-} from '@/utils/archive';
-import type { FeedFixture } from '@/utils/feeds';
-import type { MatchCentreData } from '@/utils/playerHistory';
+} from '../archive.ts';
+import type { FeedFixture } from '../feeds.ts';
+import type { MatchCentreData } from '../playerHistory.ts';
 
 const NOW = new Date('2026-11-07T12:00:00Z');
 const manifest = (overrides: Partial<ArchiveManifest> = {}): ArchiveManifest => ({

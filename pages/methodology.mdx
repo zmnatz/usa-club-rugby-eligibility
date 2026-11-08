@@ -114,6 +114,10 @@ Each update is all or nothing. If any request fails, the previous night's data s
 
 The report can also read a Rugby Xplorer Match Participation Report for any club. It works out the club and its sides from the Team Name column, and applies the same rules. That report is the union's official count and carries USA IDs and registration dates, so its totals are taken as given, using Played + Substitute. Its rounds aren't linked to match reports.
 
+## Reproducing a result
+
+Every published number is a function of the archived Rugby Xplorer match records, the rules above and a timestamp. `bun run verify` recalculates all of the published data from the archive and fails on any difference, a [notebook](https://github.com/zmnatz/usa-club-rugby-eligibility/blob/main/notebooks/reproduce-eligibility.ipynb) recounts a club's participation from the raw records in plain Python, and the engine is published as the npm package `@zmnatz/usa-club-rugby-data` for use in other tools. The [step-by-step guide](https://github.com/zmnatz/usa-club-rugby-eligibility/blob/main/docs/reproducing.md) covers each stage from the CMS to a verdict.
+
 ## Source
 
-The code, the rules configuration and the archived match data are on [GitHub](https://github.com/zmnatz/usa-club-rugby-eligibility). Corrections and questions are welcome as issues there.
+The code, the rules and the archived match data are on [GitHub](https://github.com/zmnatz/usa-club-rugby-eligibility). Corrections and questions are welcome as issues there.

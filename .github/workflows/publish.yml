@@ -1,0 +1,31 @@
+name: Publish library
+
+# Publishes @zmnatz/usa-club-rugby-data to npm when a GitHub release is published.
+# Needs an NPM_TOKEN repository secret (an npm automation token).
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write # npm provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: bun install --frozen-lockfile
+      - run: bun run test
+      - run: bun run verify
+      - run: npm publish --provenance --access public
+        working-directory: packages/usa-club-rugby-data
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

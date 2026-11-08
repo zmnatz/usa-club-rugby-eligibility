@@ -12,12 +12,26 @@ It applies the 2026-27 Senior Club Regulations (§3.4.2, §3.5) to clubs with an
 
 Each night a GitHub Action reads every senior club fixture from the Senior Club Council's, the unions' and the clubs' feeds, fetches every played match's record, archives the raw records in `archive/`, calculates each club's participation into `public/data/`, and redeploys the page. See [docs/snapshots.md](docs/snapshots.md).
 
+## Use the data
+
+The engine is published as [`@zmnatz/usa-club-rugby-data`](packages/usa-club-rugby-data/README.md): a typed client for the published teams, players and verdicts, the eligibility rules as pure functions, and a rate-limited CMS client.
+
+```ts
+import { createPublishedClient } from '@zmnatz/usa-club-rugby-data';
+const players = await createPublishedClient().players('rocky-gorge');
+```
+
+## Reproducing the numbers
+
+`bun run verify` recalculates all of `public/data` from the committed raw match archive and fails on any difference, and [a notebook](notebooks/reproduce-eligibility.ipynb) recounts a club independently in plain Python. See [docs/reproducing.md](docs/reproducing.md).
+
 ## Development
 
 ```bash
 bun install
 bun run dev        # uses the committed nightly data
-bun run test
+bun run test       # the package's tests
+bun run verify     # published data reproduces from the archive
 bun run snapshot   # refresh the data from the CMS
 ```
 

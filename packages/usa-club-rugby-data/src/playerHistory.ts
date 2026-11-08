@@ -1,6 +1,6 @@
-import { mapConcurrent, postWithRetry, sleep } from '@/utils/api';
-import { scoringKind } from '@/utils/scoring';
-import type { FixtureItem, MatchPlayer } from '@/types/match';
+import { mapConcurrent, postWithRetry, sleep } from './api.ts';
+import { scoringKind } from './scoring.ts';
+import type { FixtureItem, MatchPlayer } from './match.ts';
 
 const SCORES_URL = 'https://rugby-au-cms.graphcdn.app';
 

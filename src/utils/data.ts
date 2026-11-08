@@ -1,4 +1,4 @@
-import type { FeedFixture } from '@/utils/feeds';
+import type { FeedFixture } from '@zmnatz/usa-club-rugby-data';
 
 // The nightly data, published under public/data/ by scripts/snapshot.ts. Club pages
 // get theirs at build time; this is for the CSV page, which can be for any club.

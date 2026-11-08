@@ -16,17 +16,19 @@ import {
 } from '@mui/material';
 import { EligibilityStatusChip } from '@/components/EligibilityStatusChip';
 import {
-  playerRounds,
-  possibleFixtures,
+  type Club,
+  DEFAULT_RULES as eligibility,
+  matchUrl,
   type ParticipationSnapshot,
+  type PlayerEligibility,
   type PlayerRound,
+  playerRounds,
   type PlayerRoundStatus,
+  type PlayerRow,
+  possibleFixtures,
   type ScheduledFixture,
-} from '@/utils/participation';
-import { matchUrl } from '@/utils/rugbyXplorer';
+} from '@zmnatz/usa-club-rugby-data';
 import { formatDate } from '@/utils/dates';
-import eligibility from '@config/eligibility.yml';
-import type { Club, PlayerEligibility, PlayerRow } from '@/types/eligibility';
 
 /** Where a report's rows came from. Only a CSV report carries USA IDs and
  *  registration dates. */

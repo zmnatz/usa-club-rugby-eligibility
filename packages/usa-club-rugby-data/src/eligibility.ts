@@ -1,5 +1,5 @@
-import { parseCsv } from '@/utils/csv';
-import { isNcsSide, parseTeamSide, sideLabel, type TeamSide } from '@/utils/teamSide';
+import { parseCsv } from './csv.ts';
+import { isNcsSide, parseTeamSide, sideLabel, type TeamSide } from './teamSide.ts';
 import type {
   Club,
   DivisionSummary,
@@ -9,7 +9,7 @@ import type {
   PlayerRow,
   RemainingMatches,
   Side,
-} from '@/types/eligibility';
+} from './types.ts';
 
 const HEADER_COLUMNS = [
   'USA ID',

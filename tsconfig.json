@@ -9,9 +9,6 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ],
-      "@config/*": [
-        "./config/*"
       ]
     },
     "types": [
@@ -38,12 +35,12 @@
     "next-env.d.ts",
     "src",
     "pages",
-    "scripts",
-    "**/*.ts",
+        "**/*.ts",
     "**/*.tsx"
   ],
   "exclude": [
     "node_modules",
+    "packages",
     "out",
     ".next"
   ]

@@ -3,9 +3,12 @@ import Head from 'next/head';
 import NextLink from 'next/link';
 import { Breadcrumbs, Link as MuiLink, Typography } from '@mui/material';
 import { EligibilityReport } from '@/components/EligibilityReport';
-import { clubFixtures, type ParticipationSnapshot } from '@/utils/participation';
+import {
+  clubFixtures,
+  type FeedFixture,
+  type ParticipationSnapshot,
+} from '@zmnatz/usa-club-rugby-data';
 import { readClubSnapshot, readFixtures, readIndex, type PublishedClub } from '@/utils/published';
-import type { FeedFixture } from '@/utils/feeds';
 
 interface ClubPageProps {
   club: PublishedClub;
