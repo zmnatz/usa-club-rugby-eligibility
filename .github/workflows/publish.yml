@@ -3,7 +3,9 @@ name: Publish library
 # Publishes @zmnatz/usa-club-rugby-data to npm when a GitHub release is published,
 # by npm trusted publishing (OIDC): no token is stored. Configure it once at
 # npmjs.com > the package > Settings > Trusted Publisher: GitHub Actions, this
-# repository, workflow file publish.yml, allowing `npm publish`.
+# repository, workflow file publish.yml, with `npm publish` left unchecked.
+# The job only stages the version; approve it with 2FA on npmjs.com (Staged
+# Packages) or with `npm stage approve <stage-id>` and it goes public.
 on:
   release:
     types: [published]
@@ -26,7 +28,7 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run test
       - run: bun run verify
-      # Trusted publishing needs npm 11.5.1 or later; Node 22 ships an older one.
+      # Staged publishing needs npm 11.15.0 or later; Node 22 ships an older one.
       - run: npm install -g npm@latest
-      - run: npm publish --access public
+      - run: npm stage publish
         working-directory: packages/usa-club-rugby-data
