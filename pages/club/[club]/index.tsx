@@ -2,7 +2,6 @@ import type { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
 import NextLink from 'next/link';
 import { Breadcrumbs, Link as MuiLink, Typography } from '@mui/material';
-import { Note } from '@/theme';
 import { EligibilityReport } from '@/components/EligibilityReport';
 import {
   clubFixtures,
@@ -59,9 +58,9 @@ export default function ClubPage({ club, saved, fixtures }: ClubPageProps) {
       <Typography variant="h4" component="h1" gutterBottom>
         {club.name}
       </Typography>
-      <Note>
+      <Typography variant="body2" color="text.secondary" gutterBottom>
         {club.sides.map((side) => side.teamName).join(' · ')}
-      </Note>
+      </Typography>
       <EligibilityReport source="record" club={club} saved={saved} fixtures={fixtures} />
     </>
   );

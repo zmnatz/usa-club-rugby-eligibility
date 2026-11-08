@@ -10,7 +10,6 @@ import {
   TableRow,
   TextField,
   Typography,
-  type TypographyProps,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
@@ -63,43 +62,6 @@ export const Pre = styled('pre')({ overflowX: 'auto' });
 /** Something shown in place of a value. */
 export const Dim = styled('span')(({ theme }) => ({ color: (theme.vars || theme).palette.text.disabled }));
 
-// Text. Standard Typography variants with the colour and spacing each use needs.
-
-const Body2 = (props: TypographyProps) => <Typography variant="body2" {...props} />;
-const Body2Inline = (props: TypographyProps) => <Typography variant="body2" component="span" {...props} />;
-const H2 = (props: TypographyProps) => <Typography variant="h5" component="h2" {...props} />;
-const H3 = (props: TypographyProps) => <Typography variant="h6" component="h3" {...props} />;
-
-/** Secondary small print that ends a block. */
-export const Note = styled(Body2)(({ theme }) => ({
-  color: (theme.vars || theme).palette.text.secondary,
-  margin: theme.spacing(0, 0, 2),
-}));
-
-/** Secondary small print that follows content. */
-export const Aside = styled(Body2)(({ theme }) => ({
-  color: (theme.vars || theme).palette.text.secondary,
-  margin: theme.spacing(2, 0, 0),
-}));
-
-/** The paragraph that introduces a page. */
-export const Lead = styled(Typography)(({ theme }) => ({
-  color: (theme.vars || theme).palette.text.secondary,
-  margin: theme.spacing(0, 0, 2),
-  maxWidth: 840,
-}));
-
-/** Small text with weight. */
-export const Emphasis = styled(Body2Inline)(({ theme }) => ({ fontWeight: theme.typography.fontWeightMedium }));
-
-// Prose headings and paragraphs, for the methodology page.
-
-export const SectionHeading = styled(H2)(({ theme }) => ({ margin: theme.spacing(4, 0, '0.35em') }));
-
-export const SubsectionHeading = styled(H3)(({ theme }) => ({ margin: theme.spacing(3, 0, '0.35em') }));
-
-export const Paragraph = styled(Typography)(({ theme }) => ({ margin: theme.spacing(0, 0, 1.5) }));
-
 // App shell
 
 export const Shell = styled('div')({ display: 'flex', flexDirection: 'column', minHeight: '100dvh' });
@@ -139,8 +101,6 @@ export const FactRow = styled('div')(({ theme }) => ({
   gap: theme.spacing(2),
   padding: theme.spacing(0.5, 0),
 }));
-
-export const FactValue = styled(Emphasis)({ textAlign: 'right' });
 
 export const LinkLine = styled(Typography)(({ theme }) => ({ marginTop: theme.spacing(0.5) }));
 

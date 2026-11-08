@@ -37,12 +37,9 @@ import {
   BoldCell,
   ClickableRow,
   ColumnsControl,
-  Emphasis,
   EmptyCell,
   FileButton,
   FormDialogContent,
-  Lead,
-  Note,
   Panel,
   PlainList,
   Row,
@@ -178,9 +175,9 @@ function renderCell(player: PlayerEligibility, key: SortKey, source: ReportSourc
     case 'name':
       return (
         <>
-          <Emphasis>
+          <Typography variant="body2" component="strong">
             {player.name}
-          </Emphasis>
+          </Typography>
           {source === 'csv' && (
             <Typography variant="caption" color="text.secondary">
               USA ID {player.playerId}
@@ -657,7 +654,7 @@ export function EligibilityReport(props: EligibilityReportProps) {
 
   return (
     <>
-      <Lead>
+      <Typography color="text.secondary" gutterBottom>
         {source === 'record'
           ? `Counted from the lineups and substitutions entered in Rugby Xplorer for every
              senior club league and local playoff match. Fixtures still to play before Super
@@ -673,7 +670,7 @@ export function EligibilityReport(props: EligibilityReportProps) {
         <MuiLink component={NextLink} href="/methodology">
           How this report is worked out
         </MuiLink>
-      </Lead>
+      </Typography>
 
       <Row gap={2} below={3}>
         {source === 'csv' && csvClubs.length > 1 && (
@@ -713,10 +710,10 @@ export function EligibilityReport(props: EligibilityReportProps) {
       )}
 
       {oneSide && (
-        <Note>
+        <Typography variant="body2" color="text.secondary" gutterBottom>
           Only one of this club&apos;s sides is in the data, so it is assessed as a one-side club:
           two qualifying matches, and no other side to compare.
-        </Note>
+        </Typography>
       )}
 
       {gaps.length > 0 && (

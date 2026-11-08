@@ -5,7 +5,7 @@ import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { Button, Link as MuiLink, Typography } from '@mui/material';
-import { Lead, Note, Row } from '@/theme';
+import { Row } from '@/theme';
 import { ClubDirectory } from '@/components/ClubDirectory';
 import { formatDateTime } from '@/utils/dates';
 import { readIndex, type PublishedClub } from '@/utils/published';
@@ -46,7 +46,7 @@ export default function HomePage({ clubs, season, generatedAt }: HomeProps) {
       <Typography variant="h4" component="h1" gutterBottom>
         NCS Eligibility
       </Typography>
-      <Lead>
+      <Typography color="text.secondary" gutterBottom>
         Pick a club to see which players are eligible for the National Championship Series,
         counted from the lineups and substitutions entered in Rugby Xplorer for every senior club
         league and local playoff match. Super Regionals, National Championships, 7s, friendlies,
@@ -54,10 +54,10 @@ export default function HomePage({ clubs, season, generatedAt }: HomeProps) {
         still to play before Super Regionals count towards the two-match minimums, shown as on
         track (experimental). <MuiLink component={NextLink} href="/methodology">How this
         report is worked out</MuiLink>.
-      </Lead>
-      <Note>
+      </Typography>
+      <Typography variant="body2" color="text.secondary" gutterBottom>
         {season} season · {clubs.length} clubs · data last changed {formatDateTime(generatedAt)}
-      </Note>
+      </Typography>
       <Row gap={2} below={3}>
         <Button component={NextLink} href="/csv" variant="outlined">
           Check a Match Participation Report (CSV)
