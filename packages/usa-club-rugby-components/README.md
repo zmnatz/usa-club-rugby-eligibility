@@ -8,7 +8,7 @@ React and MUI components for USA Club Rugby **NCS eligibility**: the club direct
 
 ```bash
 npm install @zmnatz/usa-club-rugby-components @zmnatz/usa-club-rugby-data \
-  react react-dom @mui/material @emotion/react @emotion/styled @tanstack/react-query
+  react react-dom @mui/material @emotion/react @emotion/styled
 ```
 
 These are peer dependencies, so your app has one copy of each and one MUI theme:
@@ -17,19 +17,15 @@ These are peer dependencies, so your app has one copy of each and one MUI theme:
 | --- | --- |
 | `react`, `react-dom` | Rendering |
 | `@mui/material`, `@emotion/react`, `@emotion/styled` | Components and styling |
-| `@tanstack/react-query` | Loading and refreshing a club's Match Record |
 | `@zmnatz/usa-club-rugby-data` | The rules, data types and CMS client |
 
 ## Set up your app once
 
-Wrap your app in two providers. `EligibilityLinksProvider` tells the components how to link to your pages, and TanStack Query's `QueryClientProvider` is needed by `ClubEligibilityReport`.
+Wrap your app in `EligibilityLinksProvider`, which tells the components how to link to your pages.
 
 ```tsx
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { EligibilityLinksProvider, type EligibilityRoutes } from '@zmnatz/usa-club-rugby-components';
 import { Link } from 'your-router';
-
-const queryClient = new QueryClient();
 
 const routes: EligibilityRoutes = {
   club: (clubKey) => `/club/${clubKey}`,
@@ -39,11 +35,9 @@ const routes: EligibilityRoutes = {
 
 export function App({ children }: { children: React.ReactNode }) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <EligibilityLinksProvider Link={Link} routes={routes}>
-        {children}
-      </EligibilityLinksProvider>
-    </QueryClientProvider>
+    <EligibilityLinksProvider Link={Link} routes={routes}>
+      {children}
+    </EligibilityLinksProvider>
   );
 }
 ```
@@ -74,7 +68,7 @@ Every club, filtered as the user types.
 
 ### `ClubEligibilityReport`
 
-One club's report from its Match Record. The saved data shows straight away.
+One club's report from its Match Record, with when the records were last updated.
 
 ```tsx
 <ClubEligibilityReport club={club} saved={snapshot} fixtures={fixtures} live clubSlug="your-club" />
@@ -83,7 +77,7 @@ One club's report from its Match Record. The saved data shows straight away.
 | Prop | Purpose |
 | --- | --- |
 | `club`, `saved`, `fixtures` | From the data package's published client or your own copy of the data |
-| `live` | Replace the saved data with a pull from the CMS when it lands. Off by default. |
+| `live` | Offer a "Check for newer matches" button, which pulls from the CMS when clicked and replaces the saved data. Off by default. |
 | `clubSlug` | The club's Rugby Xplorer slug for match links. Without it, links use the council's path. |
 
 ### `MatchParticipationReport`
