@@ -21,6 +21,7 @@
   "sideEffects": false,
   "files": [
     "dist",
+    "!dist/.tsbuildinfo",
     "README.md"
   ],
   "main": "./dist/index.js",
@@ -35,8 +36,9 @@
     "access": "public"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc -p tsconfig.build.json",
-    "typecheck": "tsc --noEmit"
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit --incremental --tsBuildInfoFile node_modules/.cache/typecheck.tsbuildinfo",
+    "prepublishOnly": "rm -rf dist && bun run build"
   },
   "peerDependencies": {
     "react": "^19.2.8",

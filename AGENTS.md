@@ -7,10 +7,11 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 - `bun install`
 - `bun run dev`: Next.js dev server. Uses only the committed nightly data, no CMS requests.
 - `bun run build`: static build to `dist/`. `GITHUB_ACTIONS` or `BASE_PATH` sets the Pages base path.
+- `bun run build:quick`: the same build for the first 5 clubs and their players, for checking a change locally. `BUILD_CLUBS` sets the scope to a number of clubs or a comma-separated list of club keys. Its `dist/` is incomplete, so don't deploy it; CI ignores the setting.
 - `bun run test`, `bun run lint`, `bun run typecheck`
 - `bun run snapshot [--offline] [--full-history]`: see `docs/snapshots.md`.
 - `bun run verify`: recalculates `public/data` from `archive` and fails on any difference. Run it after any change to the rules or the calculation.
-- `bun run lib`: builds both packages in `packages/` to their `dist/`. `dev`, `build`, `typecheck` and `test` do it first; `test` runs the data package's tests and the component tests in `src/` and `packages/usa-club-rugby-components/`.
+- `bun run lib`: builds both packages in `packages/` to their `dist/`. The component package builds incrementally, so an unchanged rebuild is quick. `dev`, `build`, `typecheck` and `test` do it first; `test` runs the data package's tests and the component tests in `src/` and `packages/usa-club-rugby-components/`.
 
 ## Structure
 
