@@ -2,11 +2,12 @@ import { describe, expect, it } from 'bun:test';
 import { selectClubs } from './buildScope';
 
 const clubs = [{ key: 'a' }, { key: 'b' }, { key: 'c' }];
-const keysFor = (scope?: string, ci?: string) => selectClubs(clubs, { scope, ci }).map((club) => club.key);
+// Both are always passed, so the machine's own environment can't change a result.
+const keysFor = (scope: string, ci = '') => selectClubs(clubs, { scope, ci }).map((club) => club.key);
 
 describe('selectClubs', () => {
   it('builds every club by default', () => {
-    expect(keysFor(undefined)).toEqual(['a', 'b', 'c']);
+    expect(keysFor('')).toEqual(['a', 'b', 'c']);
     expect(keysFor('  ')).toEqual(['a', 'b', 'c']);
   });
 
