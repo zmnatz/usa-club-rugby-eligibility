@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import {
+  clubsToBuild,
+  fillSamplePlayer,
   filterFindings,
   globToRegExp,
   parsePageSpec,
@@ -103,5 +105,34 @@ describe('parseScreenshotsSection', () => {
 
   it('accepts CRLF line endings and any heading level', () => {
     expect(parseScreenshotsSection('### screenshots\r\n- /x\r\n')).toEqual([{ path: '/x' }]);
+  });
+});
+
+describe('clubsToBuild', () => {
+  const clubs = ['a-club', 'b-club', 'c-club'];
+  const playerClubs = new Map([['p1', ['b-club', 'c-club']]]);
+  const build = (...paths: string[]) =>
+    clubsToBuild({ defaults: ['a-club'], requested: paths.map((path) => ({ path })), clubs, playerClubs });
+
+  it('builds only the default club when no club or player page is requested', () => {
+    expect(build('/', '/csv/')).toEqual(['a-club']);
+  });
+
+  it('adds a requested club and every club a requested player is listed for', () => {
+    expect(build('/club/c-club/')).toEqual(['a-club', 'c-club']);
+    expect(build('/player/p1/')).toEqual(['a-club', 'b-club', 'c-club']);
+  });
+
+  it('leaves out unknown clubs and players, so their pages report a 404', () => {
+    expect(build('/club/nope/', '/player/nobody/')).toEqual(['a-club']);
+  });
+});
+
+describe('fillSamplePlayer', () => {
+  it('replaces the placeholder with a player from the build and leaves other paths alone', () => {
+    expect(fillSamplePlayer([{ path: '/player/{player}/' }, { path: '/csv/' }], ['z', 'a'])).toEqual([
+      { path: '/player/a/' },
+      { path: '/csv/' },
+    ]);
   });
 });

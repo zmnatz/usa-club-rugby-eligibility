@@ -5,6 +5,7 @@ import { parseArgs } from 'node:util';
 import { load } from 'js-yaml';
 import { chromium } from 'playwright-core';
 import {
+  fillSamplePlayer,
   filterFindings,
   parsePageSpec,
   parseScreenshotsSection,
@@ -90,11 +91,15 @@ async function main() {
       .map(parsePageSpec)
       .filter((spec): spec is PageSpec => spec !== null),
   ];
-  const pages = planPages({
-    changedFiles: changedFiles(values['base-ref'], values['changed-files']),
-    rules,
-    requested,
-  });
+  const playerDir = path.join(path.resolve(values.site), 'player');
+  const pages = fillSamplePlayer(
+    planPages({
+      changedFiles: changedFiles(values['base-ref'], values['changed-files']),
+      rules,
+      requested,
+    }),
+    fs.existsSync(playerDir) ? fs.readdirSync(playerDir) : []
+  );
 
   const browser = await chromium.launch();
   const reports: PageReport[] = [];

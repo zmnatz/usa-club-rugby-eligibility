@@ -40,7 +40,7 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 
 ## Pull Requests
 
-- CI screenshots each PR at desktop and mobile sizes and keeps one comment on it up to date, from a build of a single club made inside the job. For a PR that changes UI, add a `## Screenshots` section to the description listing the pages to capture, one path per line (e.g. `/csv/`). Club and player paths must belong to the club the job builds (`BUILD_CLUBS` in `.github/workflows/ci.yml`).
+- CI screenshots each PR at desktop and mobile sizes and keeps one comment on it up to date, from a partial build made inside the job. For a PR that changes UI, add a `## Screenshots` section to the description listing the pages to capture, one path per line (e.g. `/csv/`). Any `/club/<club-key>/` or `/player/<cms-id>/` listed there adds that club, or the player's clubs, to the build.
 - Add `wait: <selector>` or `delay: <ms>` after a path for pages that fill in after load.
 - Without the section the run captures `/` plus any routes mapped from changed files in `playwright/config/screenshots.yml`.
 

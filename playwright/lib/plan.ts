@@ -114,3 +114,38 @@ export function filterFindings(findings: Finding[], noise: NoiseRule[]): Finding
       !compiled.some(({ kind, re }) => (!kind || kind === finding.kind) && re.test(finding.text))
   );
 }
+
+// The clubs a PR's build needs: the defaults, each club a requested page shows,
+// and every club a requested player is listed for. Unknown clubs and players are
+// left out, so the build still runs and the comment reports their page as a 404.
+export function clubsToBuild({
+  defaults,
+  requested,
+  clubs,
+  playerClubs,
+}: {
+  defaults: string[];
+  requested: PageSpec[];
+  clubs: string[];
+  playerClubs: Map<string, string[]>;
+}): string[] {
+  const wanted = new Set(defaults);
+  for (const { path } of requested) {
+    const club = path.match(/^\/club\/([^/]+)/)?.[1];
+    if (club && clubs.includes(club)) {
+      wanted.add(club);
+    }
+    const player = path.match(/^\/player\/([^/]+)/)?.[1];
+    for (const key of player ? (playerClubs.get(player) ?? []) : []) {
+      wanted.add(key);
+    }
+  }
+  return [...wanted];
+}
+
+// `{player}` in a mapped route stands for any player in the build, so the route
+// can't go stale when the nightly data changes.
+export function fillSamplePlayer(pages: PageSpec[], playerIds: string[]): PageSpec[] {
+  const sample = [...playerIds].sort()[0] ?? 'none';
+  return pages.map((page) => ({ ...page, path: page.path.replace('{player}', sample) }));
+}
