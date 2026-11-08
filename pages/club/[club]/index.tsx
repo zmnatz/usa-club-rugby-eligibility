@@ -58,7 +58,7 @@ export default function ClubPage({ club, saved, fixtures }: ClubPageProps) {
       <Typography variant="h4" component="h1" gutterBottom>
         {club.name}
       </Typography>
-      <Typography variant="note">
+      <Typography variant="body2" color="textSecondary" gutterBottom>
         {club.sides.map((side) => side.teamName).join(' · ')}
       </Typography>
       <EligibilityReport source="record" club={club} saved={saved} fixtures={fixtures} />

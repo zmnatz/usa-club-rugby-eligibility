@@ -10,13 +10,13 @@ export const mdxComponents = {
     <Typography component="h1" variant="h4" gutterBottom {...props} />
   ),
   h2: (props: ComponentProps<'h2'>) => (
-    <Typography component="h2" variant="section" {...props} />
+    <Typography component="h2" variant="h5" gutterBottom {...props} />
   ),
   h3: (props: ComponentProps<'h3'>) => (
-    <Typography component="h3" variant="subsection" {...props} />
+    <Typography component="h3" variant="h6" gutterBottom {...props} />
   ),
   p: (props: ComponentProps<'p'>) => (
-    <Typography component="p" variant="paragraph" {...props} />
+    <Typography gutterBottom {...props} />
   ),
   a: ({ href, children, ...props }: ComponentProps<'a'>) => {
     const external =

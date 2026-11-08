@@ -52,7 +52,7 @@ export function PlayerPage({ data }: { data: PlayerProfile }) {
         {data.name}
       </Typography>
       {data.clubs.length > 1 && (
-        <Typography variant="note">
+        <Typography variant="body2" color="textSecondary" gutterBottom>
           Listed {data.clubs.length} times in the record, for different clubs or sides. Each is assessed on its own.
         </Typography>
       )}

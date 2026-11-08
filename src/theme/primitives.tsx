@@ -102,8 +102,6 @@ export const FactRow = styled('div')(({ theme }) => ({
   padding: theme.spacing(0.5, 0),
 }));
 
-export const FactValue = styled(Typography)({ textAlign: 'right' });
-
 export const LinkLine = styled(Typography)(({ theme }) => ({ marginTop: theme.spacing(0.5) }));
 
 // Forms
