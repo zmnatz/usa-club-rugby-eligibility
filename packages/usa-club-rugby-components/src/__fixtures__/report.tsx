@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react';
 import { act, render } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type {
   FeedFixture,
   ParticipationSnapshot,
@@ -104,14 +103,16 @@ export const routes: EligibilityRoutes = {
   methodology: () => '/methodology',
 };
 
-/** Renders with a fresh query client and lets the first queries settle. */
-export async function withQueryClient(ui: ReactElement) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const view = render(<QueryClientProvider client={client}>
-      <EligibilityLinksProvider Link="a" routes={routes}>
-        {ui}
-      </EligibilityLinksProvider>
-    </QueryClientProvider>);
+/** Wraps a report in what a host supplies. */
+export const inHost = (ui: ReactElement) => (
+  <EligibilityLinksProvider Link="a" routes={routes}>
+    {ui}
+  </EligibilityLinksProvider>
+);
+
+/** Renders and lets the first load settle. */
+export async function renderInHost(ui: ReactElement) {
+  const view = render(inHost(ui));
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
   });
@@ -125,7 +126,7 @@ export const renderClubReport = ({
   extraFixtures = [] as FeedFixture[],
   clubSlug = undefined as string | undefined,
 } = {}) =>
-  withQueryClient(
+  renderInHost(
     <ClubEligibilityReport
       club={club}
       saved={saved}
