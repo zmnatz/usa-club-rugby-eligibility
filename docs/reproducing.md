@@ -42,6 +42,10 @@ git diff public/data   # the verdicts that changed
 
 Rules are data: the thresholds and excluded competitions are `DEFAULT_RULES` in `packages/usa-club-rugby-data/src/rules.ts`, and every function takes the rules it applies, so a different season's rules can be tried without touching the code.
 
+## Locked Seasons
+
+Only the current season is published, because only its rules are encoded; see "Locked Seasons" in [snapshots.md](snapshots.md). To recount a Locked Season once its rules are known, read it with `readSeason(archiveDir, season)` (from `/node`) and pass it with that season's `EligibilityRules` to `buildPublished`, which builds the latest season in the fixtures it is given.
+
 ## Rebuild from scratch
 
 ```bash

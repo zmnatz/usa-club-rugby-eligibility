@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -36,6 +36,14 @@ const match: MatchCentreData = {
   players: [{ id: 'p1__1', name: 'Ann Test', position: 'Prop', shirtNumber: '1', isHome: true }],
   substitutes: [],
   coaches: [],
+};
+
+const LOCKED_SEASON = '2025/2026';
+const lockedFixture: FeedFixture = { ...fixture, id: 'o1', season: LOCKED_SEASON, dateTime: '2026-03-01T15:00:00Z' };
+const lockedMatch: MatchCentreData = {
+  ...match,
+  fixture: { ...match.fixture, id: 'o1', season: LOCKED_SEASON, dateTime: lockedFixture.dateTime },
+  players: [{ id: 'p7__1', name: 'Old Timer', position: 'Prop', shirtNumber: '1', isHome: true }],
 };
 
 let dir: string;
@@ -99,5 +107,34 @@ describe('build and verify', () => {
       serializeSeasonMatches('2026/2027', { m1: withSub }),
     );
     expect(verifyPublished({ archiveDir, publishedDir }).ok).toBe(false);
+  });
+});
+
+describe('an Archive holding a Locked Season', () => {
+  const files = (root: string) =>
+    Object.fromEntries(
+      readdirSync(root, { recursive: true, encoding: 'utf8' })
+        .filter((name) => name.endsWith('.json'))
+        .sort()
+        .map((name) => [name, readFileSync(path.join(root, name), 'utf8')]),
+    );
+
+  it('publishes the same data as one holding only the current season', async () => {
+    await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
+    const currentOnly = files(publishedDir);
+
+    const file = seasonFile(LOCKED_SEASON);
+    writeFileSync(path.join(archiveDir, 'fixtures', file), serializeSeasonFixtures(LOCKED_SEASON, [lockedFixture]));
+    writeFileSync(path.join(archiveDir, 'matches', file), serializeSeasonMatches(LOCKED_SEASON, { o1: lockedMatch }));
+    writeFileSync(
+      path.join(archiveDir, 'manifest.json'),
+      JSON.stringify({ fields: 'x', currentSeason: '2026/2027', seasons: [LOCKED_SEASON, '2026/2027'], clubIds: [] }),
+    );
+    const withHistory = path.join(dir, 'data-with-history');
+    await runSnapshot({ archiveDir, publishedDir: withHistory, offline: true, now: NOW });
+    expect(files(withHistory)).toEqual(currentOnly);
+    // Both sets of files reproduce from the Archive that now holds the Locked Season.
+    expect(verifyPublished({ archiveDir, publishedDir }).ok).toBe(true);
+    expect(verifyPublished({ archiveDir, publishedDir: withHistory }).ok).toBe(true);
   });
 });
