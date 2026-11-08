@@ -38,9 +38,9 @@ SNAPSHOT_CONCURRENCY=8 bun run snapshot
 
 The same options are inputs on the workflow's manual run (Actions, "Snapshot and deploy", Run workflow).
 
-## Earlier seasons
+## Locked Seasons
 
-The archive can hold every season the feeds list, and `public/data` is still calculated for the current season only. Earlier seasons are raw data for now: the rules differ by year, and only the 2026-27 rules are encoded (`DEFAULT_RULES`). Publishing an earlier season, or its verdicts, with the wrong rules would change which clubs and sides exist as well as who is eligible, so it waits until that season's rules are added.
+The Archive can hold every season the feeds list, and `public/data` is still calculated for the current season only. A Locked Season's Match Records are kept but not published: the rules differ by year, and only the 2026-27 rules are encoded (`DEFAULT_RULES`). Publishing a Locked Season, or its verdicts, with the wrong rules would change which clubs and sides exist as well as who is eligible, so it waits until that season's rules are added.
 
 To fill the archive:
 
@@ -48,7 +48,7 @@ To fill the archive:
 bun run snapshot --full-history   # or run the workflow with "full_history" ticked
 ```
 
-It makes thousands of CMS requests, so the workflow run is the better place for it than your own IP. Afterwards each season is in `archive/fixtures/<season>.json` and `archive/matches/<season>.json` and `manifest.json` lists them. A past season is locked: later nights never read it again, unless the requested fields change or another `--full-history` run asks. Having them in the archive changes nothing published, and `bun run verify` still passes (`snapshot.test.ts` covers this).
+It makes thousands of CMS requests, so the workflow run is the better place for it than your own IP. Afterwards each season is in `archive/fixtures/<season>.json` and `archive/matches/<season>.json` and `manifest.json` lists them. A Locked Season is never read again by later nights, unless the requested fields change or another `--full-history` run asks. Both re-read every season in the Archive, so with many seasons filled in, editing `FEED_QUERY` or `MATCH_CENTRE_QUERY` costs a full backfill's worth of requests, and a `--full-history` rerun refetches seasons it already holds. Having them in the Archive changes nothing published, and `bun run verify` still passes (`snapshot.test.ts` covers this).
 
 ## Changing what's published
 
