@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { Button, Link as MuiLink, Typography } from '@mui/material';
 import { Row } from '@/theme';
-import { ClubDirectory } from '@/components/ClubDirectory';
+import { ClubDirectory } from '@zmnatz/usa-club-rugby-components';
 import { formatDateTime } from '@/utils/dates';
 import { readIndex, type PublishedClub } from '@/utils/published';
 

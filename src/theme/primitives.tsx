@@ -8,7 +8,6 @@ import {
   TableCell,
   TableContainer,
   TableRow,
-  TextField,
   Typography,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
@@ -112,27 +111,3 @@ export const FileButton = styled(Button)({ height: 56 }) as unknown as typeof Bu
 
 export const FormDialogContent = styled(DialogContent)(({ theme }) => ({ paddingTop: theme.spacing(3) }));
 
-export const SearchField = styled(TextField)({ minWidth: 260, flex: '1 1 260px', maxWidth: 420 });
-
-// Club directory
-
-export const ClubList = styled('ul')(({ theme }) => ({
-  listStyle: 'none',
-  margin: 0,
-  padding: 0,
-  display: 'grid',
-  gridTemplateColumns: '1fr',
-  columnGap: theme.spacing(3),
-  [theme.breakpoints.up('sm')]: { gridTemplateColumns: '1fr 1fr' },
-  [theme.breakpoints.up('md')]: { gridTemplateColumns: '1fr 1fr 1fr' },
-}));
-
-export const ClubItem = styled('li')(({ theme }) => ({
-  borderBottom: `1px solid ${(theme.vars || theme).palette.divider}`,
-}));
-
-export const ClubLink = styled(Link)(({ theme }) => ({ display: 'block', padding: theme.spacing(1, 0) })) as typeof Link;
-
-export const SideLabels = styled(Typography)(({ theme }) => ({ marginLeft: theme.spacing(1) })) as typeof Typography;
-
-export const EmptyNote = styled(Typography)(({ theme }) => ({ padding: theme.spacing(2, 0) }));
