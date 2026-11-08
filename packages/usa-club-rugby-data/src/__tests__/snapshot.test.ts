@@ -38,6 +38,13 @@ const match: MatchCentreData = {
   coaches: [],
 };
 
+const oldFixture: FeedFixture = { ...fixture, id: 'o1', season: '2025/2026', dateTime: '2026-03-01T15:00:00Z' };
+const oldMatch: MatchCentreData = {
+  ...match,
+  fixture: { ...match.fixture, id: 'o1', season: '2025/2026', dateTime: oldFixture.dateTime },
+  players: [{ id: 'p7__1', name: 'Old Timer', position: 'Prop', shirtNumber: '1', isHome: true }],
+};
+
 let dir: string;
 let archiveDir: string;
 let publishedDir: string;
@@ -99,5 +106,29 @@ describe('build and verify', () => {
       serializeSeasonMatches('2026/2027', { m1: withSub }),
     );
     expect(verifyPublished({ archiveDir, publishedDir }).ok).toBe(false);
+  });
+});
+
+describe('an archive holding earlier seasons', () => {
+  const files = (root: string) =>
+    Object.fromEntries(
+      ['index.json', 'fixtures.json', 'clubs/nova.json'].map((name) => [name, readFileSync(path.join(root, name), 'utf8')]),
+    );
+
+  it('publishes the same data as one holding only the current season', async () => {
+    await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
+    const alone = files(publishedDir);
+
+    const file = seasonFile('2025/2026');
+    writeFileSync(path.join(archiveDir, 'fixtures', file), serializeSeasonFixtures('2025/2026', [oldFixture]));
+    writeFileSync(path.join(archiveDir, 'matches', file), serializeSeasonMatches('2025/2026', { o1: oldMatch }));
+    writeFileSync(
+      path.join(archiveDir, 'manifest.json'),
+      JSON.stringify({ fields: 'x', currentSeason: '2026/2027', seasons: ['2025/2026', '2026/2027'], clubIds: [] }),
+    );
+    const other = path.join(dir, 'data-with-history');
+    await runSnapshot({ archiveDir, publishedDir: other, offline: true, now: NOW });
+    expect(files(other)).toEqual(alone);
+    expect(verifyPublished({ archiveDir, publishedDir }).ok).toBe(true);
   });
 });
