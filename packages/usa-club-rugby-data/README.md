@@ -82,4 +82,4 @@ bun run test      # in this package
 bun run build     # dist/, ESM with declarations
 ```
 
-Releases are published from GitHub releases by `.github/workflows/publish.yml`.
+Releases are published from GitHub releases by `.github/workflows/publish.yml`, using npm trusted publishing (no stored token). The workflow stages the version; approve it with 2FA on npmjs.com to release it.

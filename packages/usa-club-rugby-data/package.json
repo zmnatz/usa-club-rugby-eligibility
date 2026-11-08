@@ -1,6 +1,6 @@
 {
   "name": "@zmnatz/usa-club-rugby-data",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "USA Club Rugby senior club teams, players and NCS eligibility from the Rugby Xplorer match record: typed readers for the nightly published data, a rate-limited CMS client, and the reproducible eligibility rules.",
   "keywords": [
     "rugby",
@@ -38,14 +38,13 @@
     }
   },
   "bin": {
-    "usa-club-rugby-data": "./dist/cli.js"
+    "usa-club-rugby-data": "dist/cli.js"
   },
   "engines": {
     "node": ">=20"
   },
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/cli.js",
