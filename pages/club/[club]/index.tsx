@@ -10,8 +10,8 @@ import {
 } from '@zmnatz/usa-club-rugby-data';
 import { readClubSnapshot, readFixtures, readIndex, type PublishedClub } from '@/utils/published';
 
-// Deployed pages pull live; dev uses the saved snapshot so working on the page
-// doesn't hit the CMS.
+// Deployed pages let a visitor check for newer matches; dev has only the saved
+// snapshot, so working on the page doesn't hit the CMS.
 const LIVE_RECORD = process.env.NODE_ENV === 'production';
 
 interface ClubPageProps {

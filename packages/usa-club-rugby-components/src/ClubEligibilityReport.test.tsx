@@ -1,7 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
-import { screen, waitFor, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { fixture, NAMES, renderClubReport, SEASON } from './__fixtures__/report.tsx';
+import type { PublishedClub } from '@zmnatz/usa-club-rugby-data';
+import {
+  club,
+  fixture,
+  fixtures,
+  inHost,
+  NAMES,
+  renderClubReport,
+  renderInHost,
+  saved,
+  SEASON,
+} from './__fixtures__/report.tsx';
+import { ClubEligibilityReport } from './ClubEligibilityReport.tsx';
 
 const realFetch = globalThis.fetch;
 let user: ReturnType<typeof userEvent.setup>;
@@ -156,6 +168,7 @@ describe('hiding columns', () => {
 
 describe('saved and live data', () => {
   const LIVE_GAME = fixture('l1', 'Harbor City MD3', '2026-10-05T17:00:00Z', { round: 'Round 4' });
+  const NIGHTLY_STAMP = 'Records last updated Oct 1, 2026, 6:00 AM UTC';
 
   const lineup = (id: string, name: string) => ({
     id: `${id}__9`,
@@ -178,45 +191,105 @@ describe('saved and live data', () => {
       }),
     );
 
-  it('shows the saved data while a live pull runs, then replaces it', async () => {
-    let answer: (response: Response) => void = () => {};
-    globalThis.fetch = (() => new Promise<Response>((resolve) => (answer = resolve))) as unknown as typeof fetch;
+  const checkButton = () => screen.getByRole('button', { name: 'Check for newer matches' });
 
+  /** Holds every CMS request open, for a test to answer. */
+  const holdRequests = () => {
+    const pending: ((response: Response) => void)[] = [];
+    globalThis.fetch = (() => new Promise<Response>((resolve) => pending.push(resolve))) as unknown as typeof fetch;
+    return pending;
+  };
+
+  const countRequests = () => {
+    const seen = { requests: 0 };
+    globalThis.fetch = (async () => {
+      seen.requests += 1;
+      return matchResponse();
+    }) as unknown as typeof fetch;
+    return seen;
+  };
+
+  it('shows when the saved records were last updated', async () => {
+    await renderClubReport({ live: true });
+    expect(screen.getByText(NIGHTLY_STAMP)).toBeTruthy();
+    expect(screen.getByText(/Nightly data/)).toBeTruthy();
+  });
+
+  it('asks the CMS nothing until a visitor asks', async () => {
+    const seen = countRequests();
     await renderClubReport({ live: true, extraFixtures: [LIVE_GAME] });
     await openD3();
-    expect(screen.getByText(/Nightly data/)).toBeTruthy();
+    expect(within(rowOf(NAMES.onTrack)).getByText('ON TRACK')).toBeTruthy();
+    expect(seen.requests).toBe(0);
+  });
+
+  it('offers no check when the host has not turned it on', async () => {
+    await renderClubReport();
+    expect(screen.queryByRole('button', { name: 'Check for newer matches' })).toBeNull();
+  });
+
+  it('keeps the saved data while a check runs, then replaces it and its timestamp', async () => {
+    const pending = holdRequests();
+    await renderClubReport({ live: true, extraFixtures: [LIVE_GAME] });
+    await openD3();
+
+    await user.click(checkButton());
+    expect(screen.getByText(/checking for newer matches/)).toBeTruthy();
+    expect((checkButton() as HTMLButtonElement).disabled).toBe(true);
     expect(within(rowOf(NAMES.onTrack)).getByText('ON TRACK')).toBeTruthy();
 
-    await waitFor(() => expect(screen.getByText(/checking for newer matches/)).toBeTruthy());
-    await waitFor(() => answer(matchResponse()));
+    await waitFor(() => expect(pending).toHaveLength(1));
+    pending[0](matchResponse());
 
     await waitFor(() => expect(screen.getByText(/Live data/)).toBeTruthy());
+    expect(screen.queryByText(NIGHTLY_STAMP)).toBeNull();
+    expect(screen.getByText(/^Records last updated /)).toBeTruthy();
     expect(screen.getByText(new RegExp(SEASON))).toBeTruthy();
     expect(within(rowOf(NAMES.onTrack)).getByText('ELIGIBLE')).toBeTruthy();
   });
 
-  it('keeps the saved data and says so when a live pull fails', async () => {
+  it('keeps the saved data and says so when a check fails', async () => {
     globalThis.fetch = (async () => new Response('{}', { status: 400 })) as unknown as typeof fetch;
 
     await renderClubReport({ live: true, extraFixtures: [LIVE_GAME] });
     await openD3();
+    await user.click(checkButton());
 
     expect(await screen.findByText(/The live pull failed/)).toBeTruthy();
-    expect(screen.getByText(/Nightly data/)).toBeTruthy();
+    expect(screen.getByText(NIGHTLY_STAMP)).toBeTruthy();
     expect(within(rowOf(NAMES.onTrack)).getByText('ON TRACK')).toBeTruthy();
   });
 
-  it('makes no requests when not pulling live', async () => {
-    let requests = 0;
-    globalThis.fetch = (async () => {
-      requests += 1;
-      return new Response('{}');
-    }) as unknown as typeof fetch;
+  it('says so when there is nothing newer', async () => {
+    const seen = countRequests();
+    await renderClubReport({ live: true });
+    await user.click(checkButton());
 
-    await renderClubReport();
-    await openD3();
-    await waitFor(() => expect(screen.queryByText(/checking for newer matches/)).toBeNull());
-    expect(requests).toBe(0);
+    expect(await screen.findByText(/no newer matches/)).toBeTruthy();
+    expect(screen.getByText(NIGHTLY_STAMP)).toBeTruthy();
+    expect(seen.requests).toBe(0);
+  });
+
+  it("doesn't carry one club's check to the next club", async () => {
+    const pending = holdRequests();
+    const other: PublishedClub = { key: 'other', name: 'Other Town', sides: club.sides };
+    const report = (shown: PublishedClub) => (
+      <ClubEligibilityReport club={shown} saved={saved} fixtures={[...fixtures, LIVE_GAME]} live />
+    );
+
+    const view = await renderInHost(report(club));
+    await user.click(checkButton());
+    await waitFor(() => expect(pending).toHaveLength(1));
+
+    view.rerender(inHost(report(other)));
+    await act(async () => {
+      pending[0](matchResponse());
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    });
+
+    expect(screen.getByText(/Nightly data/)).toBeTruthy();
+    expect(screen.queryByText(/checking for newer matches/)).toBeNull();
+    expect(screen.getByText(NIGHTLY_STAMP)).toBeTruthy();
   });
 });
 
