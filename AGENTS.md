@@ -34,5 +34,6 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 - `CONTEXT.md`: domain terms. Use them.
 - `docs/adr/`: decisions, including ones carried from the Rocky Gorge tool (000). Read before changing a rule, the nightly job or the package.
 - `docs/reproducing.md`: the pipeline from CMS to verdict and how to check each stage.
+- `docs/releasing.md`: releasing each npm package from a tagged GitHub release.
 - Keep `pages/methodology.mdx` in step with any change to the rules or data.
 - A change to the shape of the published JSON, or to an export of the package, is a breaking change to the npm package: bump its version. The same goes for the exports of the component package.

@@ -16,6 +16,8 @@ Each night a GitHub Action reads every senior club fixture from the Senior Club 
 
 The engine is published as [`@zmnatz/usa-club-rugby-data`](packages/usa-club-rugby-data/README.md): a typed client for the published teams, players and verdicts, the eligibility rules as pure functions, and a rate-limited CMS client.
 
+The screens are published as [`@zmnatz/usa-club-rugby-components`](packages/usa-club-rugby-components/README.md): React and MUI components for the club directory, eligibility report and player detail, for any app built on that package.
+
 ```ts
 import { createPublishedClient } from '@zmnatz/usa-club-rugby-data';
 const players = await createPublishedClient().players('rocky-gorge');
