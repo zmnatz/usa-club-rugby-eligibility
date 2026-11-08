@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { EligibilityStatusChip } from './EligibilityStatusChip';
+import { EligibilityStatusChip } from './EligibilityStatusChip.tsx';
 
 const chip = (eligible: boolean, pending: string[], cautions: string[]) =>
   renderToStaticMarkup(<EligibilityStatusChip player={{ eligible, pending, cautions }} />);

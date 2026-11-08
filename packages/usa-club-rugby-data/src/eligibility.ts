@@ -316,3 +316,21 @@ export function computeBreakdown(
     ignoredTeamNames: [...new Set(rows.map((row) => row.teamName).filter((name) => !teamNames.has(name)))],
   };
 }
+
+/** Where a player stands on a side, most urgent first. */
+export const VERDICT_STATUSES = ['ineligible', 'caution', 'on-track', 'eligible'] as const;
+
+export type VerdictStatus = (typeof VERDICT_STATUSES)[number];
+
+/** A verdict as one status. Ineligible outranks Caution, and Caution outranks On
+ *  Track, which a player can still recover from. */
+export function verdictStatus(player: Pick<PlayerEligibility, 'eligible' | 'pending' | 'cautions'>): VerdictStatus {
+  if (!player.eligible) return 'ineligible';
+  if (player.cautions.length > 0) return 'caution';
+  return player.pending.length > 0 ? 'on-track' : 'eligible';
+}
+
+/** A status's place in `VERDICT_STATUSES`, for sorting: lowest is most urgent. */
+export function verdictRank(player: Pick<PlayerEligibility, 'eligible' | 'pending' | 'cautions'>): number {
+  return VERDICT_STATUSES.indexOf(verdictStatus(player));
+}

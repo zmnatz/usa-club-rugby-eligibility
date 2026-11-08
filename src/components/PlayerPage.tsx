@@ -1,6 +1,6 @@
 import NextLink from 'next/link';
 import { Breadcrumbs, Link as MuiLink, Typography } from '@mui/material';
-import { EligibilityStatusChip } from '@/components/EligibilityStatusChip';
+import { EligibilityStatusChip } from '@zmnatz/usa-club-rugby-components';
 import { PlayerDetailBody } from '@/components/PlayerEligibilityDialog';
 import { Panel, Row, Section } from '@/theme';
 import { clubPath } from '@/utils/paths';

@@ -13,7 +13,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { EligibilityStatusChip } from '@/components/EligibilityStatusChip';
+import { EligibilityStatusChip } from '@zmnatz/usa-club-rugby-components';
 import {
   matchUrl,
   playerFixtures,

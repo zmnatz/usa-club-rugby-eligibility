@@ -10,7 +10,7 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 - `bun run test`, `bun run lint`, `bun run typecheck`
 - `bun run snapshot [--offline] [--full-history]`: see `docs/snapshots.md`.
 - `bun run verify`: recalculates `public/data` from `archive` and fails on any difference. Run it after any change to the rules or the calculation.
-- `bun run lib`: builds `packages/usa-club-rugby-data` to `dist/`. `dev`, `build` and `typecheck` do it first; `test` runs the package's tests and the component tests in `src/`.
+- `bun run lib`: builds both packages in `packages/` to their `dist/`. `dev`, `build`, `typecheck` and `test` do it first; `test` runs the data package's tests and the component tests in `src/` and `packages/usa-club-rugby-components/`.
 
 ## Structure
 
@@ -22,6 +22,7 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
   - `src/feeds.ts`, `src/archive.ts`, `src/live.ts`: the nightly pull. `src/api.ts`: CMS requests and the shared rate-limit gate.
   - `src/published.ts`: the client for the published data. Its file shapes are a public interface.
   - `src/node/`: the only filesystem code: `runSnapshot`, `verifyPublished`. `src/cli.ts` is the `usa-club-rugby-data` command.
+- `packages/usa-club-rugby-components/`: the eligibility UI, published to npm as `@zmnatz/usa-club-rugby-components`. React and MUI, with its peers supplied by the host. No Next.js imports or `@/` aliases (`src/boundaries.test.ts` fails on them), and no colours, defaults or copy for one club or union. Relative imports end in `.ts` or `.tsx`. See ADR 005.
 - `src/utils/published.ts`: reads the nightly data at build time for `getStaticPaths` and `getStaticProps`.
 - `pages/`: the report. `index.tsx` lists the clubs, `club/[club]/index.tsx` is one club's page at `/club/<club-key>`, `player/[player]/index.tsx` one player's at `/player/<cms-id>`, `csv.tsx` reads a Match Participation Report, and `methodology.mdx` explains the rules. Routes are ordinary paths, so they work on the static host.
 - `archive/`, `public/data/`: generated nightly. Never hand-edit; regenerate.
@@ -33,7 +34,7 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 - `docs/adr/`: decisions, including ones carried from the Rocky Gorge tool (000). Read before changing a rule, the nightly job or the package.
 - `docs/reproducing.md`: the pipeline from CMS to verdict and how to check each stage.
 - Keep `pages/methodology.mdx` in step with any change to the rules or data.
-- A change to the shape of the published JSON, or to an export of the package, is a breaking change to the npm package: bump its version.
+- A change to the shape of the published JSON, or to an export of the package, is a breaking change to the npm package: bump its version. The same goes for the exports of the component package.
 
 ## Agent skills
 
