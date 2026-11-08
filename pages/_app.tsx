@@ -3,20 +3,12 @@ import Head from 'next/head';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { MDXProvider } from '@mdx-js/react';
-import {
-  AppBar,
-  Box,
-  Container,
-  CssBaseline,
-  Link as MuiLink,
-  Toolbar,
-  Typography,
-} from '@mui/material';
+import { AppBar, CssBaseline, Link as MuiLink, Toolbar, Typography } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { AppCacheProvider } from '@mui/material-nextjs/v16-pagesRouter';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { mdxComponents } from '@/components/Mdx';
-import { theme } from '@/theme';
+import { BrandLink, Footer, Main, Shell, theme } from '@/theme';
 import { queryClient } from '@/utils/queryClient';
 
 const REPO_URL = 'https://github.com/zmnatz/usa-club-rugby-eligibility';
@@ -37,20 +29,14 @@ export default function App({ Component, pageProps }: AppProps) {
             <meta name="description" content={DESCRIPTION} />
             <title>USA Club Rugby Eligibility</title>
           </Head>
-          <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
+          <Shell>
             <AppBar position="static" color="primary" elevation={0}>
-              <Toolbar sx={{ gap: 2, flexWrap: 'wrap' }}>
-                <MuiLink
-                  component={NextLink}
-                  href="/"
-                  color="inherit"
-                  underline="none"
-                  sx={{ flexGrow: 1 }}
-                >
+              <Toolbar>
+                <BrandLink component={NextLink} href="/" color="inherit" underline="none">
                   <Typography variant="h6" component="span">
                     USA Club Rugby Eligibility
                   </Typography>
-                </MuiLink>
+                </BrandLink>
                 <MuiLink component={NextLink} href="/methodology" color="inherit">
                   Methodology
                 </MuiLink>
@@ -59,22 +45,15 @@ export default function App({ Component, pageProps }: AppProps) {
                 </MuiLink>
               </Toolbar>
             </AppBar>
-            <Container
-              component="main"
-              maxWidth={narrow ? 'md' : 'lg'}
-              sx={{ py: 3, flexGrow: 1 }}
-            >
+            <Main component="main" maxWidth={narrow ? 'md' : 'lg'}>
               <MDXProvider components={mdxComponents}>
                 <Component {...pageProps} />
               </MDXProvider>
-            </Container>
-            <Box
-              component="footer"
-              sx={{ py: 3, textAlign: 'center', color: 'text.secondary', typography: 'body2' }}
-            >
+            </Main>
+            <Footer>
               Not an official USA Rugby or USA Club Rugby tool. Data from Rugby Xplorer.
-            </Box>
-          </Box>
+            </Footer>
+          </Shell>
         </ThemeProvider>
       </QueryClientProvider>
     </AppCacheProvider>

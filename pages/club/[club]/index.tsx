@@ -49,7 +49,7 @@ export default function ClubPage({ club, saved, fixtures }: ClubPageProps) {
           content={`NCS player eligibility for ${club.name}, worked out from the Rugby Xplorer match record.`}
         />
       </Head>
-      <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
+      <Breadcrumbs aria-label="breadcrumb">
         <MuiLink component={NextLink} href="/" underline="hover" color="inherit">
           All clubs
         </MuiLink>
@@ -58,7 +58,7 @@ export default function ClubPage({ club, saved, fixtures }: ClubPageProps) {
       <Typography variant="h4" component="h1" gutterBottom>
         {club.name}
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+      <Typography variant="note">
         {club.sides.map((side) => side.teamName).join(' · ')}
       </Typography>
       <EligibilityReport source="record" club={club} saved={saved} fixtures={fixtures} />

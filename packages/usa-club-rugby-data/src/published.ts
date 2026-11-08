@@ -1,8 +1,9 @@
-import type { PublishedClubFile, PublishedFixturesFile } from './data.ts';
+import type { PublishedClubFile, PublishedFixturesFile, PublishedPlayersFile } from './data.ts';
 import type { Club, EligibilityBreakdown, EligibilityRules, PlayerEligibility } from './types.ts';
 import { computeBreakdown } from './eligibility.ts';
 import type { FeedFixture } from './feeds.ts';
 import { clubFixtures, type ParticipationSnapshot, participationRows, remainingMatches } from './participation.ts';
+import { buildPlayerIndex, clubContext, type PlayerClubEntry, type PlayerProfile, playerEntries, sortEntries } from './players.ts';
 import { DEFAULT_RULES } from './rules.ts';
 import { parseTeamSide, type TeamSide } from './teamSide.ts';
 
@@ -125,6 +126,33 @@ export function createPublishedClient({
     async eligibility(key: string, options: EligibilityOptions = {}): Promise<EligibilityBreakdown> {
       const [{ club: found, snapshot }, all] = await Promise.all([club(key), fixtures()]);
       return clubEligibility(snapshot, all, found, options);
+    },
+    /** Which clubs each player is in the record of, by CMS id. Not a published file: worked
+     *  out from every club's file, so it reads them all. */
+    async playerIndex(options: EligibilityOptions = {}): Promise<PublishedPlayersFile> {
+      const [{ clubs, season }, all] = await Promise.all([index(), fixtures()]);
+      const contexts = await Promise.all(
+        clubs.map(async (published) => {
+          const { snapshot } = await club(published.key);
+          return { club: published, breakdown: clubContext(published, snapshot, all, options).breakdown };
+        }),
+      );
+      return buildPlayerIndex(season, contexts);
+    },
+    /** A player from their CMS id: their verdict on every club side they're listed on, with
+     *  the fixtures behind each. Null when the id isn't in the published record (players
+     *  whose profile isn't public aren't). Reads every club to find them, so for many lookups
+     *  build the index once with `playerIndex`. */
+    async player(id: string, options: EligibilityOptions = {}): Promise<PlayerProfile | null> {
+      const found = (await this.playerIndex(options)).players[id];
+      if (!found) return null;
+      const all = await fixtures();
+      const entries: PlayerClubEntry[] = [];
+      for (const key of found.clubs) {
+        const { club: published, snapshot } = await club(key);
+        entries.push(...playerEntries(id, clubContext(published, snapshot, all, options), options));
+      }
+      return { id, name: found.name, clubs: sortEntries(entries) };
     },
     /** Every player with a verdict on each of a club's sides, one record per side. */
     async players(key: string, options: EligibilityOptions = {}): Promise<PlayerRecord[]> {

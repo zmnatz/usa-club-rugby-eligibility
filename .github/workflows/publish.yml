@@ -24,11 +24,10 @@ jobs:
           bun-version: 1.4.4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
       - run: bun install --frozen-lockfile
       - run: bun run test
       - run: bun run verify
-      # Staged publishing needs npm 11.15.0 or later; Node 22 ships an older one.
-      - run: npm install -g npm@latest
+      # Staged publishing needs npm 11.15.0 or later, which Node 26 ships.
       - run: npm stage publish
         working-directory: packages/usa-club-rugby-data

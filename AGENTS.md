@@ -23,7 +23,7 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
   - `src/published.ts`: the client for the published data. Its file shapes are a public interface.
   - `src/node/`: the only filesystem code: `runSnapshot`, `verifyPublished`. `src/cli.ts` is the `usa-club-rugby-data` command.
 - `src/utils/published.ts`: reads the nightly data at build time for `getStaticPaths` and `getStaticProps`.
-- `pages/`: the report. `index.tsx` lists the clubs, `[club].tsx` is one club's page at `/<club-key>`, `csv.tsx` reads a Match Participation Report, and `methodology.mdx` explains the rules. Routes are ordinary paths, so they work on the static host.
+- `pages/`: the report. `index.tsx` lists the clubs, `club/[club]/index.tsx` is one club's page at `/club/<club-key>`, `player/[player]/index.tsx` one player's at `/player/<cms-id>`, `csv.tsx` reads a Match Participation Report, and `methodology.mdx` explains the rules. Routes are ordinary paths, so they work on the static host.
 - `archive/`, `public/data/`: generated nightly. Never hand-edit; regenerate.
 - `notebooks/reproduce-eligibility.ipynb`: an independent Python recount of a club from `archive/`.
 

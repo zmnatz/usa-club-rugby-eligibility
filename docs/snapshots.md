@@ -11,7 +11,7 @@ The page is static. Its data is calculated each night by `usa-club-rugby-data sn
 | `public/data/fixtures.json` | The current season's fixtures | Yes |
 | `public/data/clubs/<club>.json` | One club's Match Participation rows, gaps and result ids | Yes |
 
-Each club's file becomes that club's page at `/<club-key>/` at build time, so a club's report can be linked to and shared. Pages that aren't a club (the home page, `csv` and `methodology`) keep their own paths; a club whose name would take one of those gets a `-club` suffix.
+Each club's file becomes that club's page at `/club/<club-key>/` at build time, and each player in any of them a page at `/player/<cms-id>/` (except players whose name is withheld; under no club, since players change clubs; the page has a section for each club they appear in), so a report can be linked to and shared. Player pages are built from `public/data` at build time (`src/utils/playerPages.ts` works out each player's verdict on every side they're listed for and the fixtures behind it, once per build process), so each page's HTML carries its own verdict and match table.
 
 ## What a night does
 
@@ -25,7 +25,7 @@ Each club's file becomes that club's page at `/<club-key>/` at build time, so a 
 
 Every request has to succeed or nothing is written, so a failed night leaves the previous data in place. The log ends with the number of requests, rate-limit waits and total time.
 
-A push to `main` only builds and deploys.
+A push to `main` only builds and deploys. The nightly job cannot push to `main` (it is protected), so it pushes a `snapshot/<run-id>` branch, opens a pull request and squash-merges it. This needs "Allow GitHub Actions to create and approve pull requests" under Settings > Actions > General. Pull requests made with `GITHUB_TOKEN` do not trigger other workflows, so any required status check must not be one that only runs on PRs, or the merge will wait forever (the job then falls back to auto-merge).
 
 ## Running it by hand
 

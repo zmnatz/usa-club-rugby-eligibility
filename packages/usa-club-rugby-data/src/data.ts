@@ -31,6 +31,14 @@ export interface PublishedClubFile extends ParticipationSnapshot {
   generatedAt: string;
 }
 
+/** Which clubs each player is in the record of, by CMS id, for finding a player from
+ *  their id. Not published: worked out from the club files by `buildPlayerIndex`, which
+ *  leaves out players whose profile isn't public. */
+export interface PublishedPlayersFile {
+  season: string;
+  players: Record<string, { name: string; clubs: string[] }>;
+}
+
 /** `archive/fixtures/<season>.json`: every senior club fixture that season by id. */
 export interface ArchiveFixturesFile {
   season: string;

@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react';
 import NextLink from 'next/link';
-import { Box, Link as MuiLink, Typography } from '@mui/material';
+import { Link as MuiLink, Typography } from '@mui/material';
+import { Pre, ScrollX } from '@/theme';
 
 // The methodology page is MDX, so its headings and links are mapped to the same
 // MUI type scale as the report pages.
@@ -9,13 +10,13 @@ export const mdxComponents = {
     <Typography component="h1" variant="h4" gutterBottom {...props} />
   ),
   h2: (props: ComponentProps<'h2'>) => (
-    <Typography component="h2" variant="h5" gutterBottom sx={{ mt: 4 }} {...props} />
+    <Typography component="h2" variant="section" {...props} />
   ),
   h3: (props: ComponentProps<'h3'>) => (
-    <Typography component="h3" variant="h6" gutterBottom sx={{ mt: 3 }} {...props} />
+    <Typography component="h3" variant="subsection" {...props} />
   ),
   p: (props: ComponentProps<'p'>) => (
-    <Typography component="p" variant="body1" sx={{ mb: 1.5 }} {...props} />
+    <Typography component="p" variant="paragraph" {...props} />
   ),
   a: ({ href, children, ...props }: ComponentProps<'a'>) => {
     const external =
@@ -35,11 +36,11 @@ export const mdxComponents = {
     );
   },
   table: (props: ComponentProps<'table'>) => (
-    <Box sx={{ overflowX: 'auto', my: 2 }}>
+    <ScrollX>
       <table {...props} />
-    </Box>
+    </ScrollX>
   ),
   pre: (props: ComponentProps<'pre'>) => (
-    <Box component="pre" sx={{ overflowX: 'auto' }} {...props} />
+    <Pre {...props} />
   ),
 };

@@ -13,7 +13,7 @@ export default function CsvPage() {
           content="Check a Rugby Xplorer Match Participation Report for any club against the NCS eligibility rules."
         />
       </Head>
-      <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
+      <Breadcrumbs aria-label="breadcrumb">
         <MuiLink component={NextLink} href="/" underline="hover" color="inherit">
           All clubs
         </MuiLink>
