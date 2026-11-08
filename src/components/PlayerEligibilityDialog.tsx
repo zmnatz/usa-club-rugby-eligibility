@@ -207,7 +207,7 @@ function PlayedRounds({ sides }: { sides: SideRounds[] }) {
         ))}
       {notPlayed.length > 0 && (
         <Block above={2}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="textSecondary">
             No matches played this season for {notPlayed.map(({ teamName }) => teamName).join(', ')}.
           </Typography>
         </Block>
@@ -307,17 +307,17 @@ export function PlayerDetailBody({ player, source, ownLabel, fixtures, footer }:
   return (
     <>
       {player.reasons.length > 0 && (
-        <Typography variant="body2" color="text.secondary" gutterBottom>
+        <Typography variant="body2" color="textSecondary" gutterBottom>
           {player.reasons.join(' · ')}
         </Typography>
       )}
       {player.cautions.length > 0 && (
-        <Typography variant="body2" color="text.secondary" gutterBottom>
+        <Typography variant="body2" color="textSecondary" gutterBottom>
           {player.cautions.join(' · ')}. {CAUTION_ADVICE}
         </Typography>
       )}
       {player.pending.length > 0 && (
-        <Typography variant="body2" color="text.secondary" gutterBottom>
+        <Typography variant="body2" color="textSecondary" gutterBottom>
           {player.pending.join(' · ')}
         </Typography>
       )}
@@ -336,7 +336,7 @@ export function PlayerDetailBody({ player, source, ownLabel, fixtures, footer }:
         <>
           <PlayedRounds sides={fixtures.sides} />
           <Block above={2}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="textSecondary">
               Open a report to check a line against Rugby Xplorer.
             </Typography>
           </Block>

@@ -46,7 +46,7 @@ export default function HomePage({ clubs, season, generatedAt }: HomeProps) {
       <Typography variant="h4" component="h1" gutterBottom>
         NCS Eligibility
       </Typography>
-      <Typography color="text.secondary" gutterBottom>
+      <Typography color="textSecondary" gutterBottom>
         Pick a club to see which players are eligible for the National Championship Series,
         counted from the lineups and substitutions entered in Rugby Xplorer for every senior club
         league and local playoff match. Super Regionals, National Championships, 7s, friendlies,
@@ -55,7 +55,7 @@ export default function HomePage({ clubs, season, generatedAt }: HomeProps) {
         track (experimental). <MuiLink component={NextLink} href="/methodology">How this
         report is worked out</MuiLink>.
       </Typography>
-      <Typography variant="body2" color="text.secondary" gutterBottom>
+      <Typography variant="body2" color="textSecondary" gutterBottom>
         {season} season · {clubs.length} clubs · data last changed {formatDateTime(generatedAt)}
       </Typography>
       <Row gap={2} below={3}>

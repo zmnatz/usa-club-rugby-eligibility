@@ -22,7 +22,7 @@ export const theme = createTheme({
         },
         // The paragraph that introduces a page.
         {
-          props: { variant: 'body1', gutterBottom: true, color: 'text.secondary' },
+          props: { variant: 'body1', gutterBottom: true, color: 'textSecondary' },
           style: ({ theme }) => ({ marginBottom: theme.spacing(2), maxWidth: 840 }),
         },
         // Prose headings.

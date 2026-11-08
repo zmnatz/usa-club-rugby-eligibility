@@ -654,7 +654,7 @@ export function EligibilityReport(props: EligibilityReportProps) {
 
   return (
     <>
-      <Typography color="text.secondary" gutterBottom>
+      <Typography color="textSecondary" gutterBottom>
         {source === 'record'
           ? `Counted from the lineups and substitutions entered in Rugby Xplorer for every
              senior club league and local playoff match. Fixtures still to play before Super
@@ -710,7 +710,7 @@ export function EligibilityReport(props: EligibilityReportProps) {
       )}
 
       {oneSide && (
-        <Typography variant="body2" color="text.secondary" gutterBottom>
+        <Typography variant="body2" color="textSecondary" gutterBottom>
           Only one of this club&apos;s sides is in the data, so it is assessed as a one-side club:
           two qualifying matches, and no other side to compare.
         </Typography>
