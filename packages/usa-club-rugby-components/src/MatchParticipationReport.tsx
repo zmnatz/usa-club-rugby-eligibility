@@ -3,14 +3,14 @@ import {
   Alert,
   Autocomplete,
   Button,
+  Card,
+  CardContent,
   Dialog,
   DialogContent,
   DialogTitle,
   Link as MuiLink,
-  Paper,
   Stack,
   TextField,
-  Toolbar,
   Typography,
 } from '@mui/material';
 import {
@@ -24,6 +24,7 @@ import {
   remainingMatches,
 } from '@zmnatz/usa-club-rugby-data';
 import { EligibilityReportView } from './EligibilityReportView.tsx';
+import { wrapRow } from './layout.ts';
 import { useEligibilityLinks } from './links.tsx';
 
 interface CsvFormProps {
@@ -38,9 +39,9 @@ interface CsvFormProps {
 
 function CsvForm({ csvText, fileName, canClear, onFile, onTextChange, onRun, onClear }: CsvFormProps) {
   return (
-    <>
-      <Toolbar variant="block">
-        <Button variant="outlined" component="label" size="large">
+    <Stack spacing={2} useFlexGap>
+      <Stack direction="row" spacing={2} useFlexGap sx={wrapRow}>
+        <Button variant="outlined" component="label">
           Choose CSV file…
           <input type="file" accept=".csv,text/csv" hidden onChange={onFile} />
         </Button>
@@ -53,8 +54,8 @@ function CsvForm({ csvText, fileName, canClear, onFile, onTextChange, onRun, onC
           value={csvText}
           onChange={(event) => onTextChange(event.target.value)}
         />
-      </Toolbar>
-      <Stack direction="row" spacing={2}>
+      </Stack>
+      <Stack direction="row" spacing={2} useFlexGap sx={wrapRow}>
         <Button variant="contained" onClick={onRun} disabled={!csvText.trim()}>
           Run Breakdown
         </Button>
@@ -67,7 +68,7 @@ function CsvForm({ csvText, fileName, canClear, onFile, onTextChange, onRun, onC
           </Typography>
         )}
       </Stack>
-    </>
+    </Stack>
   );
 }
 
@@ -147,38 +148,43 @@ export function MatchParticipationReport({ fixtures }: MatchParticipationReportP
         </MuiLink>
       </Typography>
 
-      <Toolbar variant="block">
-        {clubs.length > 1 && (
-          <Autocomplete
-            size="small"
-            options={clubs}
-            value={club}
-            onChange={(_, next) => {
-              setCsvClubName(next?.name ?? '');
-              setActiveSide(0);
-            }}
-            getOptionLabel={(option) => option.name}
-            isOptionEqualToValue={(option, value) => option.name === value.name}
-            renderInput={(params) => <TextField {...params} label={`Club in this report (${clubs.length})`} />}
-          />
-        )}
-      </Toolbar>
-
-      {!breakdown && (
-        <Paper component="section" sx={{ mb: 4 }}>
-          <CsvForm
-            csvText={csvText}
-            fileName={fileName}
-            canClear={Boolean(csvText)}
-            onFile={handleFile}
-            onTextChange={handleTextChange}
-            onRun={handleRun}
-            onClear={handleClear}
-          />
-        </Paper>
+      {clubs.length > 1 && (
+        <Autocomplete
+          size="small"
+          sx={{ maxWidth: 420, mb: 2 }}
+          options={clubs}
+          value={club}
+          onChange={(_, next) => {
+            setCsvClubName(next?.name ?? '');
+            setActiveSide(0);
+          }}
+          getOptionLabel={(option) => option.name}
+          isOptionEqualToValue={(option, value) => option.name === value.name}
+          renderInput={(params) => <TextField {...params} label={`Club in this report (${clubs.length})`} />}
+        />
       )}
 
-      {error && <Alert severity="error">{error}</Alert>}
+      {!breakdown && (
+        <Card component="section" sx={{ mb: 4 }}>
+          <CardContent>
+            <CsvForm
+              csvText={csvText}
+              fileName={fileName}
+              canClear={Boolean(csvText)}
+              onFile={handleFile}
+              onTextChange={handleTextChange}
+              onRun={handleRun}
+              onClear={handleClear}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
       {!breakdown && !error && (
         <Typography color="text.secondary">Upload a report and run the breakdown to see player eligibility.</Typography>

@@ -1,5 +1,5 @@
 import NextLink from 'next/link';
-import { Breadcrumbs, Link as MuiLink, Paper, Stack, Toolbar, Typography } from '@mui/material';
+import { Breadcrumbs, Card, CardContent, Link as MuiLink, Stack, Typography } from '@mui/material';
 import { EligibilityStatusChip, PlayerDetailBody } from '@zmnatz/usa-club-rugby-components';
 import { clubPath } from '@/utils/paths';
 import type { PlayerClubEntry, PlayerProfile } from '@zmnatz/usa-club-rugby-data';
@@ -8,7 +8,7 @@ import type { PlayerClubEntry, PlayerProfile } from '@zmnatz/usa-club-rugby-data
 function PlayerInClub({ entry }: { entry: PlayerClubEntry }) {
   return (
     <section>
-      <Toolbar variant="block">
+      <Stack direction="row" spacing={2} useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'center', mb: 1 }}>
         <Typography variant="h5" component="h2">
           <MuiLink component={NextLink} href={clubPath(entry.clubKey)} underline="hover">
             {entry.clubName}
@@ -21,15 +21,17 @@ function PlayerInClub({ entry }: { entry: PlayerClubEntry }) {
             CMS ID {entry.player.playerId}
           </Typography>
         )}
-      </Toolbar>
-      <Paper component="section">
-        <PlayerDetailBody
-          player={entry.player}
-          source="record"
-          ownLabel={entry.sideLabel}
-          fixtures={entry.fixtures}
-        />
-      </Paper>
+      </Stack>
+      <Card component="section">
+        <CardContent>
+          <PlayerDetailBody
+            player={entry.player}
+            source="record"
+            ownLabel={entry.sideLabel}
+            fixtures={entry.fixtures}
+          />
+        </CardContent>
+      </Card>
     </section>
   );
 }
@@ -54,7 +56,7 @@ export function PlayerPage({ data }: { data: PlayerProfile }) {
           Listed {data.clubs.length} times in the record, for different clubs or sides. Each is assessed on its own.
         </Typography>
       )}
-      <Stack spacing={4}>
+      <Stack spacing={4} useFlexGap>
         {data.clubs.map((entry) => (
           <PlayerInClub key={`${entry.clubKey}-${entry.player.teamName}`} entry={entry} />
         ))}

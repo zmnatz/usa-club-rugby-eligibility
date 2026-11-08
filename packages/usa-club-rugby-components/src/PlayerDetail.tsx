@@ -29,6 +29,7 @@ import {
 
 import { formatDate } from './dates.ts';
 import { EligibilityStatusChip } from './EligibilityStatusChip.tsx';
+import { wrapRow } from './layout.ts';
 import { useEligibilityLinks } from './links.tsx';
 
 /** Where a report's rows came from. Only a CSV report carries USA IDs and
@@ -38,7 +39,7 @@ export type ReportSource = 'record' | 'csv';
 /** One labeled fact row in the player detail dialog. */
 function Fact({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <Stack direction="row" spacing={2} sx={{ flexWrap: 'nowrap', justifyContent: 'space-between', py: 0.5 }}>
+    <Stack direction="row" spacing={2} sx={{ justifyContent: 'space-between', py: 0.5 }}>
       <Typography variant="body2" color="text.secondary">
         {label}
       </Typography>
@@ -141,7 +142,7 @@ function TeamRounds({
 }) {
   const counted = rounds.filter((round) => round.counted).length;
   return (
-    <div>
+    <Stack spacing={1} useFlexGap>
       <Typography variant="subtitle2">
         {teamName}: {counted} counted {counted === 1 ? 'match' : 'matches'}
       </Typography>
@@ -197,7 +198,7 @@ function TeamRounds({
           </TableBody>
         </Table>
       </TableContainer>
-    </div>
+    </Stack>
   );
 }
 
@@ -224,7 +225,7 @@ function PlayedRounds({ sides, clubSlug }: { sides: SideRounds[]; clubSlug: stri
 /** The fixtures behind an on-track verdict. */
 function PossibleFixtures({ possible, clubSlug }: { possible: PossibleFixture[]; clubSlug: string | null }) {
   return (
-    <div>
+    <Stack spacing={1} useFlexGap>
       <Typography variant="subtitle2">Possible fixtures: {possible.length} left</Typography>
       <Typography variant="caption" color="text.secondary">
         Why this player is on track. They could still reach the minimum in these fixtures, though
@@ -261,7 +262,7 @@ function PossibleFixtures({ possible, clubSlug }: { possible: PossibleFixture[];
           </TableBody>
         </Table>
       </TableContainer>
-    </div>
+    </Stack>
   );
 }
 
@@ -286,7 +287,7 @@ export function PlayerDetailHeading({
   component = 'span',
 }: Pick<PlayerDetailProps, 'player' | 'source' | 'showCmsId'> & { component?: 'span' | 'h1' }) {
   return (
-    <Stack direction="row" spacing={1}>
+    <Stack direction="row" spacing={1} useFlexGap sx={wrapRow}>
       <Typography variant={component === 'h1' ? 'h4' : 'h6'} component={component}>
         {player.name}
       </Typography>
@@ -312,7 +313,7 @@ export const CAUTION_ADVICE =
 /** Everything about one player's verdict, shared by the dialog and the player page. */
 export function PlayerDetailBody({ player, source, ownLabel, fixtures, clubSlug = null, footer }: PlayerDetailProps) {
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} useFlexGap>
       {player.reasons.length > 0 && (
         <Typography variant="body2" color="textSecondary">
           {player.reasons.join(' · ')}
@@ -358,10 +359,10 @@ export function PlayerDetailBody({ player, source, ownLabel, fixtures, clubSlug 
               </Typography>
             </div>
           ))}
-          <div>
+          <Stack spacing={1} useFlexGap>
             <Typography variant="subtitle2">Rounds by competition</Typography>
             <RoundsMatrix rows={player.rows} />
-          </div>
+          </Stack>
         </>
       )}
       {footer}

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Alert, Button, Link as MuiLink, Toolbar, Typography } from '@mui/material';
+import { Alert, Button, Link as MuiLink, Stack, Typography } from '@mui/material';
 import {
   type ClubRecord,
   clubGaps,
@@ -16,6 +16,7 @@ import {
 } from '@zmnatz/usa-club-rugby-data';
 import { formatDateTime } from './dates.ts';
 import { EligibilityReportView } from './EligibilityReportView.tsx';
+import { spreadRow } from './layout.ts';
 import { useEligibilityLinks } from './links.tsx';
 
 /** A visitor's check for matches newer than the saved Match Record. */
@@ -97,50 +98,52 @@ export function ClubEligibilityReport({ club, saved, fixtures, live = false, clu
         </MuiLink>
       </Typography>
 
-      <Toolbar variant="spread">
-        <div>
-          {shownAsOf && (
-            <Typography variant="subtitle1" component="p">
-              Records last updated {formatDateTime(shownAsOf)}
+      <Stack spacing={2} useFlexGap>
+        <Stack direction="row" spacing={2} useFlexGap sx={spreadRow}>
+          <div>
+            {shownAsOf && (
+              <Typography variant="subtitle1" component="p">
+                Records last updated {formatDateTime(shownAsOf)}
+              </Typography>
+            )}
+            <Typography variant="body2" color="text.secondary">
+              {snapshot.season} season · {shownSource === 'live' ? 'Live data' : 'Nightly data'}
+              {checking && ' · checking for newer matches…'}
+              {nothingNewer && ' · no newer matches'}
             </Typography>
+          </div>
+          {live && (
+            <Button variant="outlined" size="small" onClick={handleCheck} disabled={checking}>
+              Check for newer matches
+            </Button>
           )}
-          <Typography variant="body2" color="text.secondary">
-            {snapshot.season} season · {shownSource === 'live' ? 'Live data' : 'Nightly data'}
-            {checking && ' · checking for newer matches…'}
-            {nothingNewer && ' · no newer matches'}
-          </Typography>
-        </div>
-        {live && (
-          <Button variant="outlined" size="small" onClick={handleCheck} disabled={checking}>
-            Check for newer matches
-          </Button>
+        </Stack>
+
+        {checkFailed && (
+          <Alert severity="warning">
+            Couldn&apos;t check for matches since the nightly data, so this shows the nightly data.
+          </Alert>
         )}
-      </Toolbar>
 
-      {checkFailed && (
-        <Alert severity="warning">
-          Couldn&apos;t check for matches since the nightly data, so this shows the nightly data.
-        </Alert>
-      )}
+        {clubRecord?.liveFailed && (
+          <Alert severity="warning">
+            The live pull failed, so this report uses saved data and may miss recent matches.
+          </Alert>
+        )}
 
-      {clubRecord?.liveFailed && (
-        <Alert severity="warning">
-          The live pull failed, so this report uses saved data and may miss recent matches.
-        </Alert>
-      )}
-
-      <EligibilityReportView
-        source="record"
-        club={club}
-        breakdown={breakdown}
-        gaps={gaps}
-        record={playerRecord}
-        season={snapshot.season}
-        playerPages
-        clubSlug={clubSlug}
-        activeSide={activeSide}
-        onActiveSideChange={setActiveSide}
-      />
+        <EligibilityReportView
+          source="record"
+          club={club}
+          breakdown={breakdown}
+          gaps={gaps}
+          record={playerRecord}
+          season={snapshot.season}
+          playerPages
+          clubSlug={clubSlug}
+          activeSide={activeSide}
+          onActiveSideChange={setActiveSide}
+        />
+      </Stack>
     </>
   );
 }

@@ -19,4 +19,4 @@ export { ClubEligibilityReport, type ClubEligibilityReportProps } from './ClubEl
 export { EligibilityReportView, type EligibilityReportViewProps } from './EligibilityReportView.tsx';
 export { MatchParticipationReport, type MatchParticipationReportProps } from './MatchParticipationReport.tsx';
 export { SkipToFirstPlayer } from './SkipToFirstPlayer.tsx';
-export { eligibilityComponents } from './theme.ts';
+import './primitives.tsx';

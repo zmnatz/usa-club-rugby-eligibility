@@ -1,5 +1,15 @@
 import type { ComponentProps, ComponentType } from 'react';
-import { styled } from '@mui/material/styles';
+import type { CSSObject } from '@emotion/react';
+import { styled, type Theme } from '@mui/material/styles';
+
+type NamedOverrides = { styleOverrides?: { root?: CSSObject | ((args: { theme: Theme }) => CSSObject) } };
+
+declare module '@mui/material/styles' {
+  interface Components<Theme = unknown> {
+    EligibilityClubList?: NamedOverrides;
+    EligibilitySkipLink?: NamedOverrides;
+  }
+}
 
 // The only elements MUI has no component for. Each has a theme name, so a host can
 // override it like any MUI component, and an explicit type, so the package's

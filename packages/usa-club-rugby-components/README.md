@@ -1,6 +1,6 @@
 # @zmnatz/usa-club-rugby-components
 
-React and MUI components for USA Club Rugby **NCS eligibility**: the club directory, a club's eligibility report, player detail, and a check of a Rugby Xplorer Match Participation Report. They sit on [`@zmnatz/usa-club-rugby-data`](https://www.npmjs.com/package/@zmnatz/usa-club-rugby-data), and work under any MUI theme that includes their layout, and any router.
+React and MUI components for USA Club Rugby **NCS eligibility**: the club directory, a club's eligibility report, player detail, and a check of a Rugby Xplorer Match Participation Report. They sit on [`@zmnatz/usa-club-rugby-data`](https://www.npmjs.com/package/@zmnatz/usa-club-rugby-data), and work under any MUI theme and any router.
 
 > A guide, not an official tool. The Rugby Xplorer Match Participation Report is the official count, and registration isn't checked.
 
@@ -54,22 +54,9 @@ A route is any function returning a URL, so query strings work: `player: (id) =>
 
 ### The theme
 
-Colours and type come from your MUI `ThemeProvider`. The package's layout is a set of overrides of standard MUI components, so add it to your theme, or the screens lose their spacing:
+Colours, type and shapes come from your MUI `ThemeProvider`, or from MUI's default theme if there isn't one. No extra theme setup is needed: the layout is on the components, so overriding MUI components in your theme restyles the screens without breaking them.
 
-```tsx
-import { createTheme } from '@mui/material/styles';
-import { eligibilityComponents } from '@zmnatz/usa-club-rugby-components';
-
-const theme = createTheme({
-  components: {
-    ...eligibilityComponents,
-    // Yours go after, and replace the package's for that component.
-    MuiAlert: { styleOverrides: { root: { marginBottom: 8 } } },
-  },
-});
-```
-
-The overrides apply to those components throughout your app. The club list and skip link have no MUI equivalent: override them as `EligibilityClubList` and `EligibilitySkipLink`.
+The club list and skip link have no MUI equivalent: override them as `EligibilityClubList` and `EligibilitySkipLink`.
 
 ## Components
 
