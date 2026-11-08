@@ -44,7 +44,7 @@ import {
   PlainList,
   Row,
 } from '@/theme';
-import { EligibilityStatusChip } from '@/components/EligibilityStatusChip';
+import { EligibilityStatusChip } from '@zmnatz/usa-club-rugby-components';
 import {
   type Club,
   clubGaps,
@@ -70,6 +70,7 @@ import {
   remainingMatches,
   sameNamePlayers,
   sharedNames,
+  verdictRank,
 } from '@zmnatz/usa-club-rugby-data';
 import { loadFixtures } from '@/utils/data';
 import { playerPath } from '@/utils/paths';
@@ -145,9 +146,7 @@ function sortValue(player: PlayerEligibility, key: SortKey): string | number {
     case 'participation':
       return player.participation;
     case 'status':
-      if (!player.eligible) return 0;
-      if (player.cautions.length > 0) return 1;
-      return player.pending.length > 0 ? 2 : 3;
+      return verdictRank(player);
     case 'reasons':
       return player.reasons.length + player.cautions.length + player.pending.length;
     default:

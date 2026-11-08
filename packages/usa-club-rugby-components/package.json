@@ -1,0 +1,60 @@
+{
+  "name": "@zmnatz/usa-club-rugby-components",
+  "version": "0.1.0",
+  "description": "React and MUI components for USA Club Rugby NCS eligibility: the club directory, eligibility report and player detail, for any app using @zmnatz/usa-club-rugby-data.",
+  "keywords": [
+    "rugby",
+    "usa-club-rugby",
+    "rugby-xplorer",
+    "eligibility",
+    "ncs",
+    "react",
+    "mui"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zmnatz/usa-club-rugby-eligibility.git",
+    "directory": "packages/usa-club-rugby-components"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "^19.2.8",
+    "@mui/material": "^9.3.1",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@tanstack/react-query": "^5.101.4",
+    "@zmnatz/usa-club-rugby-data": "^0.4.0"
+  },
+  "devDependencies": {
+    "react": "^19.2.8",
+    "@mui/material": "^9.3.1",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@tanstack/react-query": "^5.101.4",
+    "@zmnatz/usa-club-rugby-data": "workspace:*",
+    "@types/bun": "^1.4.4",
+    "@types/react": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}
