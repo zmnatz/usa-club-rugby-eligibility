@@ -1,7 +1,7 @@
 name: Snapshot and deploy
 
 # Nightly: refresh the raw match archive from the CMS, recalculate the published
-# data, commit both if anything changed, then build and deploy GitHub Pages.
+# data, open and merge a pull request if anything changed, then build and deploy GitHub Pages.
 # A push to main redeploys without touching the CMS. See docs/snapshots.md.
 on:
   schedule:
@@ -21,6 +21,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
   pages: write
   id-token: write
 
@@ -43,6 +44,10 @@ jobs:
         with:
           bun-version: 1.4.4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
       - run: bun install --frozen-lockfile
 
       - name: Refresh the archive and published data
@@ -51,7 +56,9 @@ jobs:
       - name: Check the published data reproduces from the archive
         run: bun run verify
 
-      - name: Commit changes to main
+      - name: Open a pull request and merge it
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git add archive public/data
           if git diff --cached --quiet; then
@@ -60,10 +67,17 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # main is protected: changes go through a pull request
+          branch="snapshot/${{ github.run_id }}"
+          git checkout -b "$branch"
           git commit -m "Nightly snapshot update"
-          # main may have moved during the run
-          git pull --rebase origin main
-          git push origin HEAD:main
+          git push origin "$branch"
+          url=$(gh pr create --base main --head "$branch" \
+            --title "Nightly snapshot update" \
+            --body "Automated refresh of \`archive\` and \`public/data\` from the nightly snapshot.")
+          # Merge now so the deploy job below builds the new data; fall back to
+          # auto-merge if required checks are still pending.
+          gh pr merge "$url" --squash --delete-branch || gh pr merge "$url" --squash --delete-branch --auto
 
   deploy:
     name: Build and deploy
@@ -82,6 +96,10 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
 
       - run: bun install --frozen-lockfile
       - run: bun run test
