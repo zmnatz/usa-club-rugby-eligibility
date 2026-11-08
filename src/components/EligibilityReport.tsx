@@ -85,7 +85,14 @@ const LIVE_RECORD_STALE_MS = 10 * 60 * 1000;
 /** A club's page: its saved match record and fixtures, from the nightly data at
  *  build time, topped up live. A CSV page: whatever report is uploaded. */
 export type EligibilityReportProps =
-  | { source: 'record'; club: PublishedClub; saved: ParticipationSnapshot; fixtures: FeedFixture[] }
+  | {
+      source: 'record';
+      club: PublishedClub;
+      saved: ParticipationSnapshot;
+      fixtures: FeedFixture[];
+      /** Top the saved data up from the CMS. Defaults to on in production builds. */
+      live?: boolean;
+    }
   | { source: 'csv' };
 
 type StatusFilter = 'all' | 'eligible' | 'caution' | 'ineligible';
@@ -546,7 +553,7 @@ export function EligibilityReport(props: EligibilityReportProps) {
     queryFn: () =>
       props.source === 'record'
         ? loadClubRecord(props.club, {
-            live: LIVE_RECORD,
+            live: props.live ?? LIVE_RECORD,
             fixtures: props.fixtures,
             fetchMatch: fetchMatchCentre,
             loadSaved: async () => props.saved,
