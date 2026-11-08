@@ -78,6 +78,10 @@ export interface PlayerEligibility {
   /** Matches an eligible player still needs by Super Regionals; empty when the
    *  minimum is already met. These players are "on track". */
   pending: string[];
+  /** How one more upper-side match would end an eligible player's eligibility
+   *  for this side for the rest of the season; empty otherwise. These players
+   *  are in "Caution". */
+  cautions: string[];
 }
 
 /** One side's verdicts and summary. */
@@ -98,6 +102,8 @@ export interface DivisionSummary {
   eligible: number;
   /** How many of the eligible players still need matches to reach a minimum. */
   onTrack: number;
+  /** How many of the eligible players are in Caution. */
+  caution: number;
   /** Distinct competitions this side's roster spans, sorted. */
   competitions: string[];
 }

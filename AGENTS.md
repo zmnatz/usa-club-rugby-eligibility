@@ -10,7 +10,7 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 - `bun run test`, `bun run lint`, `bun run typecheck`
 - `bun run snapshot [--offline] [--full-history]`: see `docs/snapshots.md`.
 - `bun run verify`: recalculates `public/data` from `archive` and fails on any difference. Run it after any change to the rules or the calculation.
-- `bun run lib`: builds `packages/usa-club-rugby-data` to `dist/`. `dev`, `build` and `typecheck` do it first; `test` runs the package's tests.
+- `bun run lib`: builds `packages/usa-club-rugby-data` to `dist/`. `dev`, `build` and `typecheck` do it first; `test` runs the package's tests and the component tests in `src/`.
 
 ## Structure
 

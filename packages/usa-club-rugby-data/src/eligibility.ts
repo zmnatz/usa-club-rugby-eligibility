@@ -139,8 +139,11 @@ function evaluate(
     rosters.slice(index).map((roster) => remaining[roster.side.teamName] ?? 0),
   );
 
+  const fixturesKnown = rosters.slice(index).every((roster) => remaining[roster.side.teamName] !== undefined);
+
   const reasons: string[] = [];
   const pending: string[] = [];
+  const cautions: string[] = [];
 
   // A two-match minimum is met if the player can still reach it by Super
   // Regionals (Reg 3.5.1(a)); see docs/adr/008-eligibility-rules.md.
@@ -165,10 +168,18 @@ function evaluate(
         reasons.push(
           `Played ${count} ${rosters[aboveIndex].side.label} matches — playing ${rules.upperMatchLimit} for an upper side loses ${own.label} eligibility`,
         );
+      } else if (count === rules.upperMatchLimit - 1) {
+        cautions.push(
+          `One more ${rosters[aboveIndex].side.label} match (${count} played) loses ${own.label} eligibility for the rest of the season`,
+        );
       }
     }
     if (atOrBelow < sum(above)) {
       reasons.push(`Upper-side participation (${sum(above)}) exceeds ${ownLabel} participation (${atOrBelow})`);
+    } else if (atOrBelow === sum(above) && fixturesLeft === 0 && fixturesKnown) {
+      cautions.push(
+        `One more upper-side match loses ${own.label} eligibility for the rest of the season (level at ${atOrBelow} with no ${ownLabel} fixtures left)`,
+      );
     }
   }
 
@@ -194,6 +205,7 @@ function evaluate(
     eligible: reasons.length === 0,
     reasons,
     pending,
+    cautions: reasons.length === 0 ? cautions : [],
   };
 }
 
@@ -296,6 +308,7 @@ export function computeBreakdown(
           total: players.length,
           eligible: players.filter((player) => player.eligible).length,
           onTrack: players.filter((player) => player.eligible && player.pending.length > 0).length,
+          caution: players.filter((player) => player.cautions.length > 0).length,
           competitions: [...roster.competitions].sort(),
         },
       };

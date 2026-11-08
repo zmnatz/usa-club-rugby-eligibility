@@ -80,6 +80,29 @@ describe('fixtures still to play with more than two sides', () => {
   });
 });
 
+describe('Caution with more than two sides', () => {
+  const sides = [1, 2, 3].map(side);
+  const noFixtures = { 'Club MD1': 0, 'Club MD2': 0, 'Club MD3': 0 };
+  const cautionsBySide = (counts: number[]) =>
+    computeBreakdown(sides.map((item, index) => row(item.teamName, counts[index])), sides, rules, noFixtures).sides.map(
+      (item) => item.players[0].cautions,
+    );
+
+  it('applies the limit to each upper side separately', () => {
+    expect(cautionsBySide([1, 3, 5])).toEqual([
+      [],
+      [],
+      ['One more D2 match (3 played) loses D3 eligibility for the rest of the season'],
+    ]);
+  });
+
+  it("counts every side at or below when comparing a middle side's tie", () => {
+    expect(cautionsBySide([2, 2, 0])[1]).toEqual([
+      'One more upper-side match loses D2 eligibility for the rest of the season (level at 2 with no D2 or lower fixtures left)',
+    ]);
+  });
+});
+
 describe('clubsInRows', () => {
   it("finds a CSV report's club and sides from its team names, for any club", () => {
     const rows = ['Austin Blacks MD3', 'Austin Blacks MD1', 'Austin Blacks MD2'].map((name) => row(name, 1));

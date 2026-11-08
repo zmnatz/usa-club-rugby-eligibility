@@ -294,6 +294,10 @@ export function PlayerDetailHeading({
   );
 }
 
+/** The advice that goes with Caution: a match missing from this report could change it. */
+export const CAUTION_ADVICE =
+  'Experimental: check the official Rugby Xplorer record for matches not counted here, as one could change this.';
+
 /** Everything about one player's verdict, shared by the dialog and the player page. */
 export function PlayerDetailBody({ player, source, ownLabel, fixtures, footer }: PlayerDetailProps) {
   return (
@@ -301,6 +305,11 @@ export function PlayerDetailBody({ player, source, ownLabel, fixtures, footer }:
       {player.reasons.length > 0 && (
         <Typography variant="note" color="error">
           {player.reasons.join(' · ')}
+        </Typography>
+      )}
+      {player.cautions.length > 0 && (
+        <Typography variant="note" color="warning">
+          {player.cautions.join(' · ')}. {CAUTION_ADVICE}
         </Typography>
       )}
       {player.pending.length > 0 && (

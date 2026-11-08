@@ -29,6 +29,7 @@ import {
   DialogTitle,
 } from '@mui/material';
 import {
+  CAUTION_ADVICE,
   PlayerEligibilityDialog,
   type ReportSource,
 } from '@/components/PlayerEligibilityDialog';
@@ -87,7 +88,7 @@ export type EligibilityReportProps =
   | { source: 'record'; club: PublishedClub; saved: ParticipationSnapshot; fixtures: FeedFixture[] }
   | { source: 'csv' };
 
-type StatusFilter = 'all' | 'eligible' | 'ineligible';
+type StatusFilter = 'all' | 'eligible' | 'caution' | 'ineligible';
 
 /** A fixed column, or `other:<label>` for another side's participation. */
 type SortKey =
@@ -137,9 +138,11 @@ function sortValue(player: PlayerEligibility, key: SortKey): string | number {
     case 'participation':
       return player.participation;
     case 'status':
-      return player.eligible ? (player.pending.length > 0 ? 1 : 2) : 0;
+      if (!player.eligible) return 0;
+      if (player.cautions.length > 0) return 1;
+      return player.pending.length > 0 ? 2 : 3;
     case 'reasons':
-      return player.reasons.length + player.pending.length;
+      return player.reasons.length + player.cautions.length + player.pending.length;
     default:
       return otherSideCount(player, key);
   }
@@ -155,7 +158,7 @@ interface DivisionTableProps {
   record: PlayerRecordInput | null;
   /** Whether the players have pages of their own; a CSV report's don't. */
   playerPages: boolean;
-  summary: { total: number; eligible: number; onTrack: number };
+  summary: { total: number; eligible: number; onTrack: number; caution: number };
   visibleCount: number;
   filtered: boolean;
   hiddenColumns: string[];
@@ -200,7 +203,7 @@ function renderCell(player: PlayerEligibility, key: SortKey, source: ReportSourc
     case 'reasons':
       return player.reasons.length === 0 ? (
         <Typography variant="body2" color="text.secondary">
-          {player.pending.join(' · ') || '—'}
+          {[...player.cautions, ...player.pending].join(' · ') || '—'}
         </Typography>
       ) : (
         <Typography variant="body2">
@@ -281,12 +284,13 @@ function DivisionTable({
           >
             <ToggleButton value="all">All</ToggleButton>
             <ToggleButton value="eligible">Eligible</ToggleButton>
+            <ToggleButton value="caution">Caution</ToggleButton>
             <ToggleButton value="ineligible">Ineligible</ToggleButton>
           </ToggleButtonGroup>
           <Chip
             size="small"
             color={summary.eligible === summary.total ? 'success' : summary.total === 0 ? 'default' : 'warning'}
-            label={`${summary.eligible} of ${summary.total} eligible${summary.onTrack > 0 ? `, ${summary.onTrack} on track` : ''}`}
+            label={`${summary.eligible} of ${summary.total} eligible${summary.onTrack > 0 ? `, ${summary.onTrack} on track` : ''}${summary.caution > 0 ? `, ${summary.caution} caution` : ''}`}
           />
           <ColumnsControl size="small">
             <InputLabel>Columns</InputLabel>
@@ -413,6 +417,10 @@ function buildReport(breakdown: EligibilityBreakdown, { title, source, season, g
     lines.push('');
   }
 
+  if (breakdown.sides.some((side) => side.summary.caution > 0)) {
+    lines.push(`CAUTION: ${CAUTION_ADVICE}`, '');
+  }
+
   const sameNames = source === 'record' ? sameNamePlayers(breakdown.sides) : [];
   if (sameNames.length > 0) {
     lines.push('PLAYERS WITH THE SAME NAME (kept separate; counts may be low if one person has two profiles)');
@@ -437,6 +445,9 @@ function buildReport(breakdown: EligibilityBreakdown, { title, source, season, g
     } else {
       for (const player of eligible) {
         lines.push(`  ${reportPlayerLine(player, source, shared)}`);
+        for (const note of player.cautions) {
+          lines.push(`    • Caution: ${note}`);
+        }
         for (const note of player.pending) {
           lines.push(`    • On track: ${note}`);
         }
@@ -554,7 +565,8 @@ export function EligibilityReport(props: EligibilityReportProps) {
 
   const breakdown = useMemo(() => {
     if (!club) return null;
-    const remaining = remainingMatches(fixtures ?? [], club, eligibility);
+    // Fixtures not loaded (yet) are unknown, which isn't the same as none left.
+    const remaining = fixtures ? remainingMatches(fixtures, club, eligibility) : {};
     if (source === 'csv') {
       return csvRows && computeBreakdown(qualifyingRows(csvRows, eligibility), club.sides, eligibility, remaining);
     }
@@ -574,6 +586,7 @@ export function EligibilityReport(props: EligibilityReportProps) {
 
   const matchesFilters = (player: PlayerEligibility) => {
     if (statusFilter === 'eligible' && !player.eligible) return false;
+    if (statusFilter === 'caution' && player.cautions.length === 0) return false;
     if (statusFilter === 'ineligible' && player.eligible) return false;
     return true;
   };
@@ -646,7 +659,8 @@ export function EligibilityReport(props: EligibilityReportProps) {
           ? `Counted from the lineups and substitutions entered in Rugby Xplorer for every
              senior club league and local playoff match. Fixtures still to play before Super
              Regionals count towards the two-match minimums, shown as on track (experimental).
-             Click a player to check their count round by round against the Rugby Xplorer match
+             A player one upper-side match from losing a side for the season is shown as caution
+             (experimental). Click a player to check their count round by round against the Rugby Xplorer match
              reports. This is a guide: the Rugby Xplorer Match Participation Report is the
              official count, and registration isn't checked.`
           : `Paste or upload a Rugby Xplorer Match Participation Report for any club to see
@@ -756,6 +770,13 @@ export function EligibilityReport(props: EligibilityReportProps) {
         <Alert severity="info">
           Ignored rows for team(s) that aren&apos;t one of this club&apos;s NCS sides:{' '}
           {breakdown.ignoredTeamNames.join(', ')}.
+        </Alert>
+      )}
+
+      {breakdown?.sides.some((side) => side.summary.caution > 0) && (
+        <Alert severity="warning">
+          Caution marks players one upper-side match from losing a side for the rest of the
+          season. {CAUTION_ADVICE}
         </Alert>
       )}
 

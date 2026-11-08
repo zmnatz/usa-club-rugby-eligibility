@@ -23,7 +23,7 @@ const players = await client.players('rocky-gorge'); // a verdict per player per
 const report = await client.eligibility('rocky-gorge'); // the same, grouped by side
 ```
 
-A player record carries `participation` (Match Participation: matches started plus matches entered as a substitute), `eligible`, `reasons` for a failure, `pending` for the matches an eligible player still needs, and per-round detail in `rows[].rounds`.
+A player record carries `participation` (Match Participation: matches started plus matches entered as a substitute), `eligible`, `reasons` for a failure, `pending` for the matches an eligible player still needs, `cautions` when one more upper-side match would end an eligible player's eligibility for the rest of the season, and per-round detail in `rows[].rounds`.
 
 Everything the client does is also a pure function: `clubEligibility(snapshot, fixtures, club, { rules, now })`, `computeBreakdown`, `parseTeamSide`, `possibleFixtures` and so on. The same inputs always give the same verdicts. Pass your own `EligibilityRules` to apply a different season's thresholds; `DEFAULT_RULES` are the 2026-27 Senior Club Regulations (§3.4.2, §3.5).
 

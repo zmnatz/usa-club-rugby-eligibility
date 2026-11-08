@@ -89,8 +89,8 @@ describe('parsePlayerRows', () => {
 describe('computeBreakdown', () => {
   it('marks 0-appearance players ineligible with the participation reason', () => {
     const breakdown = twoSides(parsePlayerRows(SAMPLE_CSV));
-    expect(breakdown.upperSummary).toEqual({ total: 2, eligible: 0, onTrack: 0, competitions: ['MAC Men D1'] });
-    expect(breakdown.lowerSummary).toEqual({ total: 2, eligible: 0, onTrack: 0, competitions: ['Capital Men D3'] });
+    expect(breakdown.upperSummary).toEqual({ total: 2, eligible: 0, onTrack: 0, caution: 0, competitions: ['MAC Men D1'] });
+    expect(breakdown.lowerSummary).toEqual({ total: 2, eligible: 0, onTrack: 0, caution: 0, competitions: ['Capital Men D3'] });
 
     const burns = breakdown.upper[0];
     expect(burns.name).toBe('Matthew Burns');
@@ -313,5 +313,59 @@ describe('computeBreakdown with fixtures still to play', () => {
     const { upperSummary } = twoSides(players, { upper: 1, lower: 0 });
 
     expect(upperSummary).toMatchObject({ total: 1, eligible: 1, onTrack: 1 });
+  });
+});
+
+describe('Caution: one more upper-side match ends lower-side eligibility', () => {
+  const counts = (upperMatches: number, lowerMatches: number) => [
+    row({ teamName: 'Rocky Gorge MD1', competition: 'MAC Men D1', played: upperMatches }),
+    row({ teamName: 'Rocky Gorge MD3', played: lowerMatches }),
+  ];
+
+  it('warns an eligible player one match short of the upper-side limit', () => {
+    const { lower } = twoSides(counts(3, 4), { upper: 2, lower: 2 });
+
+    expect(lower[0]).toMatchObject({
+      eligible: true,
+      cautions: ['One more D1 match (3 played) loses D3 eligibility for the rest of the season'],
+    });
+  });
+
+  it('warns a player level with the upper sides when no lower fixtures remain to catch up', () => {
+    const { lower } = twoSides(counts(2, 2), { upper: 3, lower: 0 });
+
+    expect(lower[0]).toMatchObject({
+      eligible: true,
+      cautions: ['One more upper-side match loses D3 eligibility for the rest of the season (level at 2 with no D3 fixtures left)'],
+    });
+  });
+
+  it.each([
+    ['level, but a lower fixture remains to catch up', 2, 2, 1],
+    ['ahead of the upper sides and short of the limit', 2, 3, 0],
+  ])('does not warn a player who is %s', (_, upperMatches, lowerMatches, lowerFixtures) => {
+    const { lower } = twoSides(counts(upperMatches, lowerMatches), { upper: 3, lower: lowerFixtures });
+
+    expect(lower[0]).toMatchObject({ eligible: true, cautions: [] });
+  });
+
+  it('does not claim a tie is final when the remaining fixtures are unknown', () => {
+    const { sides: [, lower] } = computeBreakdown(counts(2, 2), sides, rules);
+
+    expect(lower.players[0]).toMatchObject({ eligible: true, cautions: [] });
+  });
+
+  it('gives an ineligible player reasons, not a caution', () => {
+    const { lower } = twoSides(counts(3, 2), { upper: 2, lower: 2 });
+
+    expect(lower[0]).toMatchObject({ eligible: false, cautions: [] });
+  });
+
+  it('never warns on the top side, and counts cautioned players in the summary', () => {
+    const { upper, upperSummary, lowerSummary } = twoSides(counts(3, 4), { upper: 2, lower: 2 });
+
+    expect(upper[0].cautions).toEqual([]);
+    expect(upperSummary).toMatchObject({ total: 1, eligible: 1, caution: 0 });
+    expect(lowerSummary).toMatchObject({ total: 1, eligible: 1, caution: 1 });
   });
 });
