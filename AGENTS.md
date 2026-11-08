@@ -6,6 +6,7 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 
 - `bun install`
 - `bun run dev`: Next.js dev server. Uses only the committed nightly data, no CMS requests.
+- `bun run players`: builds `.cache/players.sqlite` (git-ignored) from `public/data`, which the player pages are built from. `dev` and `build` run it first. Needs Node 26 (`.nvmrc`): the script uses `node:sqlite` and runs TypeScript directly, so `src/utils/playerDetail.ts`, `playerDb.ts` and `published.ts` must stay erasable syntax with `.ts` relative imports.
 - `bun run build`: static build to `dist/`. `GITHUB_ACTIONS` or `BASE_PATH` sets the Pages base path.
 - `bun run test`, `bun run lint`, `bun run typecheck`
 - `bun run snapshot [--offline] [--full-history]`: see `docs/snapshots.md`.
@@ -23,7 +24,7 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
   - `src/published.ts`: the client for the published data. Its file shapes are a public interface.
   - `src/node/`: the only filesystem code: `runSnapshot`, `verifyPublished`. `src/cli.ts` is the `usa-club-rugby-data` command.
 - `src/utils/published.ts`: reads the nightly data at build time for `getStaticPaths` and `getStaticProps`.
-- `pages/`: the report. `index.tsx` lists the clubs, `[club].tsx` is one club's page at `/<club-key>`, `csv.tsx` reads a Match Participation Report, and `methodology.mdx` explains the rules. Routes are ordinary paths, so they work on the static host.
+- `pages/`: the report. `index.tsx` lists the clubs, `club/[club]/index.tsx` is one club's page at `/club/<club-key>`, `player/[player].tsx` one player's at `/player/<cms-id>`, `csv.tsx` reads a Match Participation Report, and `methodology.mdx` explains the rules. Routes are ordinary paths, so they work on the static host.
 - `archive/`, `public/data/`: generated nightly. Never hand-edit; regenerate.
 - `notebooks/reproduce-eligibility.ipynb`: an independent Python recount of a club from `archive/`.
 

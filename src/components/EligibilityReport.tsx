@@ -4,16 +4,13 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Alert,
   Autocomplete,
-  Box,
   Button,
   Checkbox,
   Chip,
-  FormControl,
   InputLabel,
   Link as MuiLink,
   ListItemText,
   MenuItem,
-  Paper,
   Select,
   Table,
   TableBody,
@@ -29,15 +26,24 @@ import {
   ToggleButtonGroup,
   Typography,
   Dialog,
-  DialogContent,
   DialogTitle,
 } from '@mui/material';
 import {
   PlayerEligibilityDialog,
-  type ClubSchedule,
   type ReportSource,
-  type RoundAccounting,
 } from '@/components/PlayerEligibilityDialog';
+import type { ClubSchedule, RoundAccounting } from '@/utils/playerDetail';
+import {
+  BoldCell,
+  ClickableRow,
+  ColumnsControl,
+  EmptyCell,
+  FileButton,
+  FormDialogContent,
+  Panel,
+  PlainList,
+  Row,
+} from '@/theme';
 import { EligibilityStatusChip } from '@/components/EligibilityStatusChip';
 import {
   type Club,
@@ -50,8 +56,10 @@ import {
   type FeedFixture,
   fetchMatchCentre,
   hasSharedName,
+  isNameWithheld,
   loadClubRecord,
   parsePlayerRows,
+  type PublishedClub,
   type ParticipationGap,
   participationRows,
   type ParticipationSnapshot,
@@ -63,6 +71,7 @@ import {
   sharedNames,
 } from '@zmnatz/usa-club-rugby-data';
 import { loadFixtures } from '@/utils/data';
+import { playerPath } from '@/utils/paths';
 import { formatDate, formatDateTime } from '@/utils/dates';
 import { compareValues, type SortDirection } from '@/utils/sort';
 
@@ -75,7 +84,7 @@ const LIVE_RECORD_STALE_MS = 10 * 60 * 1000;
 /** A club's page: its saved match record and fixtures, from the nightly data at
  *  build time, topped up live. A CSV page: whatever report is uploaded. */
 export type EligibilityReportProps =
-  | { source: 'record'; club: Club; saved: ParticipationSnapshot; fixtures: FeedFixture[] }
+  | { source: 'record'; club: PublishedClub; saved: ParticipationSnapshot; fixtures: FeedFixture[] }
   | { source: 'csv' };
 
 type StatusFilter = 'all' | 'eligible' | 'ineligible';
@@ -145,6 +154,8 @@ interface DivisionTableProps {
   /** What the player detail needs to account for each round; absent for a CSV report. */
   accounting: RoundAccounting | null;
   schedule: ClubSchedule | null;
+  /** Whether the players have pages of their own; a CSV report's don't. */
+  playerPages: boolean;
   summary: { total: number; eligible: number; onTrack: number };
   visibleCount: number;
   filtered: boolean;
@@ -162,7 +173,7 @@ function renderCell(player: PlayerEligibility, key: SortKey, source: ReportSourc
     case 'name':
       return (
         <>
-          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+          <Typography variant="emphasis">
             {player.name}
           </Typography>
           {source === 'csv' && (
@@ -209,6 +220,7 @@ function DivisionTable({
   otherLabels,
   accounting,
   schedule,
+  playerPages,
   summary,
   visibleCount,
   filtered,
@@ -247,18 +259,9 @@ function DivisionTable({
   );
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          mb: 2,
-          flexWrap: 'wrap',
-          gap: 1,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+    <Panel>
+      <Row between below={2}>
+        <Row>
           <Typography variant="h6" component="h2">
             {title}
           </Typography>
@@ -267,8 +270,8 @@ function DivisionTable({
               Showing {visibleCount} of {summary.total}
             </Typography>
           )}
-        </Box>
-        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap' }}>
+        </Row>
+        <Row gap={1.5}>
           <ToggleButtonGroup
             exclusive
             size="small"
@@ -287,7 +290,7 @@ function DivisionTable({
             color={summary.eligible === summary.total ? 'success' : summary.total === 0 ? 'default' : 'warning'}
             label={`${summary.eligible} of ${summary.total} eligible${summary.onTrack > 0 ? `, ${summary.onTrack} on track` : ''}`}
           />
-          <FormControl size="small" sx={{ minWidth: 170 }}>
+          <ColumnsControl size="small">
             <InputLabel>Columns</InputLabel>
             <Select
               multiple
@@ -311,9 +314,9 @@ function DivisionTable({
                 );
               })}
             </Select>
-          </FormControl>
-        </Box>
-      </Box>
+          </ColumnsControl>
+        </Row>
+      </Row>
       <TableContainer>
         <Table size="small">
           <TableHead>
@@ -333,30 +336,24 @@ function DivisionTable({
           </TableHead>
           <TableBody>
             {rows.map((player) => (
-              <TableRow
-                key={player.playerId}
-                hover
-                onClick={() => setDetail(player)}
-                sx={{ cursor: 'pointer' }}
-              >
-                {visibleColumns.map((col) => (
-                  <TableCell
-                    key={col.key}
-                    align={col.numeric ? 'right' : 'left'}
-                    sx={col.key === 'participation' ? { fontWeight: 'bold' } : undefined}
-                  >
-                    {renderCell(player, col.key, source, hasSharedName(player, shared))}
-                  </TableCell>
-                ))}
-              </TableRow>
+              <ClickableRow key={player.playerId} hover onClick={() => setDetail(player)}>
+                {visibleColumns.map((col) => {
+                  const Cell = col.key === 'participation' ? BoldCell : TableCell;
+                  return (
+                    <Cell key={col.key} align={col.numeric ? 'right' : 'left'}>
+                      {renderCell(player, col.key, source, hasSharedName(player, shared))}
+                    </Cell>
+                  );
+                })}
+              </ClickableRow>
             ))}
             {rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={visibleColumns.length} align="center" sx={{ color: 'text.secondary' }}>
+                <EmptyCell colSpan={visibleColumns.length} align="center">
                   {filtered
                     ? 'No players match the current filters.'
                     : `No players in this team's report.`}
-                </TableCell>
+                </EmptyCell>
               </TableRow>
             )}
           </TableBody>
@@ -368,10 +365,11 @@ function DivisionTable({
         ownLabel={ownLabel}
         accounting={accounting}
         schedule={schedule}
+        pageHref={detail && playerPages && !isNameWithheld(detail.name) ? playerPath(detail.playerId) : undefined}
         showCmsId={detail !== null && hasSharedName(detail, shared)}
         onClose={() => setDetail(null)}
       />
-    </Paper>
+    </Panel>
   );
 }
 
@@ -478,11 +476,11 @@ interface CsvFormProps {
 function CsvForm({ csvText, fileName, canClear, onFile, onTextChange, onRun, onClear }: CsvFormProps) {
   return (
     <>
-      <Box sx={{ display: 'flex', gap: 2, alignItems: 'stretch', mb: 2, flexWrap: 'wrap' }}>
-        <Button variant="outlined" component="label" sx={{ height: 56 }}>
+      <Row gap={2} stretch below={2}>
+        <FileButton variant="outlined" component="label">
           Choose CSV file…
           <input type="file" accept=".csv,text/csv" hidden onChange={onFile} />
-        </Button>
+        </FileButton>
         <TextField
           label="…or paste the CSV"
           multiline
@@ -492,8 +490,8 @@ function CsvForm({ csvText, fileName, canClear, onFile, onTextChange, onRun, onC
           value={csvText}
           onChange={(event) => onTextChange(event.target.value)}
         />
-      </Box>
-      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+      </Row>
+      <Row gap={2}>
         <Button variant="contained" onClick={onRun} disabled={!csvText.trim()}>
           Run Breakdown
         </Button>
@@ -505,7 +503,7 @@ function CsvForm({ csvText, fileName, canClear, onFile, onTextChange, onRun, onC
             Loaded: {fileName}
           </Typography>
         )}
-      </Box>
+      </Row>
     </>
   );
 }
@@ -656,7 +654,7 @@ export function EligibilityReport(props: EligibilityReportProps) {
 
   return (
     <>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 2, maxWidth: 800 }}>
+      <Typography variant="lead">
         {source === 'record'
           ? `Counted from the lineups and substitutions entered in Rugby Xplorer for every
              senior club league and local playoff match. Fixtures still to play before Super
@@ -673,11 +671,10 @@ export function EligibilityReport(props: EligibilityReportProps) {
         </MuiLink>
       </Typography>
 
-      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap', mb: 3 }}>
+      <Row gap={2} below={3}>
         {source === 'csv' && csvClubs.length > 1 && (
           <Autocomplete
             size="small"
-            sx={{ minWidth: 280, flex: '1 1 280px', maxWidth: 420 }}
             options={csvClubs}
             value={club}
             onChange={(_, next) => {
@@ -697,56 +694,56 @@ export function EligibilityReport(props: EligibilityReportProps) {
             {record.isFetching && ' · checking for newer matches…'}
           </Typography>
         )}
-      </Box>
+      </Row>
 
       {source === 'record' && record.isError && (
-        <Alert severity="warning" sx={{ mb: 3 }}>
+        <Alert severity="warning">
           Couldn&apos;t check for matches since the nightly data, so this shows the nightly data.
         </Alert>
       )}
 
       {source === 'record' && clubRecord?.liveFailed && (
-        <Alert severity="warning" sx={{ mb: 3 }}>
+        <Alert severity="warning">
           The live pull failed, so this report uses saved data and may miss recent matches.
         </Alert>
       )}
 
       {oneSide && (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <Typography variant="note">
           Only one of this club&apos;s sides is in the data, so it is assessed as a one-side club:
           two qualifying matches, and no other side to compare.
         </Typography>
       )}
 
       {gaps.length > 0 && (
-        <Alert severity="warning" sx={{ mb: 3 }}>
+        <Alert severity="warning">
           These matches have gaps in the record, so some counts may be low. Check them
           before relying on a verdict:
-          <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+          <PlainList>
             {gaps.map((gap) => (
               <li key={`${gap.fixtureId}-${gap.teamName}`}>{gapText(gap)}</li>
             ))}
-          </Box>
+          </PlainList>
         </Alert>
       )}
 
       {sameNames.length > 0 && (
-        <Alert severity="info" sx={{ mb: 3 }}>
+        <Alert severity="info">
           These players share a name, so they are kept separate. If one person has two Rugby
           Xplorer profiles, their matches stay split until the profiles are merged, and each count
           may be low:
-          <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+          <PlainList>
             {sameNames.map(({ name, ids }) => (
               <li key={name}>
                 {name}: CMS IDs {ids.join(', ')}
               </li>
             ))}
-          </Box>
+          </PlainList>
         </Alert>
       )}
 
       {source === 'csv' && !breakdown && (
-        <Paper sx={{ p: 3, mb: 4 }}>
+        <Panel pad={3} below={4}>
           <CsvForm
             csvText={csvText}
             fileName={fileName}
@@ -759,17 +756,17 @@ export function EligibilityReport(props: EligibilityReportProps) {
             onRun={handleRun}
             onClear={handleClear}
           />
-        </Paper>
+        </Panel>
       )}
 
       {source === 'csv' && error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error">
           {error}
         </Alert>
       )}
 
       {breakdown && breakdown.ignoredTeamNames.length > 0 && (
-        <Alert severity="info" sx={{ mb: 3 }}>
+        <Alert severity="info">
           Ignored rows for team(s) that aren&apos;t one of this club&apos;s NCS sides:{' '}
           {breakdown.ignoredTeamNames.join(', ')}.
         </Alert>
@@ -783,17 +780,9 @@ export function EligibilityReport(props: EligibilityReportProps) {
 
       {breakdown && (
         <>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 2,
-              mb: 2,
-            }}
-          >
+          <Row between gap={2} below={2}>
             {oneSide ? (
-              <Box />
+              <div />
             ) : (
               <Tabs
                 value={Math.min(activeTab, breakdown.sides.length - 1)}
@@ -807,7 +796,7 @@ export function EligibilityReport(props: EligibilityReportProps) {
                 ))}
               </Tabs>
             )}
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <Row>
               {source === 'csv' && (
                 <Button variant="outlined" size="small" onClick={() => setDialogOpen(true)}>
                   Edit Report Data
@@ -816,8 +805,8 @@ export function EligibilityReport(props: EligibilityReportProps) {
               <Button variant="outlined" size="small" onClick={handleExport}>
                 Export Report
               </Button>
-            </Box>
-          </Box>
+            </Row>
+          </Row>
           {activeSide && (
             <DivisionTable
               title={divisionLabel(activeSide.label, activeSide.teamName, activeSide.summary)}
@@ -828,6 +817,7 @@ export function EligibilityReport(props: EligibilityReportProps) {
                 .map((side) => side.label)}
               accounting={accounting}
               schedule={clubSchedule}
+              playerPages={props.source === 'record'}
               summary={activeSide.summary}
               visibleCount={visiblePlayers.length}
               filtered={filtersActive}
@@ -849,7 +839,7 @@ export function EligibilityReport(props: EligibilityReportProps) {
         fullWidth
       >
         <DialogTitle>Edit Report Data</DialogTitle>
-        <DialogContent dividers sx={{ pt: 3 }}>
+        <FormDialogContent dividers>
           <CsvForm
             csvText={csvText}
             fileName={fileName}
@@ -862,7 +852,7 @@ export function EligibilityReport(props: EligibilityReportProps) {
             onRun={handleRun}
             onClear={handleClear}
           />
-        </DialogContent>
+        </FormDialogContent>
       </Dialog>
     </>
   );

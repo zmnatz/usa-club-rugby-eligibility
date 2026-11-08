@@ -1,9 +1,11 @@
 import type { GetStaticProps } from 'next';
+import { clubPath } from '@/utils/paths';
 import Head from 'next/head';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
-import { Box, Button, Link as MuiLink, Typography } from '@mui/material';
+import { Button, Link as MuiLink, Typography } from '@mui/material';
+import { Row } from '@/theme';
 import { ClubDirectory } from '@/components/ClubDirectory';
 import { formatDateTime } from '@/utils/dates';
 import { readIndex, type PublishedClub } from '@/utils/published';
@@ -28,7 +30,7 @@ export default function HomePage({ clubs, season, generatedAt }: HomeProps) {
     if (!router.isReady) return;
     const legacy = router.query.club;
     if (typeof legacy === 'string' && clubs.some((club) => club.key === legacy)) {
-      router.replace(`/${legacy}`);
+      router.replace(clubPath(legacy));
     }
   }, [router, clubs]);
 
@@ -44,7 +46,7 @@ export default function HomePage({ clubs, season, generatedAt }: HomeProps) {
       <Typography variant="h4" component="h1" gutterBottom>
         NCS Eligibility
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 2, maxWidth: 840 }}>
+      <Typography variant="lead">
         Pick a club to see which players are eligible for the National Championship Series,
         counted from the lineups and substitutions entered in Rugby Xplorer for every senior club
         league and local playoff match. Super Regionals, National Championships, 7s, friendlies,
@@ -53,14 +55,14 @@ export default function HomePage({ clubs, season, generatedAt }: HomeProps) {
         track (experimental). <MuiLink component={NextLink} href="/methodology">How this
         report is worked out</MuiLink>.
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+      <Typography variant="note">
         {season} season · {clubs.length} clubs · data last changed {formatDateTime(generatedAt)}
       </Typography>
-      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 3 }}>
+      <Row gap={2} below={3}>
         <Button component={NextLink} href="/csv" variant="outlined">
           Check a Match Participation Report (CSV)
         </Button>
-      </Box>
+      </Row>
       <ClubDirectory clubs={clubs} />
     </>
   );

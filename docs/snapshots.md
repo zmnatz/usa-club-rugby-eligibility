@@ -11,7 +11,7 @@ The page is static. Its data is calculated each night by `usa-club-rugby-data sn
 | `public/data/fixtures.json` | The current season's fixtures | Yes |
 | `public/data/clubs/<club>.json` | One club's Match Participation rows, gaps and result ids | Yes |
 
-Each club's file becomes that club's page at `/<club-key>/` at build time, so a club's report can be linked to and shared. Pages that aren't a club (the home page, `csv` and `methodology`) keep their own paths; a club whose name would take one of those gets a `-club` suffix.
+Each club's file becomes that club's page at `/club/<club-key>/` at build time, and each player in any of them a page at `/player/<cms-id>/` (except players whose name is withheld; under no club, since players change clubs; the page has a section for each club they appear in), so a report can be linked to and shared. Player pages are built from `.cache/players.sqlite`, which `bun run players` derives from `public/data` before each build (a build cache, not published). It holds each player's verdict on every side they're listed for and the fixtures behind it, worked out by the engine, so each page's HTML carries its own verdict and match table.
 
 ## What a night does
 
