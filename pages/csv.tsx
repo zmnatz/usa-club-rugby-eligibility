@@ -1,9 +1,13 @@
 import Head from 'next/head';
 import NextLink from 'next/link';
 import { Breadcrumbs, Link as MuiLink, Typography } from '@mui/material';
-import { EligibilityReport } from '@/components/EligibilityReport';
+import { useQuery } from '@tanstack/react-query';
+import { MatchParticipationReport } from '@zmnatz/usa-club-rugby-components';
+import { loadFixtures } from '@/utils/data';
 
 export default function CsvPage() {
+  // A report can be for any club, so this is the national fixture list.
+  const { data: fixtures } = useQuery({ queryKey: ['eligibility-fixtures'], queryFn: loadFixtures });
   return (
     <>
       <Head>
@@ -22,7 +26,7 @@ export default function CsvPage() {
       <Typography variant="h4" component="h1" gutterBottom>
         Match Participation Report
       </Typography>
-      <EligibilityReport source="csv" />
+      <MatchParticipationReport fixtures={fixtures} />
     </>
   );
 }
