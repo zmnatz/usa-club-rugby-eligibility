@@ -1,7 +1,8 @@
 import { createTheme } from '@mui/material/styles';
+import { eligibilityComponents } from '@zmnatz/usa-club-rugby-components';
 
 // Neutral on purpose: this tool serves every club, so it carries no club's colours.
-// All styling lives here (the theme) or in ./primitives; components don't use `sx`.
+// Common styling lives here, on standard MUI components. `sx` is only for one-offs.
 
 export const theme = createTheme({
   // The static HTML carries both schemes behind prefers-color-scheme, so the browser
@@ -11,8 +12,24 @@ export const theme = createTheme({
   palette: { primary: { main: '#1f4e8c' } },
   typography: { h4: { fontWeight: 600 } },
   components: {
+    ...eligibilityComponents,
+    MuiCssBaseline: {
+      styleOverrides: {
+        '#__next': { display: 'flex', flexDirection: 'column', minHeight: '100dvh' },
+        pre: { overflowX: 'auto' },
+      },
+    },
+    MuiContainer: {
+      styleOverrides: {
+        root: ({ theme }) => ({ paddingTop: theme.spacing(3), paddingBottom: theme.spacing(3), flexGrow: 1 }),
+      },
+    },
     MuiTypography: {
       variants: [
+        {
+          props: { component: 'footer' },
+          style: ({ theme }) => ({ padding: theme.spacing(3, 0) }),
+        },
         // Secondary small print that ends a block.
         {
           props: { variant: 'body2', gutterBottom: true },
@@ -46,9 +63,14 @@ export const theme = createTheme({
     },
     MuiBreadcrumbs: { styleOverrides: { root: ({ theme }) => ({ marginBottom: theme.spacing(2) }) } },
     MuiToolbar: {
-      styleOverrides: { root: ({ theme }) => ({ gap: theme.spacing(2), flexWrap: 'wrap' }) },
+      ...eligibilityComponents.MuiToolbar,
+      styleOverrides: {
+        // The app bar: its first item, the brand link, pushes the rest to the right.
+        root: ({ theme, ownerState }) =>
+          ownerState.variant === 'regular'
+            ? { gap: theme.spacing(2), flexWrap: 'wrap', '& > :first-child': { flexGrow: 1 } }
+            : {},
+      },
     },
   },
 });
-
-export * from './primitives';

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Typography } from '@mui/material';
+import { Paper, TextField, Toolbar, Typography } from '@mui/material';
 import type { PublishedClub } from '@zmnatz/usa-club-rugby-data';
 import { useEligibilityLinks } from './links.tsx';
-import { ClubList, EmptyNote, Panel, Row, SearchField } from './primitives.tsx';
+import { ClubList } from './primitives.tsx';
 
 export interface ClubDirectoryProps {
   clubs: PublishedClub[];
@@ -37,9 +37,9 @@ export function ClubDirectory({ clubs, autoFocus = false }: ClubDirectoryProps) 
   }, [sorted, query]);
 
   return (
-    <Panel>
-      <Row gap={2} between below={2}>
-        <SearchField
+    <Paper component="section">
+      <Toolbar variant="spread">
+        <TextField
           size="small"
           label="Find a club"
           placeholder="Club or team name"
@@ -50,7 +50,7 @@ export function ClubDirectory({ clubs, autoFocus = false }: ClubDirectoryProps) 
         <Typography variant="body2" color="text.secondary">
           {shown.length} of {sorted.length} clubs
         </Typography>
-      </Row>
+      </Toolbar>
       <ClubList>
         {shown.map((club) => (
           <li key={club.key}>
@@ -62,8 +62,8 @@ export function ClubDirectory({ clubs, autoFocus = false }: ClubDirectoryProps) 
         ))}
       </ClubList>
       {shown.length === 0 && (
-        <EmptyNote color="text.secondary">No club matches “{query}”.</EmptyNote>
+        <Typography color="text.secondary">No club matches “{query}”.</Typography>
       )}
-    </Panel>
+    </Paper>
   );
 }

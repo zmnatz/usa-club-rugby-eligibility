@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Button, Link as MuiLink, Typography } from '@mui/material';
+import { Alert, Button, Link as MuiLink, Toolbar, Typography } from '@mui/material';
 import {
   type ClubRecord,
   clubGaps,
@@ -17,7 +17,6 @@ import {
 import { formatDateTime } from './dates.ts';
 import { EligibilityReportView } from './EligibilityReportView.tsx';
 import { useEligibilityLinks } from './links.tsx';
-import { ReportAlert, Row } from './primitives.tsx';
 
 /** A visitor's check for matches newer than the saved Match Record. */
 interface RecordCheck {
@@ -98,7 +97,7 @@ export function ClubEligibilityReport({ club, saved, fixtures, live = false, clu
         </MuiLink>
       </Typography>
 
-      <Row between gap={2} below={3}>
+      <Toolbar variant="spread">
         <div>
           {shownAsOf && (
             <Typography variant="subtitle1" component="p">
@@ -116,18 +115,18 @@ export function ClubEligibilityReport({ club, saved, fixtures, live = false, clu
             Check for newer matches
           </Button>
         )}
-      </Row>
+      </Toolbar>
 
       {checkFailed && (
-        <ReportAlert severity="warning">
+        <Alert severity="warning">
           Couldn&apos;t check for matches since the nightly data, so this shows the nightly data.
-        </ReportAlert>
+        </Alert>
       )}
 
       {clubRecord?.liveFailed && (
-        <ReportAlert severity="warning">
+        <Alert severity="warning">
           The live pull failed, so this report uses saved data and may miss recent matches.
-        </ReportAlert>
+        </Alert>
       )}
 
       <EligibilityReportView

@@ -1,15 +1,14 @@
 import NextLink from 'next/link';
-import { Breadcrumbs, Link as MuiLink, Typography } from '@mui/material';
+import { Breadcrumbs, Link as MuiLink, Paper, Stack, Toolbar, Typography } from '@mui/material';
 import { EligibilityStatusChip, PlayerDetailBody } from '@zmnatz/usa-club-rugby-components';
-import { Panel, Row, Section } from '@/theme';
 import { clubPath } from '@/utils/paths';
 import type { PlayerClubEntry, PlayerProfile } from '@zmnatz/usa-club-rugby-data';
 
 /** A player's verdict in one club. */
 function PlayerInClub({ entry }: { entry: PlayerClubEntry }) {
   return (
-    <Section>
-      <Row below={1}>
+    <section>
+      <Toolbar variant="block">
         <Typography variant="h5" component="h2">
           <MuiLink component={NextLink} href={clubPath(entry.clubKey)} underline="hover">
             {entry.clubName}
@@ -22,16 +21,16 @@ function PlayerInClub({ entry }: { entry: PlayerClubEntry }) {
             CMS ID {entry.player.playerId}
           </Typography>
         )}
-      </Row>
-      <Panel>
+      </Toolbar>
+      <Paper component="section">
         <PlayerDetailBody
           player={entry.player}
           source="record"
           ownLabel={entry.sideLabel}
           fixtures={entry.fixtures}
         />
-      </Panel>
-    </Section>
+      </Paper>
+    </section>
   );
 }
 
@@ -55,9 +54,11 @@ export function PlayerPage({ data }: { data: PlayerProfile }) {
           Listed {data.clubs.length} times in the record, for different clubs or sides. Each is assessed on its own.
         </Typography>
       )}
-      {data.clubs.map((entry) => (
-        <PlayerInClub key={`${entry.clubKey}-${entry.player.teamName}`} entry={entry} />
-      ))}
+      <Stack spacing={4}>
+        {data.clubs.map((entry) => (
+          <PlayerInClub key={`${entry.clubKey}-${entry.player.teamName}`} entry={entry} />
+        ))}
+      </Stack>
     </>
   );
 }

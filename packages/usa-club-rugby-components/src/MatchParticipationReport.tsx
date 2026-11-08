@@ -1,5 +1,18 @@
 import { type ChangeEvent, useMemo, useState } from 'react';
-import { Button, Dialog, DialogTitle, Link as MuiLink, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Autocomplete,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Link as MuiLink,
+  Paper,
+  Stack,
+  TextField,
+  Toolbar,
+  Typography,
+} from '@mui/material';
 import {
   clubsInRows,
   computeBreakdown,
@@ -12,7 +25,6 @@ import {
 } from '@zmnatz/usa-club-rugby-data';
 import { EligibilityReportView } from './EligibilityReportView.tsx';
 import { useEligibilityLinks } from './links.tsx';
-import { ClubPicker, FileButton, FormDialogContent, Panel, ReportAlert, Row } from './primitives.tsx';
 
 interface CsvFormProps {
   csvText: string;
@@ -27,11 +39,11 @@ interface CsvFormProps {
 function CsvForm({ csvText, fileName, canClear, onFile, onTextChange, onRun, onClear }: CsvFormProps) {
   return (
     <>
-      <Row gap={2} stretch below={2}>
-        <FileButton variant="outlined" component="label">
+      <Toolbar variant="block">
+        <Button variant="outlined" component="label" size="large">
           Choose CSV file…
           <input type="file" accept=".csv,text/csv" hidden onChange={onFile} />
-        </FileButton>
+        </Button>
         <TextField
           label="…or paste the CSV"
           multiline
@@ -41,8 +53,8 @@ function CsvForm({ csvText, fileName, canClear, onFile, onTextChange, onRun, onC
           value={csvText}
           onChange={(event) => onTextChange(event.target.value)}
         />
-      </Row>
-      <Row gap={2}>
+      </Toolbar>
+      <Stack direction="row" spacing={2}>
         <Button variant="contained" onClick={onRun} disabled={!csvText.trim()}>
           Run Breakdown
         </Button>
@@ -54,7 +66,7 @@ function CsvForm({ csvText, fileName, canClear, onFile, onTextChange, onRun, onC
             Loaded: {fileName}
           </Typography>
         )}
-      </Row>
+      </Stack>
     </>
   );
 }
@@ -135,9 +147,9 @@ export function MatchParticipationReport({ fixtures }: MatchParticipationReportP
         </MuiLink>
       </Typography>
 
-      <Row gap={2} below={3}>
+      <Toolbar variant="block">
         {clubs.length > 1 && (
-          <ClubPicker
+          <Autocomplete
             size="small"
             options={clubs}
             value={club}
@@ -150,10 +162,10 @@ export function MatchParticipationReport({ fixtures }: MatchParticipationReportP
             renderInput={(params) => <TextField {...params} label={`Club in this report (${clubs.length})`} />}
           />
         )}
-      </Row>
+      </Toolbar>
 
       {!breakdown && (
-        <Panel pad={3} below={4}>
+        <Paper component="section" sx={{ mb: 4 }}>
           <CsvForm
             csvText={csvText}
             fileName={fileName}
@@ -163,10 +175,10 @@ export function MatchParticipationReport({ fixtures }: MatchParticipationReportP
             onRun={handleRun}
             onClear={handleClear}
           />
-        </Panel>
+        </Paper>
       )}
 
-      {error && <ReportAlert severity="error">{error}</ReportAlert>}
+      {error && <Alert severity="error">{error}</Alert>}
 
       {!breakdown && !error && (
         <Typography color="text.secondary">Upload a report and run the breakdown to see player eligibility.</Typography>
@@ -189,7 +201,7 @@ export function MatchParticipationReport({ fixtures }: MatchParticipationReportP
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Edit Report Data</DialogTitle>
-        <FormDialogContent dividers>
+        <DialogContent dividers>
           <CsvForm
             csvText={csvText}
             fileName={fileName}
@@ -199,7 +211,7 @@ export function MatchParticipationReport({ fixtures }: MatchParticipationReportP
             onRun={handleRun}
             onClear={handleClear}
           />
-        </FormDialogContent>
+        </DialogContent>
       </Dialog>
     </>
   );

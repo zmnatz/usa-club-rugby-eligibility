@@ -1,12 +1,17 @@
 import { type ReactNode, useMemo, useState } from 'react';
 import {
+  Alert,
   Button,
   Checkbox,
   Chip,
+  FormControl,
   InputLabel,
+  Link as MuiLink,
   ListItemText,
   MenuItem,
+  Paper,
   Select,
+  Stack,
   Tab,
   Table,
   TableBody,
@@ -18,6 +23,7 @@ import {
   Tabs,
   ToggleButton,
   ToggleButtonGroup,
+  Toolbar,
   Typography,
 } from '@mui/material';
 import {
@@ -37,17 +43,6 @@ import { formatDate } from './dates.ts';
 import { EligibilityStatusChip } from './EligibilityStatusChip.tsx';
 import { useEligibilityLinks } from './links.tsx';
 import { CAUTION_ADVICE, PlayerEligibilityDialog, type ReportSource } from './PlayerDetail.tsx';
-import {
-  BoldCell,
-  ClickableRow,
-  ColumnsControl,
-  EmptyCell,
-  Panel,
-  PlainList,
-  PlayerButton,
-  ReportAlert,
-  Row,
-} from './primitives.tsx';
 import { FIRST_PLAYER_ID } from './SkipToFirstPlayer.tsx';
 import { compareValues, type SortDirection } from './sort.ts';
 
@@ -146,7 +141,11 @@ function renderCell(
         <>
           {/* A real button, so the player can be reached and opened from the keyboard.
               Its click reaches the row, which opens the detail. */}
-          <PlayerButton
+          <MuiLink
+            component="button"
+            color="inherit"
+            underline="none"
+            align="left"
             id={buttonId}
             type="button"
             aria-haspopup="dialog"
@@ -155,7 +154,7 @@ function renderCell(
             <Typography variant="body2" component="strong">
               {player.name}
             </Typography>
-          </PlayerButton>
+          </MuiLink>
           {source === 'csv' && (
             <Typography variant="caption" color="text.secondary">
               USA ID {player.playerId}
@@ -240,9 +239,9 @@ function DivisionTable({
   );
 
   return (
-    <Panel>
-      <Row between below={2}>
-        <Row>
+    <Paper component="section">
+      <Toolbar variant="spread">
+        <Stack direction="row" spacing={1}>
           <Typography variant="h6" component="h2">
             {title}
           </Typography>
@@ -251,8 +250,8 @@ function DivisionTable({
               Showing {visibleCount} of {summary.total}
             </Typography>
           )}
-        </Row>
-        <Row gap={1.5}>
+        </Stack>
+        <Stack direction="row" spacing={1.5}>
           <ToggleButtonGroup
             exclusive
             size="small"
@@ -272,7 +271,7 @@ function DivisionTable({
             color={summary.eligible === summary.total ? 'success' : summary.total === 0 ? 'default' : 'warning'}
             label={`${summary.eligible} of ${summary.total} eligible${summary.onTrack > 0 ? `, ${summary.onTrack} on track` : ''}${summary.caution > 0 ? `, ${summary.caution} caution` : ''}`}
           />
-          <ColumnsControl size="small">
+          <FormControl size="small">
             <InputLabel>Columns</InputLabel>
             <Select
               multiple
@@ -296,9 +295,9 @@ function DivisionTable({
                 );
               })}
             </Select>
-          </ColumnsControl>
-        </Row>
-      </Row>
+          </FormControl>
+        </Stack>
+      </Toolbar>
       <TableContainer>
         <Table size="small">
           <TableHead>
@@ -318,30 +317,32 @@ function DivisionTable({
           </TableHead>
           <TableBody>
             {rows.map((player, index) => (
-              <ClickableRow key={player.playerId} hover onClick={() => setDetail(player)}>
+              <TableRow key={player.playerId} hover onClick={() => setDetail(player)}>
                 {visibleColumns.map((col) => {
-                  const Cell = col.key === 'participation' ? BoldCell : TableCell;
+                  const content = renderCell(
+                    player,
+                    col.key,
+                    source,
+                    hasSharedName(player, shared),
+                    index === 0 ? FIRST_PLAYER_ID : undefined,
+                  );
                   return (
-                    <Cell key={col.key} align={col.numeric ? 'right' : 'left'}>
-                      {renderCell(
-                        player,
-                        col.key,
-                        source,
-                        hasSharedName(player, shared),
-                        index === 0 ? FIRST_PLAYER_ID : undefined,
-                      )}
-                    </Cell>
+                    <TableCell key={col.key} align={col.numeric ? 'right' : 'left'}>
+                      {col.key === 'participation' ? <strong>{content}</strong> : content}
+                    </TableCell>
                   );
                 })}
-              </ClickableRow>
+              </TableRow>
             ))}
             {rows.length === 0 && (
               <TableRow>
-                <EmptyCell id={FIRST_PLAYER_ID} tabIndex={-1} colSpan={visibleColumns.length} align="center">
-                  {filtered
-                    ? 'No players match the current filters.'
-                    : `No players in this team's report.`}
-                </EmptyCell>
+                <TableCell id={FIRST_PLAYER_ID} tabIndex={-1} colSpan={visibleColumns.length} align="center">
+                  <Typography variant="body2" component="span" color="text.secondary">
+                    {filtered
+                      ? 'No players match the current filters.'
+                      : `No players in this team's report.`}
+                  </Typography>
+                </TableCell>
               </TableRow>
             )}
           </TableBody>
@@ -357,7 +358,7 @@ function DivisionTable({
         showCmsId={detail !== null && hasSharedName(detail, shared)}
         onClose={() => setDetail(null)}
       />
-    </Panel>
+    </Paper>
   );
 }
 
@@ -534,47 +535,47 @@ export function EligibilityReportView({
       )}
 
       {gaps.length > 0 && (
-        <ReportAlert severity="warning">
+        <Alert severity="warning">
           These matches have gaps in the record, so some counts may be low. Check them
           before relying on a verdict:
-          <PlainList>
+          <ul>
             {gaps.map((gap) => (
               <li key={`${gap.fixtureId}-${gap.teamName}`}>{gapText(gap)}</li>
             ))}
-          </PlainList>
-        </ReportAlert>
+          </ul>
+        </Alert>
       )}
 
       {sameNames.length > 0 && (
-        <ReportAlert severity="info">
+        <Alert severity="info">
           These players share a name, so they are kept separate. If one person has two Rugby
           Xplorer profiles, their matches stay split until the profiles are merged, and each count
           may be low:
-          <PlainList>
+          <ul>
             {sameNames.map(({ name, ids }) => (
               <li key={name}>
                 {name}: CMS IDs {ids.join(', ')}
               </li>
             ))}
-          </PlainList>
-        </ReportAlert>
+          </ul>
+        </Alert>
       )}
 
       {breakdown.ignoredTeamNames.length > 0 && (
-        <ReportAlert severity="info">
+        <Alert severity="info">
           Ignored rows for team(s) that aren&apos;t one of this club&apos;s NCS sides:{' '}
           {breakdown.ignoredTeamNames.join(', ')}.
-        </ReportAlert>
+        </Alert>
       )}
 
       {breakdown.sides.some((entry) => entry.summary.caution > 0) && (
-        <ReportAlert severity="warning">
+        <Alert severity="warning">
           Caution marks players one upper-side match from losing a side for the rest of the
           season. {CAUTION_ADVICE}
-        </ReportAlert>
+        </Alert>
       )}
 
-      <Row between gap={2} below={2}>
+      <Toolbar variant="spread">
         {oneSide ? (
           <div />
         ) : (
@@ -590,13 +591,13 @@ export function EligibilityReportView({
             ))}
           </Tabs>
         )}
-        <Row>
+        <Stack direction="row" spacing={1}>
           {actions}
           <Button variant="outlined" size="small" onClick={handleExport}>
             Export Report
           </Button>
-        </Row>
-      </Row>
+        </Stack>
+      </Toolbar>
       {side && (
         <DivisionTable
           title={divisionLabel(side.label, side.teamName, side.summary)}

@@ -36,7 +36,7 @@
     },
     "packages/usa-club-rugby-components": {
       "name": "@zmnatz/usa-club-rugby-components",
-      "version": "0.4.1",
+      "version": "0.5.0",
       "devDependencies": {
         "@emotion/react": "^11.14.0",
         "@emotion/styled": "^11.14.1",

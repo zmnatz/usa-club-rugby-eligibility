@@ -4,8 +4,7 @@ import Head from 'next/head';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
-import { Button, Link as MuiLink, Typography } from '@mui/material';
-import { Row } from '@/theme';
+import { Button, Link as MuiLink, Toolbar, Typography } from '@mui/material';
 import { ClubDirectory } from '@zmnatz/usa-club-rugby-components';
 import { formatDateTime } from '@/utils/dates';
 import { readIndex, type PublishedClub } from '@/utils/published';
@@ -58,11 +57,11 @@ export default function HomePage({ clubs, season, generatedAt }: HomeProps) {
       <Typography variant="body2" color="textSecondary" gutterBottom>
         {season} season · {clubs.length} clubs · data last changed {formatDateTime(generatedAt)}
       </Typography>
-      <Row gap={2} below={3}>
+      <Toolbar variant="block">
         <Button component={NextLink} href="/csv" variant="outlined">
           Check a Match Participation Report (CSV)
         </Button>
-      </Row>
+      </Toolbar>
       <ClubDirectory clubs={clubs} autoFocus />
     </>
   );
