@@ -1,10 +1,14 @@
 import type { ComponentProps, ComponentType } from 'react';
 import {
+  Alert,
+  type AlertProps,
+  FormControl,
   Link,
   Paper,
   type PaperProps,
   TableCell,
   TableContainer,
+  TableRow,
   TextField,
   Typography,
   type TypographyProps,
@@ -72,12 +76,36 @@ export const Aside = styled(Body2)(({ theme }) => ({
   margin: theme.spacing(2, 0, 0),
 })) as ComponentType<TypographyProps>;
 
+/** The paragraph that introduces a page. */
+export const Lead = styled(Typography)(({ theme }) => ({
+  color: (theme.vars || theme).palette.text.secondary,
+  margin: theme.spacing(0, 0, 2),
+  maxWidth: 840,
+})) as ComponentType<TypographyProps>;
+
 /** Small text with weight. */
 export const Emphasis = styled(Body2Inline)(({ theme }) => ({
   fontWeight: theme.typography.fontWeightMedium,
 })) as ComponentType<TypographyProps>;
 
+export const ReportAlert = styled(Alert)(({ theme }) => ({
+  marginBottom: theme.spacing(3),
+})) as ComponentType<AlertProps>;
+
+export const PlainList = styled('ul')(({ theme }) => ({
+  margin: 0,
+  paddingLeft: theme.spacing(2.5),
+})) as ComponentType<ComponentProps<'ul'>>;
+
+export const ColumnsControl = styled(FormControl)({ minWidth: 170 }) as typeof FormControl;
+
 // Tables
+
+export const ClickableRow = styled(TableRow)({ cursor: 'pointer' }) as typeof TableRow;
+
+export const BoldCell = styled(TableCell)(({ theme }) => ({
+  fontWeight: theme.typography.fontWeightBold,
+})) as typeof TableCell;
 
 export const RoundsTable = styled(TableContainer)(({ theme }) => ({
   marginTop: theme.spacing(1),

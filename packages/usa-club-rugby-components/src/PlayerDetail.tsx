@@ -141,9 +141,11 @@ function roundDate(dateTime: string): string {
 function TeamRounds({
   teamName,
   rounds,
+  clubSlug,
 }: {
   teamName: string;
   rounds: PlayerRound[];
+  clubSlug: string | null;
 }) {
   const counted = rounds.filter((round) => round.counted).length;
   return (
@@ -183,7 +185,7 @@ function TeamRounds({
                 </TableCell>
                 <TableCell align="center">{round.counted ? 'Yes' : 'No'}</TableCell>
                 <NoWrapCell>
-                  <MuiLink href={matchUrl(round.fixtureId, null)} target="_blank" rel="noopener noreferrer">
+                  <MuiLink href={matchUrl(round.fixtureId, clubSlug)} target="_blank" rel="noopener noreferrer">
                     Rugby Xplorer
                   </MuiLink>
                 </NoWrapCell>
@@ -205,14 +207,14 @@ function TeamRounds({
 
 /** A round table for each side the player has played for, own side first; every
  *  side feeds the verdict. A side they haven't played for gets only a line. */
-function PlayedRounds({ sides }: { sides: SideRounds[] }) {
+function PlayedRounds({ sides, clubSlug }: { sides: SideRounds[]; clubSlug: string | null }) {
   const notPlayed = sides.filter(({ rounds }) => !rounds.some((round) => round.counted));
   return (
     <>
       {sides
         .filter(({ rounds }) => rounds.some((round) => round.counted))
         .map(({ teamName, rounds }) => (
-          <TeamRounds key={teamName} teamName={teamName} rounds={rounds} />
+          <TeamRounds key={teamName} teamName={teamName} rounds={rounds} clubSlug={clubSlug} />
         ))}
       {notPlayed.length > 0 && (
         <Block above={2}>
@@ -226,7 +228,7 @@ function PlayedRounds({ sides }: { sides: SideRounds[] }) {
 }
 
 /** The fixtures behind an on-track verdict. */
-function PossibleFixtures({ possible }: { possible: PossibleFixture[] }) {
+function PossibleFixtures({ possible, clubSlug }: { possible: PossibleFixture[]; clubSlug: string | null }) {
   return (
     <Block above={2}>
       <Typography variant="subtitle2">Possible fixtures: {possible.length} left</Typography>
@@ -255,7 +257,7 @@ function PossibleFixtures({ possible }: { possible: PossibleFixture[] }) {
                 <TableCell>{fixture.competition}</TableCell>
                 <NoWrapCell>
                   {fixture.fixtureId && (
-                    <MuiLink href={matchUrl(fixture.fixtureId, null)} target="_blank" rel="noopener noreferrer">
+                    <MuiLink href={matchUrl(fixture.fixtureId, clubSlug)} target="_blank" rel="noopener noreferrer">
                       Rugby Xplorer
                     </MuiLink>
                   )}
@@ -277,6 +279,8 @@ export interface PlayerDetailProps {
   fixtures: PlayerFixtures | null;
   /** Tells this player apart from another with the same name. */
   showCmsId?: boolean;
+  /** Rugby Xplorer's own club slug. Match links use the council's path without one. */
+  clubSlug?: string | null;
   footer?: ReactNode;
 }
 
@@ -312,7 +316,7 @@ export const CAUTION_ADVICE =
   'Experimental: check the official Rugby Xplorer record for matches not counted here, as one could change this.';
 
 /** Everything about one player's verdict, shared by the dialog and the player page. */
-export function PlayerDetailBody({ player, source, ownLabel, fixtures, footer }: PlayerDetailProps) {
+export function PlayerDetailBody({ player, source, ownLabel, fixtures, clubSlug = null, footer }: PlayerDetailProps) {
   return (
     <>
       {player.reasons.length > 0 && (
@@ -340,10 +344,10 @@ export function PlayerDetailBody({ player, source, ownLabel, fixtures, footer }:
           <Fact key={side.teamName} label={`${side.label} participation`} value={side.participation} />
         ))}
       </div>
-      {fixtures && fixtures.possible.length > 0 && <PossibleFixtures possible={fixtures.possible} />}
+      {fixtures && fixtures.possible.length > 0 && <PossibleFixtures possible={fixtures.possible} clubSlug={clubSlug} />}
       {fixtures ? (
         <>
-          <PlayedRounds sides={fixtures.sides} />
+          <PlayedRounds sides={fixtures.sides} clubSlug={clubSlug} />
           <Block above={2}>
             <Typography variant="body2" color="textSecondary">
               Open a report to check a line against Rugby Xplorer.

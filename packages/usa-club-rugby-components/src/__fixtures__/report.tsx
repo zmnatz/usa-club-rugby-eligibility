@@ -7,9 +7,8 @@ import type {
   PlayerRow,
   PublishedClub,
 } from '@zmnatz/usa-club-rugby-data';
-import { EligibilityLinksProvider } from '@zmnatz/usa-club-rugby-components';
-import { routes } from '@/utils/paths';
-import { EligibilityReport } from '../EligibilityReport';
+import { ClubEligibilityReport } from '../ClubEligibilityReport.tsx';
+import { EligibilityLinksProvider, type EligibilityRoutes } from '../links.tsx';
 
 // One fictional two-side club, with a player in each verdict on its D3 side.
 
@@ -99,6 +98,12 @@ export const saved: ParticipationSnapshot = {
 
 export const NAMES = { ineligible: 'Ina Over', caution: 'Cal Careful', onTrack: 'Ona Track', eligible: 'Eli Clear' };
 
+export const routes: EligibilityRoutes = {
+  club: (key) => `/club/${key}`,
+  player: (id) => `/player/${id}`,
+  methodology: () => '/methodology',
+};
+
 /** Renders with a fresh query client and lets the first queries settle. */
 export async function withQueryClient(ui: ReactElement) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -113,12 +118,19 @@ export async function withQueryClient(ui: ReactElement) {
   return view;
 }
 
-// The two ways a host shows the report. Tests go through these, so only this file
-// changes when the report's props do.
+// Tests go through this, so only this file changes when the report's props do.
 
-export const renderClubReport = ({ live = false, extraFixtures = [] as FeedFixture[] } = {}) =>
+export const renderClubReport = ({
+  live = false,
+  extraFixtures = [] as FeedFixture[],
+  clubSlug = undefined as string | undefined,
+} = {}) =>
   withQueryClient(
-    <EligibilityReport source="record" club={club} saved={saved} fixtures={[...fixtures, ...extraFixtures]} live={live} />,
+    <ClubEligibilityReport
+      club={club}
+      saved={saved}
+      fixtures={[...fixtures, ...extraFixtures]}
+      live={live}
+      clubSlug={clubSlug}
+    />,
   );
-
-export const renderCsvReport = () => withQueryClient(<EligibilityReport source="csv" />);

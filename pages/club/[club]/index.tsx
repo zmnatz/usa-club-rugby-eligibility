@@ -2,13 +2,17 @@ import type { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
 import NextLink from 'next/link';
 import { Breadcrumbs, Link as MuiLink, Typography } from '@mui/material';
-import { EligibilityReport } from '@/components/EligibilityReport';
+import { ClubEligibilityReport } from '@zmnatz/usa-club-rugby-components';
 import {
   clubFixtures,
   type FeedFixture,
   type ParticipationSnapshot,
 } from '@zmnatz/usa-club-rugby-data';
 import { readClubSnapshot, readFixtures, readIndex, type PublishedClub } from '@/utils/published';
+
+// Deployed pages pull live; dev uses the saved snapshot so working on the page
+// doesn't hit the CMS.
+const LIVE_RECORD = process.env.NODE_ENV === 'production';
 
 interface ClubPageProps {
   club: PublishedClub;
@@ -61,7 +65,7 @@ export default function ClubPage({ club, saved, fixtures }: ClubPageProps) {
       <Typography variant="body2" color="textSecondary" gutterBottom>
         {club.sides.map((side) => side.teamName).join(' · ')}
       </Typography>
-      <EligibilityReport source="record" club={club} saved={saved} fixtures={fixtures} />
+      <ClubEligibilityReport club={club} saved={saved} fixtures={fixtures} live={LIVE_RECORD} />
     </>
   );
 }
