@@ -2,11 +2,11 @@ import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
-import { useEffect, useRef } from 'react';
+import { type ComponentProps, useEffect, useRef } from 'react';
 import { MDXProvider } from '@mdx-js/react';
 import { AppBar, CssBaseline, Link as MuiLink, Toolbar, Typography } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
-import { AppCacheProvider } from '@mui/material-nextjs/v16-pagesRouter';
+import { AppCacheProvider, type EmotionCacheProviderProps } from '@mui/material-nextjs/v16-pagesRouter';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { EligibilityLinksProvider, SkipToFirstPlayer } from '@zmnatz/usa-club-rugby-components';
 import { mdxComponents } from '@/components/Mdx';
@@ -19,7 +19,17 @@ const REPO_URL = 'https://github.com/zmnatz/usa-club-rugby-eligibility';
 const DESCRIPTION =
   'NCS player eligibility for every USA Club Rugby senior club, worked out from the Rugby Xplorer match record.';
 
-export default function App({ Component, pageProps }: AppProps) {
+// The package links to every club and player on a page, often hundreds of them.
+// Next still prefetches each one when it's hovered.
+function PackageLink(props: ComponentProps<typeof NextLink>) {
+  return <NextLink prefetch={false} {...props} />;
+}
+
+export default function App({
+  Component,
+  pageProps,
+  emotionCache,
+}: AppProps & EmotionCacheProviderProps) {
   const router = useRouter();
   const narrow = router.pathname === '/methodology';
   const clubReport = router.pathname === '/club/[club]';
@@ -34,10 +44,12 @@ export default function App({ Component, pageProps }: AppProps) {
   }, [router.events]);
 
   return (
-    <AppCacheProvider>
+    // _document supplies the cache it extracts into the <head> of the static HTML.
+    // Without it the theme's variables land at the end of <body>, after the content.
+    <AppCacheProvider emotionCache={emotionCache}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={theme}>
-          <EligibilityLinksProvider Link={NextLink} routes={routes}>
+          <EligibilityLinksProvider Link={PackageLink} routes={routes}>
             <CssBaseline />
             <Head>
               <meta name="viewport" content="width=device-width, initial-scale=1" />

@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
   // Pages serves /<club-key>/ from <club-key>/index.html.
   trailingSlash: true,
   images: { unoptimized: true },
+  // Left external, the adapter gets its own copy of Emotion, MUI never sees its cache
+  // and the static HTML has no styles in the <head>.
+  transpilePackages: ['@mui/material-nextjs'],
   pageExtensions: ['ts', 'tsx', 'mdx'],
   env: { NEXT_PUBLIC_BASE_PATH: basePath },
 };

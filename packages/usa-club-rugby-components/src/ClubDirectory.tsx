@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Typography } from '@mui/material';
 import type { PublishedClub } from '@zmnatz/usa-club-rugby-data';
 import { useEligibilityLinks } from './links.tsx';
-import { ClubItem, ClubLink, ClubList, EmptyNote, Panel, Row, SearchField, SideLabels } from './primitives.tsx';
+import { ClubList, EmptyNote, Panel, Row, SearchField } from './primitives.tsx';
 
 export interface ClubDirectoryProps {
   clubs: PublishedClub[];
@@ -53,14 +53,12 @@ export function ClubDirectory({ clubs, autoFocus = false }: ClubDirectoryProps) 
       </Row>
       <ClubList>
         {shown.map((club) => (
-          <ClubItem key={club.key}>
-            <ClubLink component={Link} href={routes.club(club.key)} underline="hover">
+          <li key={club.key}>
+            <Link href={routes.club(club.key)}>
               {club.name}
-              <SideLabels component="span" variant="caption" color="text.secondary">
-                {club.sides.map((side) => side.label).join(' · ')}
-              </SideLabels>
-            </ClubLink>
-          </ClubItem>
+              <span>{club.sides.map((side) => side.label).join(' · ')}</span>
+            </Link>
+          </li>
         ))}
       </ClubList>
       {shown.length === 0 && (

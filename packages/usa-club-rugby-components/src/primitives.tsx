@@ -6,7 +6,6 @@ import {
   Button,
   DialogContent,
   FormControl,
-  Link,
   Paper,
   type PaperProps,
   TableCell,
@@ -155,6 +154,8 @@ export const ClubPicker = styled(Autocomplete)({
 
 export const SearchField = styled(TextField)({ minWidth: 260, flex: '1 1 260px', maxWidth: 420 }) as typeof TextField;
 
+// Styles its rows as well, so they can be plain elements: there are hundreds of
+// them, and a styled component for each part makes the page slow to hydrate.
 export const ClubList = styled('ul')(({ theme }) => ({
   listStyle: 'none',
   margin: 0,
@@ -164,14 +165,18 @@ export const ClubList = styled('ul')(({ theme }) => ({
   columnGap: theme.spacing(3),
   [theme.breakpoints.up('sm')]: { gridTemplateColumns: '1fr 1fr' },
   [theme.breakpoints.up('md')]: { gridTemplateColumns: '1fr 1fr 1fr' },
+  '& > li': { borderBottom: `1px solid ${(theme.vars || theme).palette.divider}` },
+  '& > li > a': {
+    display: 'block',
+    padding: theme.spacing(1, 0),
+    color: (theme.vars || theme).palette.primary.main,
+    textDecoration: 'none',
+    '&:hover': { textDecoration: 'underline' },
+  },
+  '& > li > a > span': {
+    ...theme.typography.caption,
+    marginLeft: theme.spacing(1),
+  },
 })) as ComponentType<ComponentProps<'ul'>>;
-
-export const ClubItem = styled('li')(({ theme }) => ({
-  borderBottom: `1px solid ${(theme.vars || theme).palette.divider}`,
-})) as ComponentType<ComponentProps<'li'>>;
-
-export const ClubLink = styled(Link)(({ theme }) => ({ display: 'block', padding: theme.spacing(1, 0) })) as typeof Link;
-
-export const SideLabels = styled(Typography)(({ theme }) => ({ marginLeft: theme.spacing(1) })) as typeof Typography;
 
 export const EmptyNote = styled(Typography)(({ theme }) => ({ padding: theme.spacing(2, 0) })) as typeof Typography;
