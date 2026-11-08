@@ -7,6 +7,7 @@ import {
   type PlayerProfile,
   sortEntries,
 } from '@zmnatz/usa-club-rugby-data';
+import { selectClubs } from '@/utils/buildScope';
 import { readClubSnapshot, readFixtures, readIndex } from '@/utils/published';
 
 // What the player pages show, from the nightly data at build time. Which clubs a
@@ -49,8 +50,12 @@ function context(key: string): ClubContext {
   return found;
 }
 
+/** The players with a page in this build: those in any club it covers. */
 export function listPlayerIds(): string[] {
-  return Object.keys(cache().players);
+  const built = new Set(selectClubs(readIndex().clubs).map((club) => club.key));
+  return Object.entries(cache().players)
+    .filter(([, player]) => player.clubs.some((key) => built.has(key)))
+    .map(([id]) => id);
 }
 
 /** A player and everything their page shows, or null if they have no page. */

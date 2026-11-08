@@ -8,6 +8,7 @@
     "lib": "bun run --cwd packages/usa-club-rugby-data build && bun run --cwd packages/usa-club-rugby-components build",
     "dev": "bun run lib && next dev",
     "build": "bun run lib && next build",
+    "build:quick": "BUILD_CLUBS=5 bun run build",
     "snapshot": "bun run lib && node packages/usa-club-rugby-data/dist/cli.js snapshot",
     "verify": "bun run lib && node packages/usa-club-rugby-data/dist/cli.js verify",
     "lint": "biome check .",

@@ -8,6 +8,7 @@ import {
   type FeedFixture,
   type ParticipationSnapshot,
 } from '@zmnatz/usa-club-rugby-data';
+import { selectClubs } from '@/utils/buildScope';
 import { readClubSnapshot, readFixtures, readIndex, type PublishedClub } from '@/utils/published';
 
 // Deployed pages let a visitor check for newer matches; dev has only the saved
@@ -22,7 +23,7 @@ interface ClubPageProps {
 
 export const getStaticPaths: GetStaticPaths = async () => {
   return {
-    paths: readIndex().clubs.map((club) => ({ params: { club: club.key } })),
+    paths: selectClubs(readIndex().clubs).map((club) => ({ params: { club: club.key } })),
     fallback: false,
   };
 };
