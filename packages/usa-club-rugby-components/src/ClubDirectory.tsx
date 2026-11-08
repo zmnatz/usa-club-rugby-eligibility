@@ -1,13 +1,26 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Typography } from '@mui/material';
 import type { PublishedClub } from '@zmnatz/usa-club-rugby-data';
 import { useEligibilityLinks } from './links.tsx';
 import { ClubItem, ClubLink, ClubList, EmptyNote, Panel, Row, SearchField, SideLabels } from './primitives.tsx';
 
+export interface ClubDirectoryProps {
+  clubs: PublishedClub[];
+  /** Put the cursor in the filter when the directory appears. For a page that is
+   *  mainly the directory. Off by default. */
+  autoFocus?: boolean;
+}
+
 /** Every club, filtered by name or side. Each club opens the host's club route. */
-export function ClubDirectory({ clubs }: { clubs: PublishedClub[] }) {
+export function ClubDirectory({ clubs, autoFocus = false }: ClubDirectoryProps) {
   const { Link, routes } = useEligibilityLinks();
   const [query, setQuery] = useState('');
+  const searchInput = useRef<HTMLInputElement>(null);
+
+  // In an effect because React ignores autoFocus when hydrating a server-rendered page.
+  useEffect(() => {
+    if (autoFocus) searchInput.current?.focus();
+  }, [autoFocus]);
 
   const sorted = useMemo(
     () => [...clubs].sort((a, b) => a.name.localeCompare(b.name)),
@@ -30,6 +43,7 @@ export function ClubDirectory({ clubs }: { clubs: PublishedClub[] }) {
           size="small"
           label="Find a club"
           placeholder="Club or team name"
+          inputRef={searchInput}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />

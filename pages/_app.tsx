@@ -2,12 +2,13 @@ import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
+import { useEffect, useRef } from 'react';
 import { MDXProvider } from '@mdx-js/react';
 import { AppBar, CssBaseline, Link as MuiLink, Toolbar, Typography } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { AppCacheProvider } from '@mui/material-nextjs/v16-pagesRouter';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { EligibilityLinksProvider } from '@zmnatz/usa-club-rugby-components';
+import { EligibilityLinksProvider, SkipToFirstPlayer } from '@zmnatz/usa-club-rugby-components';
 import { mdxComponents } from '@/components/Mdx';
 import { BrandLink, Footer, Main, Shell, theme } from '@/theme';
 import { routes } from '@/utils/paths';
@@ -21,6 +22,17 @@ const DESCRIPTION =
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const narrow = router.pathname === '/methodology';
+  const clubReport = router.pathname === '/club/[club]';
+
+  // Arriving from another page leaves focus partway down this one, past the skip
+  // link. A full page load already starts Tab at the link.
+  const skipLink = useRef<HTMLAnchorElement>(null);
+  useEffect(() => {
+    const focusSkipLink = () => skipLink.current?.focus();
+    router.events.on('routeChangeComplete', focusSkipLink);
+    return () => router.events.off('routeChangeComplete', focusSkipLink);
+  }, [router.events]);
+
   return (
     <AppCacheProvider>
       <QueryClientProvider client={queryClient}>
@@ -33,6 +45,7 @@ export default function App({ Component, pageProps }: AppProps) {
               <title>USA Club Rugby Eligibility</title>
             </Head>
             <Shell>
+              {clubReport && <SkipToFirstPlayer ref={skipLink} />}
               <AppBar position="static" color="primary" elevation={0}>
                 <Toolbar>
                   <BrandLink component={NextLink} href="/" color="inherit" underline="none">

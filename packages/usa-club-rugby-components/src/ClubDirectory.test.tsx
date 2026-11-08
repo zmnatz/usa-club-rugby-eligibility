@@ -17,11 +17,11 @@ const routes: EligibilityRoutes = {
   methodology: () => '/about',
 };
 
-const renderDirectory = () =>
+const renderDirectory = (props: { autoFocus?: boolean } = {}) =>
   render(
     <ThemeProvider theme={createTheme()}>
       <EligibilityLinksProvider Link="a" routes={routes}>
-        <ClubDirectory clubs={clubs} />
+        <ClubDirectory clubs={clubs} {...props} />
       </EligibilityLinksProvider>
     </ThemeProvider>,
   );
@@ -46,6 +46,16 @@ describe('ClubDirectory', () => {
     expect(screen.queryByRole('link', { name: /Harbor City/ })).toBeNull();
     expect(screen.getByRole('link', { name: /Bayside/ })).toBeTruthy();
     expect(screen.getByText('1 of 2 clubs')).toBeTruthy();
+  });
+
+  it('puts the cursor in the filter when asked to', () => {
+    renderDirectory({ autoFocus: true });
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Find a club' }));
+  });
+
+  it('leaves focus alone by default', () => {
+    renderDirectory();
+    expect(document.activeElement).toBe(document.body);
   });
 });
 

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
-import { act, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { PublishedClub } from '@zmnatz/usa-club-rugby-data';
 import {
@@ -14,6 +14,7 @@ import {
   SEASON,
 } from './__fixtures__/report.tsx';
 import { ClubEligibilityReport } from './ClubEligibilityReport.tsx';
+import { SkipToFirstPlayer } from './SkipToFirstPlayer.tsx';
 
 const realFetch = globalThis.fetch;
 let user: ReturnType<typeof userEvent.setup>;
@@ -408,5 +409,42 @@ describe('opening a player from the keyboard', () => {
     await openD3();
     await user.click(within(rowOf(NAMES.onTrack)).getByText('ON TRACK'));
     expect(within(await screen.findByRole('dialog')).getByText('Ona Track')).toBeTruthy();
+  });
+});
+
+describe('skipping to the first player', () => {
+  const playerButton = (name: string) => screen.getByRole('button', { name: new RegExp(name) });
+
+  const filterBy = async (name: string) =>
+    user.click(within(screen.getByRole('group', { name: 'Eligibility status' })).getByRole('button', { name }));
+
+  const skip = async () => {
+    render(<SkipToFirstPlayer />).getByRole('link', { name: 'Skip to first player' }).focus();
+    await user.keyboard('{Enter}');
+  };
+
+  it('lands on the top player, ready to Tab down the rest', async () => {
+    await renderClubReport();
+    await openD3();
+    await skip();
+    const [first, second] = playerOrder();
+    expect(document.activeElement).toBe(playerButton(first as string));
+    await user.tab();
+    expect(document.activeElement).toBe(playerButton(second as string));
+  });
+
+  it('follows the table when it is filtered', async () => {
+    await renderClubReport();
+    await openD3();
+    await filterBy('Caution');
+    await skip();
+    expect(document.activeElement).toBe(playerButton(NAMES.caution));
+  });
+
+  it('lands on the note when no players are shown', async () => {
+    await renderClubReport();
+    await filterBy('Ineligible');
+    await skip();
+    expect(document.activeElement?.textContent).toBe('No players match the current filters.');
   });
 });
