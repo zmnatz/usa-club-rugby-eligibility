@@ -1,15 +1,13 @@
 import type { ReactElement } from 'react';
 import { act, render } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type {
   FeedFixture,
   ParticipationSnapshot,
   PlayerRow,
   PublishedClub,
 } from '@zmnatz/usa-club-rugby-data';
-import { EligibilityLinksProvider } from '@zmnatz/usa-club-rugby-components';
-import { routes } from '@/utils/paths';
-import { EligibilityReport } from '../EligibilityReport';
+import { ClubEligibilityReport } from '../ClubEligibilityReport.tsx';
+import { EligibilityLinksProvider, type EligibilityRoutes } from '../links.tsx';
 
 // One fictional two-side club, with a player in each verdict on its D3 side.
 
@@ -99,26 +97,41 @@ export const saved: ParticipationSnapshot = {
 
 export const NAMES = { ineligible: 'Ina Over', caution: 'Cal Careful', onTrack: 'Ona Track', eligible: 'Eli Clear' };
 
-/** Renders with a fresh query client and lets the first queries settle. */
-export async function withQueryClient(ui: ReactElement) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const view = render(<QueryClientProvider client={client}>
-      <EligibilityLinksProvider Link="a" routes={routes}>
-        {ui}
-      </EligibilityLinksProvider>
-    </QueryClientProvider>);
+export const routes: EligibilityRoutes = {
+  club: (key) => `/club/${key}`,
+  player: (id) => `/player/${id}`,
+  methodology: () => '/methodology',
+};
+
+/** Wraps a report in what a host supplies. */
+export const inHost = (ui: ReactElement) => (
+  <EligibilityLinksProvider Link="a" routes={routes}>
+    {ui}
+  </EligibilityLinksProvider>
+);
+
+/** Renders and lets the first load settle. */
+export async function renderInHost(ui: ReactElement) {
+  const view = render(inHost(ui));
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
   });
   return view;
 }
 
-// The two ways a host shows the report. Tests go through these, so only this file
-// changes when the report's props do.
+// Tests go through this, so only this file changes when the report's props do.
 
-export const renderClubReport = ({ live = false, extraFixtures = [] as FeedFixture[] } = {}) =>
-  withQueryClient(
-    <EligibilityReport source="record" club={club} saved={saved} fixtures={[...fixtures, ...extraFixtures]} live={live} />,
+export const renderClubReport = ({
+  live = false,
+  extraFixtures = [] as FeedFixture[],
+  clubSlug = undefined as string | undefined,
+} = {}) =>
+  renderInHost(
+    <ClubEligibilityReport
+      club={club}
+      saved={saved}
+      fixtures={[...fixtures, ...extraFixtures]}
+      live={live}
+      clubSlug={clubSlug}
+    />,
   );
-
-export const renderCsvReport = () => withQueryClient(<EligibilityReport source="csv" />);

@@ -1,10 +1,14 @@
 import type { ComponentProps, ComponentType } from 'react';
 import {
+  Alert,
+  type AlertProps,
+  FormControl,
   Link,
   Paper,
   type PaperProps,
   TableCell,
   TableContainer,
+  TableRow,
   TextField,
   Typography,
   type TypographyProps,
@@ -55,29 +59,24 @@ export const Dim = styled('span')(({ theme }) => ({
   color: (theme.vars || theme).palette.text.disabled,
 })) as ComponentType<ComponentProps<'span'>>;
 
-// Text
+export const ReportAlert = styled(Alert)(({ theme }) => ({
+  marginBottom: theme.spacing(3),
+})) as ComponentType<AlertProps>;
 
-const Body2 = (props: TypographyProps) => <Typography variant="body2" {...props} />;
-const Body2Inline = (props: TypographyProps) => <Typography variant="body2" component="span" {...props} />;
+export const PlainList = styled('ul')(({ theme }) => ({
+  margin: 0,
+  paddingLeft: theme.spacing(2.5),
+})) as ComponentType<ComponentProps<'ul'>>;
 
-/** Secondary small print that ends a block. */
-export const Note = styled(Body2)(({ theme }) => ({
-  color: (theme.vars || theme).palette.text.secondary,
-  margin: theme.spacing(0, 0, 2),
-})) as ComponentType<TypographyProps>;
-
-/** Secondary small print that follows content. */
-export const Aside = styled(Body2)(({ theme }) => ({
-  color: (theme.vars || theme).palette.text.secondary,
-  margin: theme.spacing(2, 0, 0),
-})) as ComponentType<TypographyProps>;
-
-/** Small text with weight. */
-export const Emphasis = styled(Body2Inline)(({ theme }) => ({
-  fontWeight: theme.typography.fontWeightMedium,
-})) as ComponentType<TypographyProps>;
+export const ColumnsControl = styled(FormControl)({ minWidth: 170 }) as typeof FormControl;
 
 // Tables
+
+export const ClickableRow = styled(TableRow)({ cursor: 'pointer' }) as typeof TableRow;
+
+export const BoldCell = styled(TableCell)(({ theme }) => ({
+  fontWeight: theme.typography.fontWeightBold,
+})) as typeof TableCell;
 
 export const RoundsTable = styled(TableContainer)(({ theme }) => ({
   marginTop: theme.spacing(1),
@@ -97,8 +96,6 @@ export const FactRow = styled('div')(({ theme }) => ({
   gap: theme.spacing(2),
   padding: theme.spacing(0.5, 0),
 })) as ComponentType<ComponentProps<'div'>>;
-
-export const FactValue = styled(Emphasis)({ textAlign: 'right' }) as ComponentType<TypographyProps>;
 
 export const LinkLine = styled(Typography)(({ theme }) => ({
   marginTop: theme.spacing(0.5),

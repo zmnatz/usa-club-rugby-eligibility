@@ -15,3 +15,5 @@ export {
   PlayerEligibilityDialog,
   type ReportSource,
 } from './PlayerDetail.tsx';
+export { ClubEligibilityReport, type ClubEligibilityReportProps } from './ClubEligibilityReport.tsx';
+export { EligibilityReportView, type EligibilityReportViewProps } from './EligibilityReportView.tsx';

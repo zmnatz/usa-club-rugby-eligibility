@@ -34,6 +34,10 @@ describe('package boundaries', () => {
     expect(forbidden).toEqual([]);
   });
 
+  it.each(sourceFiles.map(({ file, text }) => [file, text]))('%s reads no environment variables', (_, text) => {
+    expect(text).not.toContain('process.env');
+  });
+
   it.each(sourceFiles.map(({ file, text }) => [file, text]))('%s holds no route strings', (_, text) => {
     expect(text.match(/['"`]\/(?:club|player|methodology)\b[^'"`]*/g) ?? []).toEqual([]);
   });
