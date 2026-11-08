@@ -77,6 +77,21 @@ export const ColumnsControl = styled(FormControl)({ minWidth: 170 }) as typeof F
 
 export const ClickableRow = styled(TableRow)({ cursor: 'pointer' }) as typeof TableRow;
 
+/** Looks like the text inside it, with a focus ring for keyboard users. */
+export const PlayerButton = styled('button')(({ theme }) => ({
+  padding: 0,
+  border: 0,
+  background: 'none',
+  color: 'inherit',
+  font: 'inherit',
+  textAlign: 'left',
+  cursor: 'pointer',
+  '&:focus-visible': {
+    outline: `2px solid ${(theme.vars || theme).palette.primary.main}`,
+    outlineOffset: 2,
+  },
+})) as ComponentType<ComponentProps<'button'>>;
+
 export const BoldCell = styled(TableCell)(({ theme }) => ({
   fontWeight: theme.typography.fontWeightBold,
 })) as typeof TableCell;
