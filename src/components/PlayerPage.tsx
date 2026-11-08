@@ -4,7 +4,7 @@ import { EligibilityStatusChip } from '@/components/EligibilityStatusChip';
 import { PlayerDetailBody } from '@/components/PlayerEligibilityDialog';
 import { Panel, Row, Section } from '@/theme';
 import { clubPath } from '@/utils/paths';
-import type { PlayerClubEntry, PlayerPageData } from '@/utils/playerDb';
+import type { PlayerClubEntry, PlayerProfile } from '@zmnatz/usa-club-rugby-data';
 
 /** A player's verdict in one club. */
 function PlayerInClub({ entry }: { entry: PlayerClubEntry }) {
@@ -39,7 +39,7 @@ function PlayerInClub({ entry }: { entry: PlayerClubEntry }) {
 /** One player's verdict and the matches behind it, on a page of its own so it can
  *  be linked to. A player can have played for several clubs, so there is a section
  *  for each: eligibility is worked out within a club. Built from the nightly data. */
-export function PlayerPage({ data }: { data: PlayerPageData }) {
+export function PlayerPage({ data }: { data: PlayerProfile }) {
   return (
     <>
       <Breadcrumbs aria-label="breadcrumb">

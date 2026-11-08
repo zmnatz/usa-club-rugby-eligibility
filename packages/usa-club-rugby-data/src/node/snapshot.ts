@@ -28,7 +28,7 @@ import { listJson, prune, readJson, readText, withoutStamp, writeIfChanged } fro
 export interface SnapshotPaths {
   /** The raw match archive: manifest.json, fixtures/ and matches/. */
   archiveDir: string;
-  /** The published data: index.json, fixtures.json and clubs/. */
+  /** The published data: index.json, fixtures.json, players.json and clubs/. */
   publishedDir: string;
 }
 
@@ -72,6 +72,7 @@ export function renderPublished(data: PublishedData, generatedAt: string): Map<s
   for (const [key, snapshot] of Object.entries(data.clubFiles)) {
     files.set(`clubs/${key}.json`, JSON.stringify({ ...snapshot, generatedAt }));
   }
+  files.set('players.json', JSON.stringify(data.players));
   files.set('index.json', JSON.stringify({ generatedAt, season: data.season, clubs: data.clubs }));
   return files;
 }

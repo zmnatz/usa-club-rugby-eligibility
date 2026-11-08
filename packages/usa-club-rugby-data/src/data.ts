@@ -4,6 +4,7 @@
 //   public/data/index.json           PublishedIndexFile
 //   public/data/fixtures.json        PublishedFixturesFile
 //   public/data/clubs/<key>.json     PublishedClubFile
+//   public/data/players.json         PublishedPlayersFile
 //   archive/manifest.json            ArchiveManifest
 //   archive/fixtures/<season>.json   ArchiveFixturesFile
 //   archive/matches/<season>.json    ArchiveMatchesFile
@@ -29,6 +30,13 @@ export interface PublishedFixturesFile {
 export interface PublishedClubFile extends ParticipationSnapshot {
   /** When the data last changed; always present in a published file. */
   generatedAt: string;
+}
+
+/** `players.json`: which clubs each player is in the record of, by CMS id, for finding
+ *  a player from their id. Players whose profile isn't public are left out. */
+export interface PublishedPlayersFile {
+  season: string;
+  players: Record<string, { name: string; clubs: string[] }>;
 }
 
 /** `archive/fixtures/<season>.json`: every senior club fixture that season by id. */

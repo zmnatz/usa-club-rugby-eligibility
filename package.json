@@ -6,9 +6,8 @@
   "packageManager": "bun@1.4.4",
   "scripts": {
     "lib": "bun run --cwd packages/usa-club-rugby-data build",
-    "players": "bun run lib && node scripts/build-players.ts",
-    "dev": "bun run players && next dev",
-    "build": "bun run players && next build",
+    "dev": "bun run lib && next dev",
+    "build": "bun run lib && next build",
     "snapshot": "bun run lib && node packages/usa-club-rugby-data/dist/cli.js snapshot",
     "verify": "bun run lib && node packages/usa-club-rugby-data/dist/cli.js verify",
     "lint": "biome check .",

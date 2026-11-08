@@ -74,6 +74,36 @@ describe('createPublishedClient', () => {
     expect(verdict('Bob', 'D2')).toBe(false);
   });
 
+  it("gives a player's verdict on every club side they're listed on, with the fixtures behind it", async () => {
+    const files2 = {
+      ...files,
+      'players.json': { season: index.season, players: { p1: { name: 'Ann Test', clubs: ['nova'] } } },
+    };
+    const { fetcher, requested } = server(files2);
+    const client = createPublishedClient({ baseUrl: 'https://example.test/data', fetch: fetcher });
+    const profile = await client.player('p1', { now: new Date('2026-11-07T00:00:00Z') });
+    expect(profile?.name).toBe('Ann Test');
+    expect(profile?.clubs.map((entry) => [entry.clubKey, entry.sideLabel, entry.player.eligible])).toEqual([
+      ['nova', 'D1', true],
+      ['nova', 'D2', false],
+    ]);
+    // Each side's rounds, the player's own side first, and no raw rows kept.
+    expect(profile?.clubs[1].fixtures.sides.map((side) => side.teamName)).toEqual(['NOVA MD2', 'NOVA MD1']);
+    expect(profile?.clubs[0].player.rows).toEqual([]);
+    expect(requested.sort()).toEqual([
+      'https://example.test/data/clubs/nova.json',
+      'https://example.test/data/fixtures.json',
+      'https://example.test/data/index.json',
+      'https://example.test/data/players.json',
+    ]);
+  });
+
+  it('has no profile for a player that is not in the published index', async () => {
+    const { fetcher } = server({ ...files, 'players.json': { season: index.season, players: {} } });
+    const client = createPublishedClient({ baseUrl: 'https://example.test/data', fetch: fetcher });
+    expect(await client.player('nobody')).toBeNull();
+  });
+
   it('reads each file once however many calls need it', async () => {
     const { fetcher, requested } = server(files);
     const client = createPublishedClient({ baseUrl: 'https://example.test/data', fetch: fetcher });

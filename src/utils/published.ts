@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import type { FeedFixture, ParticipationSnapshot, PublishedIndex } from '@zmnatz/usa-club-rugby-data';
+import type { FeedFixture, ParticipationSnapshot, PublishedIndex, PublishedPlayersFile } from '@zmnatz/usa-club-rugby-data';
 
 // Reads the nightly data at build time, for getStaticPaths and getStaticProps.
 // Never import this from code that runs in the browser.
@@ -17,6 +17,10 @@ export function readIndex(): PublishedIndex {
 
 export function readFixtures(): FeedFixture[] {
   return readJson<{ fixtures: FeedFixture[] }>('fixtures.json').fixtures;
+}
+
+export function readPlayers(): PublishedPlayersFile {
+  return readJson<PublishedPlayersFile>('players.json');
 }
 
 export function readClubSnapshot(key: string): ParticipationSnapshot {

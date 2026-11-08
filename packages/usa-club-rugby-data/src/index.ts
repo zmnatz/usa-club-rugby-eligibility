@@ -9,12 +9,14 @@ export type {
   PublishedClubFile,
   PublishedFixturesFile,
   PublishedIndexFile,
+  PublishedPlayersFile,
 } from './data.ts';
 export * from './eligibility.ts';
 export * from './feeds.ts';
 export * from './live.ts';
 export type * from './match.ts';
 export * from './participation.ts';
+export * from './players.ts';
 export * from './playerHistory.ts';
 export * from './published.ts';
 export * from './rugbyXplorer.ts';

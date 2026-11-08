@@ -32,7 +32,6 @@ import {
   PlayerEligibilityDialog,
   type ReportSource,
 } from '@/components/PlayerEligibilityDialog';
-import type { ClubSchedule, RoundAccounting } from '@/utils/playerDetail';
 import {
   BoldCell,
   ClickableRow,
@@ -64,6 +63,7 @@ import {
   participationRows,
   type ParticipationSnapshot,
   type PlayerEligibility,
+  type PlayerRecordInput,
   type PlayerRow,
   qualifyingRows,
   remainingMatches,
@@ -151,9 +151,8 @@ interface DivisionTableProps {
   ownLabel: string;
   /** The club's other sides; empty for a club with one side. */
   otherLabels: string[];
-  /** What the player detail needs to account for each round; absent for a CSV report. */
-  accounting: RoundAccounting | null;
-  schedule: ClubSchedule | null;
+  /** What the player detail accounts each round from; absent for a CSV report. */
+  record: PlayerRecordInput | null;
   /** Whether the players have pages of their own; a CSV report's don't. */
   playerPages: boolean;
   summary: { total: number; eligible: number; onTrack: number };
@@ -218,8 +217,7 @@ function DivisionTable({
   source,
   ownLabel,
   otherLabels,
-  accounting,
-  schedule,
+  record,
   playerPages,
   summary,
   visibleCount,
@@ -363,8 +361,7 @@ function DivisionTable({
         player={detail}
         source={source}
         ownLabel={ownLabel}
-        accounting={accounting}
-        schedule={schedule}
+        record={record}
         pageHref={detail && playerPages && !isNameWithheld(detail.name) ? playerPath(detail.playerId) : undefined}
         showCmsId={detail !== null && hasSharedName(detail, shared)}
         onClose={() => setDetail(null)}
@@ -571,18 +568,8 @@ export function EligibilityReport(props: EligibilityReportProps) {
   );
   const oneSide = club?.sides.length === 1;
   const sameNames = source === 'record' && breakdown ? sameNamePlayers(breakdown.sides) : [];
-  const accounting: RoundAccounting | null =
-    source === 'record' && snapshot && club
-      ? {
-          snapshot,
-          fixtures: fixtures ?? [],
-          clubSlug: xplorerClubSlug,
-          sides: club.sides.map((side) => side.teamName),
-        }
-      : null;
-  const clubSchedule: ClubSchedule | null = club
-    ? { club, fixtures: fixtures ?? [], clubSlug: xplorerClubSlug }
-    : null;
+  const playerRecord: PlayerRecordInput | null =
+    source === 'record' && snapshot && club ? { club, snapshot, fixtures: fixtures ?? [] } : null;
   const activeSide = breakdown?.sides[Math.min(activeTab, breakdown.sides.length - 1)] ?? null;
 
   const matchesFilters = (player: PlayerEligibility) => {
@@ -815,8 +802,7 @@ export function EligibilityReport(props: EligibilityReportProps) {
               otherLabels={breakdown.sides
                 .filter((side) => side.teamName !== activeSide.teamName)
                 .map((side) => side.label)}
-              accounting={accounting}
-              schedule={clubSchedule}
+              record={playerRecord}
               playerPages={props.source === 'record'}
               summary={activeSide.summary}
               visibleCount={visiblePlayers.length}

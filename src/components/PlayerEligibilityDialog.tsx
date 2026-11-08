@@ -16,19 +16,17 @@ import {
 import { EligibilityStatusChip } from '@/components/EligibilityStatusChip';
 import {
   matchUrl,
+  playerFixtures,
+  type PlayerFixtures,
+  type PlayerRecordInput,
+  type SideRounds,
   type PlayerEligibility,
   type PlayerRound,
   type PlayerRoundStatus,
   type PlayerRow,
   type PossibleFixture,
 } from '@zmnatz/usa-club-rugby-data';
-import {
-  playerFixtures,
-  type ClubSchedule,
-  type PlayerFixtures,
-  type RoundAccounting,
-  type SideRounds,
-} from '@/utils/playerDetail';
+
 import { Block, Dim, EmptyCell, FactRow, FactValue, LinkLine, NoWrapCell, RoundsTable, Row } from '@/theme';
 import { formatDate } from '@/utils/dates';
 
@@ -355,16 +353,14 @@ export function PlayerDetailBody({ player, source, ownLabel, fixtures, footer }:
  *  report's players also have a page of their own, linked from here. */
 export function PlayerEligibilityDialog({
   player,
-  accounting,
-  schedule,
+  record,
   pageHref,
   onClose,
   ...detail
 }: Omit<PlayerDetailProps, 'player' | 'fixtures'> & {
   player: PlayerEligibility | null;
   /** What the fixtures are worked out from; absent for a CSV report. */
-  accounting: RoundAccounting | null;
-  schedule: ClubSchedule | null;
+  record: PlayerRecordInput | null;
   /** The player's own page, when they have one. */
   pageHref?: string;
   onClose: () => void;
@@ -386,7 +382,7 @@ export function PlayerEligibilityDialog({
           <DialogContent dividers>
             <PlayerDetailBody
               player={player}
-              fixtures={accounting && schedule ? playerFixtures(player, accounting, schedule) : null}
+              fixtures={record ? playerFixtures(player, record) : null}
               {...detail}
             />
           </DialogContent>

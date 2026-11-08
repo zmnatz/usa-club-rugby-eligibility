@@ -1,6 +1,8 @@
 import type { ArchiveFixturesFile, ArchiveMatchesFile } from './data.ts';
 import type { Club, EligibilityRules } from './types.ts';
 import { currentSeason, type FeedFixture, isResult, sortFixtures } from './feeds.ts';
+import type { PublishedPlayersFile } from './data.ts';
+import { buildPlayerIndex, clubContext } from './players.ts';
 import { buildParticipationSnapshot, clubSnapshot, listClubs, type ParticipationSnapshot } from './participation.ts';
 import {
   aggregatePlayerHistory,
@@ -142,6 +144,8 @@ export interface PublishedData {
   fixtures: FeedFixture[];
   clubs: (Club & { key: string })[];
   clubFiles: Record<string, ParticipationSnapshot>;
+  /** Which clubs each player is in the record of. */
+  players: PublishedPlayersFile;
 }
 
 /** Calculates the published data from archived fixtures and matches, with no
@@ -169,5 +173,12 @@ export function buildPublished(
   const clubFiles = Object.fromEntries(
     clubs.map((club) => [club.key, clubSnapshot(participation, club, results)]),
   );
-  return { season, fixtures: seasonFixtures, clubs, clubFiles };
+  const players = buildPlayerIndex(
+    season,
+    clubs.map((club) => ({
+      club,
+      breakdown: clubContext(club, clubFiles[club.key], seasonFixtures, { rules, now }).breakdown,
+    })),
+  );
+  return { season, fixtures: seasonFixtures, clubs, clubFiles, players };
 }
