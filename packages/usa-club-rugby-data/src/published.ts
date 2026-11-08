@@ -3,12 +3,12 @@ import type { Club, EligibilityBreakdown, EligibilityRules, PlayerEligibility } 
 import { computeBreakdown } from './eligibility.ts';
 import type { FeedFixture } from './feeds.ts';
 import { clubFixtures, type ParticipationSnapshot, participationRows, remainingMatches } from './participation.ts';
-import { clubContext, type PlayerClubEntry, type PlayerProfile, playerEntries, sortEntries } from './players.ts';
+import { buildPlayerIndex, clubContext, type PlayerClubEntry, type PlayerProfile, playerEntries, sortEntries } from './players.ts';
 import { DEFAULT_RULES } from './rules.ts';
 import { parseTeamSide, type TeamSide } from './teamSide.ts';
 
 // Readers for the data the nightly job publishes: public/data/index.json,
-// fixtures.json, players.json and clubs/<key>.json. Plain HTTPS GETs of static files, so there is
+// fixtures.json and clubs/<key>.json. Plain HTTPS GETs of static files, so there is
 // no rate limit and no need for a key.
 
 /** Where the reference deployment publishes its nightly data. */
@@ -52,7 +52,7 @@ export interface PlayerRecord extends PlayerEligibility {
 }
 
 export interface PublishedClientOptions {
-  /** Directory URL holding index.json, fixtures.json, players.json and clubs/. */
+  /** Directory URL holding index.json, fixtures.json and clubs/. */
   baseUrl?: string;
   fetch?: typeof globalThis.fetch;
 }
@@ -127,13 +127,24 @@ export function createPublishedClient({
       const [{ club: found, snapshot }, all] = await Promise.all([club(key), fixtures()]);
       return clubEligibility(snapshot, all, found, options);
     },
-    /** Which clubs each player is in the record of, by CMS id. */
-    playerIndex: () => getJson<PublishedPlayersFile>('players.json'),
+    /** Which clubs each player is in the record of, by CMS id. Not a published file: worked
+     *  out from every club's file, so it reads them all. */
+    async playerIndex(options: EligibilityOptions = {}): Promise<PublishedPlayersFile> {
+      const [{ clubs, season }, all] = await Promise.all([index(), fixtures()]);
+      const contexts = await Promise.all(
+        clubs.map(async (published) => {
+          const { snapshot } = await club(published.key);
+          return { club: published, breakdown: clubContext(published, snapshot, all, options).breakdown };
+        }),
+      );
+      return buildPlayerIndex(season, contexts);
+    },
     /** A player from their CMS id: their verdict on every club side they're listed on, with
      *  the fixtures behind each. Null when the id isn't in the published record (players
-     *  whose profile isn't public aren't). Reads the clubs the player is in, not every club. */
+     *  whose profile isn't public aren't). Reads every club to find them, so for many lookups
+     *  build the index once with `playerIndex`. */
     async player(id: string, options: EligibilityOptions = {}): Promise<PlayerProfile | null> {
-      const found = (await getJson<PublishedPlayersFile>('players.json')).players[id];
+      const found = (await this.playerIndex(options)).players[id];
       if (!found) return null;
       const all = await fixtures();
       const entries: PlayerClubEntry[] = [];

@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -75,15 +75,9 @@ describe('build and verify', () => {
     expect(result).toMatchObject({ ok: true, asOf: NOW.toISOString(), different: [], missing: [], extra: [] });
   });
 
-  it('publishes which clubs each player is in, and verify checks it', async () => {
+  it('does not publish a player index, which each consumer works out for itself', async () => {
     await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
-    const file = path.join(publishedDir, 'players.json');
-    expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({
-      season: '2026/2027',
-      players: { p1: { name: 'Ann Test', clubs: ['nova'] } },
-    });
-    writeFileSync(file, readFileSync(file, 'utf8').replace('"nova"', '"potomac"'));
-    expect(verifyPublished({ archiveDir, publishedDir })).toMatchObject({ ok: false, different: ['players.json'] });
+    expect(existsSync(path.join(publishedDir, 'players.json'))).toBe(false);
   });
 
   it('leaves the files alone when nothing changed, even at a later time', async () => {
