@@ -6,7 +6,6 @@ import {
   Link,
   Paper,
   TableCell,
-  TableContainer,
   TableRow,
   Typography,
 } from '@mui/material';
@@ -32,15 +31,6 @@ export const Row = styled('div', { shouldForwardProp: notForwarded('gap', 'below
   marginBottom: theme.spacing(below),
 }));
 
-/** A block with theme-spaced margins. */
-export const Block = styled('div', { shouldForwardProp: notForwarded('above', 'below') })<{
-  above?: number;
-  below?: number;
-}>(({ theme, above = 0, below = 0 }) => ({
-  marginTop: theme.spacing(above),
-  marginBottom: theme.spacing(below),
-}));
-
 export const Section = styled('section')(({ theme }) => ({ marginBottom: theme.spacing(4) }));
 
 /** A padded surface. */
@@ -58,8 +48,6 @@ export const ScrollX = styled('div')(({ theme }) => ({ overflowX: 'auto', margin
 
 export const Pre = styled('pre')({ overflowX: 'auto' });
 
-/** Something shown in place of a value. */
-export const Dim = styled('span')(({ theme }) => ({ color: (theme.vars || theme).palette.text.disabled }));
 
 // App shell
 
@@ -82,26 +70,11 @@ export const BrandLink = styled(Link)({ flexGrow: 1 }) as typeof Link;
 
 // Tables
 
-export const RoundsTable = styled(TableContainer)(({ theme }) => ({ marginTop: theme.spacing(1) })) as typeof TableContainer;
-
 export const ClickableRow = styled(TableRow)({ cursor: 'pointer' });
-
-export const NoWrapCell = styled(TableCell)({ whiteSpace: 'nowrap' });
 
 export const BoldCell = styled(TableCell)(({ theme }) => ({ fontWeight: theme.typography.fontWeightBold }));
 
 export const EmptyCell = styled(TableCell)(({ theme }) => ({ color: (theme.vars || theme).palette.text.secondary }));
-
-// Detail facts
-
-export const FactRow = styled('div')(({ theme }) => ({
-  display: 'flex',
-  justifyContent: 'space-between',
-  gap: theme.spacing(2),
-  padding: theme.spacing(0.5, 0),
-}));
-
-export const LinkLine = styled(Typography)(({ theme }) => ({ marginTop: theme.spacing(0.5) }));
 
 // Forms
 

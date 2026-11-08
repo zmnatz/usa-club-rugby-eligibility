@@ -1,5 +1,4 @@
 import { useMemo, type ReactNode } from 'react';
-import NextLink from 'next/link';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +12,6 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { EligibilityStatusChip } from '@zmnatz/usa-club-rugby-components';
 import {
   matchUrl,
   playerFixtures,
@@ -27,8 +25,19 @@ import {
   type PossibleFixture,
 } from '@zmnatz/usa-club-rugby-data';
 
-import { Block, Dim, EmptyCell, FactRow, LinkLine, NoWrapCell, RoundsTable, Row } from '@/theme';
-import { formatDate } from '@/utils/dates';
+import { formatDate } from './dates.ts';
+import { EligibilityStatusChip } from './EligibilityStatusChip.tsx';
+import { useEligibilityLinks } from './links.tsx';
+import {
+  Block,
+  Dim,
+  EmptyCell,
+  FactRow,
+  LinkLine,
+  NoWrapCell,
+  RoundsTable,
+  Row,
+} from './primitives.tsx';
 
 /** Where a report's rows came from. Only a CSV report carries USA IDs and
  *  registration dates. */
@@ -380,6 +389,7 @@ export function PlayerEligibilityDialog({
   pageHref?: string;
   onClose: () => void;
 }) {
+  const { Link } = useEligibilityLinks();
   return (
     <Dialog open={player !== null} onClose={onClose} maxWidth="md" fullWidth>
       {player !== null && (
@@ -388,7 +398,7 @@ export function PlayerEligibilityDialog({
             <PlayerDetailHeading player={player} source={detail.source} showCmsId={detail.showCmsId} />
             {pageHref && (
               <LinkLine variant="body2">
-                <MuiLink component={NextLink} href={pageHref}>
+                <MuiLink component={Link} href={pageHref}>
                   Open as a page
                 </MuiLink>
               </LinkLine>

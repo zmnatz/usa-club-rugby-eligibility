@@ -29,11 +29,6 @@ import {
   DialogTitle,
 } from '@mui/material';
 import {
-  CAUTION_ADVICE,
-  PlayerEligibilityDialog,
-  type ReportSource,
-} from '@/components/PlayerEligibilityDialog';
-import {
   BoldCell,
   ClickableRow,
   ColumnsControl,
@@ -44,7 +39,12 @@ import {
   PlainList,
   Row,
 } from '@/theme';
-import { EligibilityStatusChip } from '@zmnatz/usa-club-rugby-components';
+import {
+  CAUTION_ADVICE,
+  EligibilityStatusChip,
+  PlayerEligibilityDialog,
+  type ReportSource,
+} from '@zmnatz/usa-club-rugby-components';
 import {
   type Club,
   clubGaps,
