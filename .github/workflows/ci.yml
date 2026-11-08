@@ -47,3 +47,117 @@ jobs:
           path: dist
           retention-days: 7
           compression-level: 9
+
+  # Builds one club in the Playwright container, screenshots it, stores the images
+  # on the orphan `pr-screenshots` branch so they can be embedded inline, and keeps
+  # one sticky comment on the PR up to date. Pages come from the PR description's
+  # `## Screenshots` section plus routes mapped from changed files
+  # (playwright/config/screenshots.yml); `/` is always included.
+  screenshots:
+    name: Screenshots
+    # A fork's token can't push the images or comment.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency:
+      group: screenshots-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    container:
+      # Floating tag: the newest Playwright image, with Chromium and its system
+      # libraries preinstalled.
+      image: mcr.microsoft.com/playwright:noble
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR: ${{ github.event.pull_request.number }}
+      SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      # The image lacks the GitHub CLI and git, and setup-bun needs unzip.
+      - name: Install the GitHub CLI, git and unzip
+        run: apt-get update -qq && apt-get install -y -qq gh git unzip
+
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: bun install --frozen-lockfile
+
+      # The quick build. selectClubs ignores BUILD_CLUBS under CI so a deployed site
+      # is always complete, and this build is never deployed, so GITHUB_ACTIONS is
+      # cleared for this command only. That also builds for the root path.
+      - name: Build one club
+        env:
+          BUILD_CLUBS: pittsburgh-forge
+        run: GITHUB_ACTIONS= bun run build
+
+      # Only the screenshot tooling's own dependencies, not the site's.
+      - name: Install the screenshot tooling
+        working-directory: playwright
+        run: npm install --no-audit --no-fund --no-package-lock
+
+      # A no-op when the image's browser build matches the Playwright version
+      # installed above; otherwise it fetches just the matching Chromium.
+      - name: Ensure the matching Chromium
+        working-directory: playwright
+        run: npx playwright-core install chromium
+
+      - name: Read the PR description and changed files
+        run: |
+          gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json body -q .body > pr-body.md
+          # Not `gh pr diff`, which fails above 300 files.
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename' > changed-files.txt
+
+      - name: Take screenshots
+        run: node playwright/screenshots.ts --site dist --changed-files changed-files.txt --pr-body pr-body.md --out screenshots
+
+      - name: Publish images to the pr-screenshots branch
+        if: always() && hashFiles('screenshots/report.json') != ''
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin pr-screenshots >/dev/null; then
+            git fetch origin pr-screenshots
+            git worktree add shots-branch origin/pr-screenshots --detach
+          else
+            git worktree add --orphan -b pr-screenshots shots-branch
+          fi
+          dir="shots-branch/pr-$PR/$SHA"
+          mkdir -p "$dir"
+          cp screenshots/*.png "$dir/"
+          cd shots-branch
+          git add -A
+          git commit -m "Screenshots for PR $PR at $SHA" || true
+          # Other PRs push to this branch too.
+          for attempt in 1 2 3; do
+            git push origin HEAD:pr-screenshots && exit 0
+            git fetch origin pr-screenshots
+            git rebase origin/pr-screenshots
+          done
+          exit 1
+
+      - name: Build the comment
+        if: always() && hashFiles('screenshots/report.json') != ''
+        run: |
+          node playwright/screenshot-comment.ts \
+            --report screenshots/report.json \
+            --image-base-url "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/pr-screenshots/pr-$PR/$SHA" \
+            --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --sha "$SHA" \
+            --out comment.md
+
+      - name: Create or update the PR comment
+        if: always() && hashFiles('comment.md') != ''
+        run: |
+          id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
+            --jq '[.[] | select(.body | startswith("<!-- pr-screenshots -->"))][0].id // empty')
+          if [ -n "$id" ]; then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -F body=@comment.md >/dev/null
+          else
+            gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body-file comment.md
+          fi

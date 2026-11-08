@@ -38,6 +38,12 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 - Keep `pages/methodology.mdx` in step with any change to the rules or data.
 - A change to the shape of the published JSON, or to an export of the package, is a breaking change to the npm package: bump its version. The same goes for the exports of the component package.
 
+## Pull Requests
+
+- CI screenshots each PR at desktop and mobile sizes and keeps one comment on it up to date, from a build of a single club made inside the job. For a PR that changes UI, add a `## Screenshots` section to the description listing the pages to capture, one path per line (e.g. `/csv/`). Club and player paths must belong to the club the job builds (`BUILD_CLUBS` in `.github/workflows/ci.yml`).
+- Add `wait: <selector>` or `delay: <ms>` after a path for pages that fill in after load.
+- Without the section the run captures `/` plus any routes mapped from changed files in `playwright/config/screenshots.yml`.
+
 ## Agent skills
 
 ### Issue tracker

@@ -1,0 +1,11 @@
+# Known noise for the PR screenshot report. Findings whose text
+# matches `pattern` (a regular expression) are left out of the PR comment.
+# `kind` is optional: console, pageerror or request; omit it to match all.
+# Add an entry with a reason rather than silencing a finding silently.
+noise:
+  - kind: request
+    pattern: "/_next/data/\\S+ 404$"
+    reason: The job builds one club, so links to every other club prefetch data that isn't there.
+  - kind: console
+    pattern: "^Failed to load resource: the server responded with a status of 404"
+    reason: The same prefetches. Chromium's message has no URL, and a real 404 is still reported as a request.

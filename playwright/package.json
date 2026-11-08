@@ -1,0 +1,13 @@
+{
+  "name": "usa-club-rugby-eligibility-playwright",
+  "private": true,
+  "type": "module",
+  "description": "PR screenshot tooling, isolated from the site's dependencies so its CI job installs only these.",
+  "scripts": {
+    "screenshots": "node screenshots.ts"
+  },
+  "dependencies": {
+    "playwright-core": "latest",
+    "js-yaml": "latest"
+  }
+}
