@@ -4,13 +4,13 @@ import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { type ComponentProps, useEffect, useRef } from 'react';
 import { MDXProvider } from '@mdx-js/react';
-import { AppBar, CssBaseline, Link as MuiLink, Toolbar, Typography } from '@mui/material';
+import { AppBar, Container, CssBaseline, Link as MuiLink, Stack, Toolbar, Typography } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { AppCacheProvider, type EmotionCacheProviderProps } from '@mui/material-nextjs/v16-pagesRouter';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { EligibilityLinksProvider, SkipToFirstPlayer } from '@zmnatz/usa-club-rugby-components';
 import { mdxComponents } from '@/components/Mdx';
-import { BrandLink, Footer, Main, Shell, theme } from '@/theme';
+import { theme } from '@/theme';
 import { routes } from '@/utils/paths';
 import { queryClient } from '@/utils/queryClient';
 
@@ -56,15 +56,15 @@ export default function App({
               <meta name="description" content={DESCRIPTION} />
               <title>USA Club Rugby Eligibility</title>
             </Head>
-            <Shell>
+            <Stack sx={{ minHeight: '100dvh' }}>
               {clubReport && <SkipToFirstPlayer ref={skipLink} />}
               <AppBar position="static" color="primary" elevation={0}>
-                <Toolbar>
-                  <BrandLink component={NextLink} href="/" color="inherit" underline="none">
+                <Toolbar sx={{ flexWrap: 'wrap', gap: 2 }}>
+                  <MuiLink component={NextLink} href="/" color="inherit" underline="none" sx={{ flexGrow: 1 }}>
                     <Typography variant="h6" component="span">
                       USA Club Rugby Eligibility
                     </Typography>
-                  </BrandLink>
+                  </MuiLink>
                   <MuiLink component={NextLink} href="/methodology" color="inherit">
                     Methodology
                   </MuiLink>
@@ -73,15 +73,15 @@ export default function App({
                   </MuiLink>
                 </Toolbar>
               </AppBar>
-              <Main component="main" maxWidth={narrow ? 'md' : 'lg'}>
+              <Container component="main" maxWidth={narrow ? 'md' : 'lg'} sx={{ py: 3, flexGrow: 1 }}>
                 <MDXProvider components={mdxComponents}>
                   <Component {...pageProps} />
                 </MDXProvider>
-              </Main>
-              <Footer>
+              </Container>
+              <Typography component="footer" variant="body2" color="text.secondary" align="center" sx={{ py: 3 }}>
                 Not an official USA Rugby or USA Club Rugby tool. Data from Rugby Xplorer.
-              </Footer>
-            </Shell>
+              </Typography>
+            </Stack>
           </EligibilityLinksProvider>
         </ThemeProvider>
       </QueryClientProvider>

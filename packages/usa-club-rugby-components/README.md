@@ -54,7 +54,9 @@ A route is any function returning a URL, so query strings work: `player: (id) =>
 
 ### The theme
 
-Components take their colours and spacing from your MUI `ThemeProvider`, or from MUI's default theme if there isn't one. No extra theme setup is needed.
+Colours, type and shapes come from your MUI `ThemeProvider`, or from MUI's default theme if there isn't one. No extra theme setup is needed: the layout is on the components, so overriding MUI components in your theme restyles the screens without breaking them.
+
+The club list and skip link have no MUI equivalent: override them as `EligibilityClubList` and `EligibilitySkipLink`.
 
 ## Components
 

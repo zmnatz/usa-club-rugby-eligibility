@@ -1,7 +1,7 @@
 import { createTheme } from '@mui/material/styles';
 
 // Neutral on purpose: this tool serves every club, so it carries no club's colours.
-// All styling lives here (the theme) or in ./primitives; components don't use `sx`.
+// The theme sets the look. Layout is on the components, so they work without it.
 
 export const theme = createTheme({
   // The static HTML carries both schemes behind prefers-color-scheme, so the browser
@@ -45,10 +45,5 @@ export const theme = createTheme({
       ],
     },
     MuiBreadcrumbs: { styleOverrides: { root: ({ theme }) => ({ marginBottom: theme.spacing(2) }) } },
-    MuiToolbar: {
-      styleOverrides: { root: ({ theme }) => ({ gap: theme.spacing(2), flexWrap: 'wrap' }) },
-    },
   },
 });
-
-export * from './primitives';

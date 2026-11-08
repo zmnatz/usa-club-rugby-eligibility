@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Typography } from '@mui/material';
+import { Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import type { PublishedClub } from '@zmnatz/usa-club-rugby-data';
+import { spreadRow } from './layout.ts';
 import { useEligibilityLinks } from './links.tsx';
-import { ClubList, EmptyNote, Panel, Row, SearchField } from './primitives.tsx';
+import { ClubList } from './primitives.tsx';
 
 export interface ClubDirectoryProps {
   clubs: PublishedClub[];
@@ -37,33 +38,36 @@ export function ClubDirectory({ clubs, autoFocus = false }: ClubDirectoryProps) 
   }, [sorted, query]);
 
   return (
-    <Panel>
-      <Row gap={2} between below={2}>
-        <SearchField
-          size="small"
-          label="Find a club"
-          placeholder="Club or team name"
-          inputRef={searchInput}
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-        <Typography variant="body2" color="text.secondary">
-          {shown.length} of {sorted.length} clubs
-        </Typography>
-      </Row>
-      <ClubList>
-        {shown.map((club) => (
-          <li key={club.key}>
-            <Link href={routes.club(club.key)}>
-              {club.name}
-              <span>{club.sides.map((side) => side.label).join(' · ')}</span>
-            </Link>
-          </li>
-        ))}
-      </ClubList>
-      {shown.length === 0 && (
-        <EmptyNote color="text.secondary">No club matches “{query}”.</EmptyNote>
-      )}
-    </Panel>
+    <Card component="section">
+      <CardContent>
+        <Stack direction="row" spacing={2} useFlexGap sx={{ ...spreadRow, mb: 2 }}>
+          <TextField
+            size="small"
+            label="Find a club"
+          sx={{ flex: '1 1 260px', maxWidth: 420 }}
+            placeholder="Club or team name"
+            inputRef={searchInput}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          <Typography variant="body2" color="text.secondary">
+            {shown.length} of {sorted.length} clubs
+          </Typography>
+        </Stack>
+        <ClubList>
+          {shown.map((club) => (
+            <li key={club.key}>
+              <Link href={routes.club(club.key)}>
+                {club.name}
+                <span>{club.sides.map((side) => side.label).join(' · ')}</span>
+              </Link>
+            </li>
+          ))}
+        </ClubList>
+        {shown.length === 0 && (
+          <Typography color="text.secondary">No club matches “{query}”.</Typography>
+        )}
+      </CardContent>
+    </Card>
   );
 }

@@ -1,5 +1,18 @@
 import { type ChangeEvent, useMemo, useState } from 'react';
-import { Button, Dialog, DialogTitle, Link as MuiLink, TextField, Typography } from '@mui/material';
+import {
+  Alert,
+  Autocomplete,
+  Button,
+  Card,
+  CardContent,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Link as MuiLink,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import {
   clubsInRows,
   computeBreakdown,
@@ -11,8 +24,8 @@ import {
   remainingMatches,
 } from '@zmnatz/usa-club-rugby-data';
 import { EligibilityReportView } from './EligibilityReportView.tsx';
+import { wrapRow } from './layout.ts';
 import { useEligibilityLinks } from './links.tsx';
-import { ClubPicker, FileButton, FormDialogContent, Panel, ReportAlert, Row } from './primitives.tsx';
 
 interface CsvFormProps {
   csvText: string;
@@ -26,12 +39,12 @@ interface CsvFormProps {
 
 function CsvForm({ csvText, fileName, canClear, onFile, onTextChange, onRun, onClear }: CsvFormProps) {
   return (
-    <>
-      <Row gap={2} stretch below={2}>
-        <FileButton variant="outlined" component="label">
+    <Stack spacing={2} useFlexGap>
+      <Stack direction="row" spacing={2} useFlexGap sx={wrapRow}>
+        <Button variant="outlined" component="label">
           Choose CSV file…
           <input type="file" accept=".csv,text/csv" hidden onChange={onFile} />
-        </FileButton>
+        </Button>
         <TextField
           label="…or paste the CSV"
           multiline
@@ -41,8 +54,8 @@ function CsvForm({ csvText, fileName, canClear, onFile, onTextChange, onRun, onC
           value={csvText}
           onChange={(event) => onTextChange(event.target.value)}
         />
-      </Row>
-      <Row gap={2}>
+      </Stack>
+      <Stack direction="row" spacing={2} useFlexGap sx={wrapRow}>
         <Button variant="contained" onClick={onRun} disabled={!csvText.trim()}>
           Run Breakdown
         </Button>
@@ -54,8 +67,8 @@ function CsvForm({ csvText, fileName, canClear, onFile, onTextChange, onRun, onC
             Loaded: {fileName}
           </Typography>
         )}
-      </Row>
-    </>
+      </Stack>
+    </Stack>
   );
 }
 
@@ -135,38 +148,43 @@ export function MatchParticipationReport({ fixtures }: MatchParticipationReportP
         </MuiLink>
       </Typography>
 
-      <Row gap={2} below={3}>
-        {clubs.length > 1 && (
-          <ClubPicker
-            size="small"
-            options={clubs}
-            value={club}
-            onChange={(_, next) => {
-              setCsvClubName(next?.name ?? '');
-              setActiveSide(0);
-            }}
-            getOptionLabel={(option) => option.name}
-            isOptionEqualToValue={(option, value) => option.name === value.name}
-            renderInput={(params) => <TextField {...params} label={`Club in this report (${clubs.length})`} />}
-          />
-        )}
-      </Row>
-
-      {!breakdown && (
-        <Panel pad={3} below={4}>
-          <CsvForm
-            csvText={csvText}
-            fileName={fileName}
-            canClear={Boolean(csvText)}
-            onFile={handleFile}
-            onTextChange={handleTextChange}
-            onRun={handleRun}
-            onClear={handleClear}
-          />
-        </Panel>
+      {clubs.length > 1 && (
+        <Autocomplete
+          size="small"
+          sx={{ maxWidth: 420, mb: 2 }}
+          options={clubs}
+          value={club}
+          onChange={(_, next) => {
+            setCsvClubName(next?.name ?? '');
+            setActiveSide(0);
+          }}
+          getOptionLabel={(option) => option.name}
+          isOptionEqualToValue={(option, value) => option.name === value.name}
+          renderInput={(params) => <TextField {...params} label={`Club in this report (${clubs.length})`} />}
+        />
       )}
 
-      {error && <ReportAlert severity="error">{error}</ReportAlert>}
+      {!breakdown && (
+        <Card component="section" sx={{ mb: 4 }}>
+          <CardContent>
+            <CsvForm
+              csvText={csvText}
+              fileName={fileName}
+              canClear={Boolean(csvText)}
+              onFile={handleFile}
+              onTextChange={handleTextChange}
+              onRun={handleRun}
+              onClear={handleClear}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
       {!breakdown && !error && (
         <Typography color="text.secondary">Upload a report and run the breakdown to see player eligibility.</Typography>
@@ -189,7 +207,7 @@ export function MatchParticipationReport({ fixtures }: MatchParticipationReportP
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Edit Report Data</DialogTitle>
-        <FormDialogContent dividers>
+        <DialogContent dividers>
           <CsvForm
             csvText={csvText}
             fileName={fileName}
@@ -199,7 +217,7 @@ export function MatchParticipationReport({ fixtures }: MatchParticipationReportP
             onRun={handleRun}
             onClear={handleClear}
           />
-        </FormDialogContent>
+        </DialogContent>
       </Dialog>
     </>
   );

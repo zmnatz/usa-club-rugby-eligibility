@@ -1,12 +1,19 @@
 import { type ReactNode, useMemo, useState } from 'react';
 import {
+  Alert,
+  Box,
   Button,
+  Card,
+  CardContent,
   Checkbox,
   Chip,
+  FormControl,
   InputLabel,
+  Link as MuiLink,
   ListItemText,
   MenuItem,
   Select,
+  Stack,
   Tab,
   Table,
   TableBody,
@@ -35,19 +42,9 @@ import {
 } from '@zmnatz/usa-club-rugby-data';
 import { formatDate } from './dates.ts';
 import { EligibilityStatusChip } from './EligibilityStatusChip.tsx';
+import { spreadRow, wrapRow } from './layout.ts';
 import { useEligibilityLinks } from './links.tsx';
 import { CAUTION_ADVICE, PlayerEligibilityDialog, type ReportSource } from './PlayerDetail.tsx';
-import {
-  BoldCell,
-  ClickableRow,
-  ColumnsControl,
-  EmptyCell,
-  Panel,
-  PlainList,
-  PlayerButton,
-  ReportAlert,
-  Row,
-} from './primitives.tsx';
 import { FIRST_PLAYER_ID } from './SkipToFirstPlayer.tsx';
 import { compareValues, type SortDirection } from './sort.ts';
 
@@ -146,7 +143,11 @@ function renderCell(
         <>
           {/* A real button, so the player can be reached and opened from the keyboard.
               Its click reaches the row, which opens the detail. */}
-          <PlayerButton
+          <MuiLink
+            component="button"
+            color="inherit"
+            underline="none"
+            align="left"
             id={buttonId}
             type="button"
             aria-haspopup="dialog"
@@ -155,14 +156,14 @@ function renderCell(
             <Typography variant="body2" component="strong">
               {player.name}
             </Typography>
-          </PlayerButton>
+          </MuiLink>
           {source === 'csv' && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" component="div" color="text.secondary">
               USA ID {player.playerId}
             </Typography>
           )}
           {source === 'record' && showCmsId && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" component="div" color="text.secondary">
               CMS ID {player.playerId}
             </Typography>
           )}
@@ -240,124 +241,128 @@ function DivisionTable({
   );
 
   return (
-    <Panel>
-      <Row between below={2}>
-        <Row>
-          <Typography variant="h6" component="h2">
-            {title}
-          </Typography>
-          {filtered && (
-            <Typography variant="caption" color="text.secondary">
-              Showing {visibleCount} of {summary.total}
+    <Card component="section">
+      <CardContent>
+        <Stack direction="row" spacing={2} useFlexGap sx={{ ...spreadRow, mb: 2 }}>
+          <Stack direction="row" spacing={1} useFlexGap sx={wrapRow}>
+            <Typography variant="h6" component="h2">
+              {title}
             </Typography>
-          )}
-        </Row>
-        <Row gap={1.5}>
-          <ToggleButtonGroup
-            exclusive
-            size="small"
-            value={statusFilter}
-            onChange={(_, next) => {
-              if (next) onStatusFilterChange(next as StatusFilter);
-            }}
-            aria-label="Eligibility status"
-          >
-            <ToggleButton value="all">All</ToggleButton>
-            <ToggleButton value="eligible">Eligible</ToggleButton>
-            <ToggleButton value="caution">Caution</ToggleButton>
-            <ToggleButton value="ineligible">Ineligible</ToggleButton>
-          </ToggleButtonGroup>
-          <Chip
-            size="small"
-            color={summary.eligible === summary.total ? 'success' : summary.total === 0 ? 'default' : 'warning'}
-            label={`${summary.eligible} of ${summary.total} eligible${summary.onTrack > 0 ? `, ${summary.onTrack} on track` : ''}${summary.caution > 0 ? `, ${summary.caution} caution` : ''}`}
-          />
-          <ColumnsControl size="small">
-            <InputLabel>Columns</InputLabel>
-            <Select
-              multiple
-              value={columns.filter((col) => !hiddenColumns.includes(col.key)).map((col) => col.key)}
-              label="Columns"
-              onChange={(event) => {
-                const selected = event.target.value as string[];
-                onHiddenColumnsChange(
-                  columns.map((col) => col.key).filter((key) => !selected.includes(key)),
-                );
+            {filtered && (
+              <Typography variant="caption" color="text.secondary">
+                Showing {visibleCount} of {summary.total}
+              </Typography>
+            )}
+          </Stack>
+          <Stack direction="row" spacing={1.5} useFlexGap sx={wrapRow}>
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={statusFilter}
+              onChange={(_, next) => {
+                if (next) onStatusFilterChange(next as StatusFilter);
               }}
-              renderValue={(selected) => `Columns (${selected.length})`}
+              aria-label="Eligibility status"
             >
-              {columns.map((col) => {
-                const locked = col.key === 'name';
-                return (
-                  <MenuItem key={col.key} value={col.key} disabled={locked}>
-                    <Checkbox checked={!hiddenColumns.includes(col.key)} disabled={locked} size="small" />
-                    <ListItemText primary={col.title} />
-                  </MenuItem>
-                );
-              })}
-            </Select>
-          </ColumnsControl>
-        </Row>
-      </Row>
-      <TableContainer>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              {visibleColumns.map((col) => (
-                <TableCell key={col.key} align={col.numeric ? 'right' : 'left'}>
-                  <TableSortLabel
-                    active={sort.key === col.key}
-                    direction={sort.key === col.key ? sort.direction : 'asc'}
-                    onClick={() => handleSort(col.key)}
-                  >
-                    {col.title}
-                  </TableSortLabel>
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((player, index) => (
-              <ClickableRow key={player.playerId} hover onClick={() => setDetail(player)}>
-                {visibleColumns.map((col) => {
-                  const Cell = col.key === 'participation' ? BoldCell : TableCell;
+              <ToggleButton value="all">All</ToggleButton>
+              <ToggleButton value="eligible">Eligible</ToggleButton>
+              <ToggleButton value="caution">Caution</ToggleButton>
+              <ToggleButton value="ineligible">Ineligible</ToggleButton>
+            </ToggleButtonGroup>
+            <Chip
+              size="small"
+              color={summary.eligible === summary.total ? 'success' : summary.total === 0 ? 'default' : 'warning'}
+              label={`${summary.eligible} of ${summary.total} eligible${summary.onTrack > 0 ? `, ${summary.onTrack} on track` : ''}${summary.caution > 0 ? `, ${summary.caution} caution` : ''}`}
+            />
+            <FormControl size="small" sx={{ minWidth: 170 }}>
+              <InputLabel>Columns</InputLabel>
+              <Select
+                multiple
+                value={columns.filter((col) => !hiddenColumns.includes(col.key)).map((col) => col.key)}
+                label="Columns"
+                onChange={(event) => {
+                  const selected = event.target.value as string[];
+                  onHiddenColumnsChange(
+                    columns.map((col) => col.key).filter((key) => !selected.includes(key)),
+                  );
+                }}
+                renderValue={(selected) => `Columns (${selected.length})`}
+              >
+                {columns.map((col) => {
+                  const locked = col.key === 'name';
                   return (
-                    <Cell key={col.key} align={col.numeric ? 'right' : 'left'}>
-                      {renderCell(
-                        player,
-                        col.key,
-                        source,
-                        hasSharedName(player, shared),
-                        index === 0 ? FIRST_PLAYER_ID : undefined,
-                      )}
-                    </Cell>
+                    <MenuItem key={col.key} value={col.key} disabled={locked}>
+                      <Checkbox checked={!hiddenColumns.includes(col.key)} disabled={locked} size="small" />
+                      <ListItemText primary={col.title} />
+                    </MenuItem>
                   );
                 })}
-              </ClickableRow>
-            ))}
-            {rows.length === 0 && (
+              </Select>
+            </FormControl>
+          </Stack>
+        </Stack>
+        <TableContainer>
+          <Table size="small" sx={{ '& .MuiTableRow-hover': { cursor: 'pointer' } }}>
+            <TableHead>
               <TableRow>
-                <EmptyCell id={FIRST_PLAYER_ID} tabIndex={-1} colSpan={visibleColumns.length} align="center">
-                  {filtered
-                    ? 'No players match the current filters.'
-                    : `No players in this team's report.`}
-                </EmptyCell>
+                {visibleColumns.map((col) => (
+                  <TableCell key={col.key} align={col.numeric ? 'right' : 'left'}>
+                    <TableSortLabel
+                      active={sort.key === col.key}
+                      direction={sort.key === col.key ? sort.direction : 'asc'}
+                      onClick={() => handleSort(col.key)}
+                    >
+                      {col.title}
+                    </TableSortLabel>
+                  </TableCell>
+                ))}
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <PlayerEligibilityDialog
-        player={detail}
-        source={source}
-        ownLabel={ownLabel}
-        record={record}
-        clubSlug={clubSlug}
-        pageHref={detail && playerPages && !isNameWithheld(detail.name) ? routes.player(detail.playerId) : undefined}
-        showCmsId={detail !== null && hasSharedName(detail, shared)}
-        onClose={() => setDetail(null)}
-      />
-    </Panel>
+            </TableHead>
+            <TableBody>
+              {rows.map((player, index) => (
+                <TableRow key={player.playerId} hover onClick={() => setDetail(player)}>
+                  {visibleColumns.map((col) => {
+                    const content = renderCell(
+                      player,
+                      col.key,
+                      source,
+                      hasSharedName(player, shared),
+                      index === 0 ? FIRST_PLAYER_ID : undefined,
+                    );
+                    return (
+                      <TableCell key={col.key} align={col.numeric ? 'right' : 'left'}>
+                        {col.key === 'participation' ? <strong>{content}</strong> : content}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              ))}
+              {rows.length === 0 && (
+                <TableRow>
+                  <TableCell id={FIRST_PLAYER_ID} tabIndex={-1} colSpan={visibleColumns.length} align="center">
+                    <Typography variant="body2" component="span" color="text.secondary">
+                      {filtered
+                        ? 'No players match the current filters.'
+                        : `No players in this team's report.`}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <PlayerEligibilityDialog
+          player={detail}
+          source={source}
+          ownLabel={ownLabel}
+          record={record}
+          clubSlug={clubSlug}
+          pageHref={detail && playerPages && !isNameWithheld(detail.name) ? routes.player(detail.playerId) : undefined}
+          showCmsId={detail !== null && hasSharedName(detail, shared)}
+          onClose={() => setDetail(null)}
+        />
+      </CardContent>
+    </Card>
   );
 }
 
@@ -525,56 +530,56 @@ export function EligibilityReportView({
   };
 
   return (
-    <>
+    <Stack spacing={2} useFlexGap>
       {oneSide && (
-        <Typography variant="body2" color="textSecondary" gutterBottom>
+        <Typography variant="body2" color="textSecondary">
           Only one of this club&apos;s sides is in the data, so it is assessed as a one-side club:
           two qualifying matches, and no other side to compare.
         </Typography>
       )}
 
       {gaps.length > 0 && (
-        <ReportAlert severity="warning">
+        <Alert severity="warning">
           These matches have gaps in the record, so some counts may be low. Check them
           before relying on a verdict:
-          <PlainList>
+          <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
             {gaps.map((gap) => (
               <li key={`${gap.fixtureId}-${gap.teamName}`}>{gapText(gap)}</li>
             ))}
-          </PlainList>
-        </ReportAlert>
+          </Box>
+        </Alert>
       )}
 
       {sameNames.length > 0 && (
-        <ReportAlert severity="info">
+        <Alert severity="info">
           These players share a name, so they are kept separate. If one person has two Rugby
           Xplorer profiles, their matches stay split until the profiles are merged, and each count
           may be low:
-          <PlainList>
+          <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
             {sameNames.map(({ name, ids }) => (
               <li key={name}>
                 {name}: CMS IDs {ids.join(', ')}
               </li>
             ))}
-          </PlainList>
-        </ReportAlert>
+          </Box>
+        </Alert>
       )}
 
       {breakdown.ignoredTeamNames.length > 0 && (
-        <ReportAlert severity="info">
+        <Alert severity="info">
           Ignored rows for team(s) that aren&apos;t one of this club&apos;s NCS sides:{' '}
           {breakdown.ignoredTeamNames.join(', ')}.
-        </ReportAlert>
+        </Alert>
       )}
 
       {breakdown.sides.some((entry) => entry.summary.caution > 0) && (
-        <ReportAlert severity="warning">
+        <Alert severity="warning">
           Caution marks players one upper-side match from losing a side for the rest of the
           season. {CAUTION_ADVICE}
-        </ReportAlert>
+        </Alert>
       )}
 
-      <Row between gap={2} below={2}>
+      <Stack direction="row" spacing={2} useFlexGap sx={spreadRow}>
         {oneSide ? (
           <div />
         ) : (
@@ -590,13 +595,13 @@ export function EligibilityReportView({
             ))}
           </Tabs>
         )}
-        <Row>
+        <Stack direction="row" spacing={1} useFlexGap sx={wrapRow}>
           {actions}
           <Button variant="outlined" size="small" onClick={handleExport}>
             Export Report
           </Button>
-        </Row>
-      </Row>
+        </Stack>
+      </Stack>
       {side && (
         <DivisionTable
           title={divisionLabel(side.label, side.teamName, side.summary)}
@@ -617,6 +622,6 @@ export function EligibilityReportView({
           allPlayers={side.players}
         />
       )}
-    </>
+    </Stack>
   );
 }

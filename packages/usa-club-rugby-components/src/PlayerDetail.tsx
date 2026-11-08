@@ -5,9 +5,11 @@ import {
   DialogTitle,
   Link as MuiLink,
   Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
   Typography,
@@ -27,17 +29,8 @@ import {
 
 import { formatDate } from './dates.ts';
 import { EligibilityStatusChip } from './EligibilityStatusChip.tsx';
+import { wrapRow } from './layout.ts';
 import { useEligibilityLinks } from './links.tsx';
-import {
-  Block,
-  Dim,
-  EmptyCell,
-  FactRow,
-  LinkLine,
-  NoWrapCell,
-  RoundsTable,
-  Row,
-} from './primitives.tsx';
 
 /** Where a report's rows came from. Only a CSV report carries USA IDs and
  *  registration dates. */
@@ -46,14 +39,14 @@ export type ReportSource = 'record' | 'csv';
 /** One labeled fact row in the player detail dialog. */
 function Fact({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <FactRow>
+    <Stack direction="row" spacing={2} sx={{ justifyContent: 'space-between', py: 0.5 }}>
       <Typography variant="body2" color="text.secondary">
         {label}
       </Typography>
       <Typography variant="body2" component="strong" align="right">
         {value ?? '—'}
       </Typography>
-    </FactRow>
+    </Stack>
   );
 }
 
@@ -84,7 +77,7 @@ function RoundsMatrix({ rows }: { rows: PlayerRow[] }) {
     );
   }
   return (
-    <RoundsTable component={Paper} variant="outlined">
+    <TableContainer component={Paper} variant="outlined">
       <Table size="small">
         <TableHead>
           <TableRow>
@@ -106,7 +99,7 @@ function RoundsMatrix({ rows }: { rows: PlayerRow[] }) {
                 return (
                   <TableCell key={round} align="center">
                     {shown ?? (
-                      <Dim>—</Dim>
+                      <Typography variant="inherit" component="span" color="text.disabled">—</Typography>
                     )}
                   </TableCell>
                 );
@@ -115,7 +108,7 @@ function RoundsMatrix({ rows }: { rows: PlayerRow[] }) {
           ))}
         </TableBody>
       </Table>
-    </RoundsTable>
+    </TableContainer>
   );
 }
 
@@ -149,11 +142,11 @@ function TeamRounds({
 }) {
   const counted = rounds.filter((round) => round.counted).length;
   return (
-    <Block above={2}>
+    <Stack spacing={1} useFlexGap>
       <Typography variant="subtitle2">
         {teamName}: {counted} counted {counted === 1 ? 'match' : 'matches'}
       </Typography>
-      <RoundsTable component={Paper} variant="outlined">
+      <TableContainer component={Paper} variant="outlined">
         <Table size="small">
           <TableHead>
             <TableRow>
@@ -172,9 +165,11 @@ function TeamRounds({
                 <TableCell>{round.round}</TableCell>
                 <TableCell>{roundDate(round.dateTime)}</TableCell>
                 <TableCell>{round.opponent || 'To be decided'}</TableCell>
-                <NoWrapCell>
-                  {round.scoreFor || round.scoreAgainst ? `${round.scoreFor} - ${round.scoreAgainst}` : '—'}
-                </NoWrapCell>
+                <TableCell>
+                  <Typography variant="inherit" component="span" noWrap>
+                    {round.scoreFor || round.scoreAgainst ? `${round.scoreFor} - ${round.scoreAgainst}` : '—'}
+                  </Typography>
+                </TableCell>
                 <TableCell>
                   {ROUND_STATUS[round.status]}
                   {round.substitutionsMissing && (
@@ -184,24 +179,26 @@ function TeamRounds({
                   )}
                 </TableCell>
                 <TableCell align="center">{round.counted ? 'Yes' : 'No'}</TableCell>
-                <NoWrapCell>
-                  <MuiLink href={matchUrl(round.fixtureId, clubSlug)} target="_blank" rel="noopener noreferrer">
+                <TableCell>
+                  <MuiLink noWrap href={matchUrl(round.fixtureId, clubSlug)} target="_blank" rel="noopener noreferrer">
                     Rugby Xplorer
                   </MuiLink>
-                </NoWrapCell>
+                </TableCell>
               </TableRow>
             ))}
             {rounds.length === 0 && (
               <TableRow>
-                <EmptyCell colSpan={7} align="center">
-                  No fixtures this season.
-                </EmptyCell>
+                <TableCell colSpan={7} align="center">
+                  <Typography variant="body2" component="span" color="text.secondary">
+                    No fixtures this season.
+                  </Typography>
+                </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
-      </RoundsTable>
-    </Block>
+      </TableContainer>
+    </Stack>
   );
 }
 
@@ -217,11 +214,9 @@ function PlayedRounds({ sides, clubSlug }: { sides: SideRounds[]; clubSlug: stri
           <TeamRounds key={teamName} teamName={teamName} rounds={rounds} clubSlug={clubSlug} />
         ))}
       {notPlayed.length > 0 && (
-        <Block above={2}>
-          <Typography variant="body2" color="textSecondary">
-            No matches played this season for {notPlayed.map(({ teamName }) => teamName).join(', ')}.
-          </Typography>
-        </Block>
+        <Typography variant="body2" color="textSecondary">
+          No matches played this season for {notPlayed.map(({ teamName }) => teamName).join(', ')}.
+        </Typography>
       )}
     </>
   );
@@ -230,14 +225,14 @@ function PlayedRounds({ sides, clubSlug }: { sides: SideRounds[]; clubSlug: stri
 /** The fixtures behind an on-track verdict. */
 function PossibleFixtures({ possible, clubSlug }: { possible: PossibleFixture[]; clubSlug: string | null }) {
   return (
-    <Block above={2}>
+    <Stack spacing={1} useFlexGap>
       <Typography variant="subtitle2">Possible fixtures: {possible.length} left</Typography>
       <Typography variant="caption" color="text.secondary">
         Why this player is on track. They could still reach the minimum in these fixtures, though
         availability isn&apos;t checked and a side may not reach a playoff. On track is experimental:
         future playoff matches aren&apos;t always entered in Rugby Xplorer, so this list may be incomplete.
       </Typography>
-      <RoundsTable component={Paper} variant="outlined">
+      <TableContainer component={Paper} variant="outlined">
         <Table size="small">
           <TableHead>
             <TableRow>
@@ -255,19 +250,19 @@ function PossibleFixtures({ possible, clubSlug }: { possible: PossibleFixture[];
                 <TableCell>{fixture.teamName}</TableCell>
                 <TableCell>{fixture.open ? 'Playoff, teams not decided' : fixture.opponent || 'To be decided'}</TableCell>
                 <TableCell>{fixture.competition}</TableCell>
-                <NoWrapCell>
+                <TableCell>
                   {fixture.fixtureId && (
-                    <MuiLink href={matchUrl(fixture.fixtureId, clubSlug)} target="_blank" rel="noopener noreferrer">
+                    <MuiLink noWrap href={matchUrl(fixture.fixtureId, clubSlug)} target="_blank" rel="noopener noreferrer">
                       Rugby Xplorer
                     </MuiLink>
                   )}
-                </NoWrapCell>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-      </RoundsTable>
-    </Block>
+      </TableContainer>
+    </Stack>
   );
 }
 
@@ -292,7 +287,7 @@ export function PlayerDetailHeading({
   component = 'span',
 }: Pick<PlayerDetailProps, 'player' | 'source' | 'showCmsId'> & { component?: 'span' | 'h1' }) {
   return (
-    <Row>
+    <Stack direction="row" spacing={1} useFlexGap sx={wrapRow}>
       <Typography variant={component === 'h1' ? 'h4' : 'h6'} component={component}>
         {player.name}
       </Typography>
@@ -307,7 +302,7 @@ export function PlayerDetailHeading({
         </Typography>
       )}
       <EligibilityStatusChip player={player} />
-    </Row>
+    </Stack>
   );
 }
 
@@ -318,19 +313,19 @@ export const CAUTION_ADVICE =
 /** Everything about one player's verdict, shared by the dialog and the player page. */
 export function PlayerDetailBody({ player, source, ownLabel, fixtures, clubSlug = null, footer }: PlayerDetailProps) {
   return (
-    <>
+    <Stack spacing={2} useFlexGap>
       {player.reasons.length > 0 && (
-        <Typography variant="body2" color="textSecondary" gutterBottom>
+        <Typography variant="body2" color="textSecondary">
           {player.reasons.join(' · ')}
         </Typography>
       )}
       {player.cautions.length > 0 && (
-        <Typography variant="body2" color="textSecondary" gutterBottom>
+        <Typography variant="body2" color="textSecondary">
           {player.cautions.join(' · ')}. {CAUTION_ADVICE}
         </Typography>
       )}
       {player.pending.length > 0 && (
-        <Typography variant="body2" color="textSecondary" gutterBottom>
+        <Typography variant="body2" color="textSecondary">
           {player.pending.join(' · ')}
         </Typography>
       )}
@@ -348,32 +343,30 @@ export function PlayerDetailBody({ player, source, ownLabel, fixtures, clubSlug 
       {fixtures ? (
         <>
           <PlayedRounds sides={fixtures.sides} clubSlug={clubSlug} />
-          <Block above={2}>
-            <Typography variant="body2" color="textSecondary">
-              Open a report to check a line against Rugby Xplorer.
-            </Typography>
-          </Block>
+          <Typography variant="body2" color="textSecondary">
+            Open a report to check a line against Rugby Xplorer.
+          </Typography>
         </>
       ) : (
         <>
           {player.rows.map((row) => (
-            <Block key={row.competition || 'report row'} above={2}>
+            <div key={row.competition || 'report row'}>
               <Typography variant="subtitle2">
                 {row.competition || 'Report row'} — {row.teamName}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Appearances {row.appearances} · Played {row.played} · Substitute {row.substitute}
               </Typography>
-            </Block>
+            </div>
           ))}
-          <Block above={2}>
+          <Stack spacing={1} useFlexGap>
             <Typography variant="subtitle2">Rounds by competition</Typography>
             <RoundsMatrix rows={player.rows} />
-          </Block>
+          </Stack>
         </>
       )}
       {footer}
-    </>
+    </Stack>
   );
 }
 
@@ -401,11 +394,11 @@ export function PlayerEligibilityDialog({
           <DialogTitle>
             <PlayerDetailHeading player={player} source={detail.source} showCmsId={detail.showCmsId} />
             {pageHref && (
-              <LinkLine variant="body2">
+              <Typography variant="body2">
                 <MuiLink component={Link} href={pageHref}>
                   Open as a page
                 </MuiLink>
-              </LinkLine>
+              </Typography>
             )}
           </DialogTitle>
           <DialogContent dividers>
