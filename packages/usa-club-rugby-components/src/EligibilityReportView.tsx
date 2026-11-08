@@ -41,9 +41,7 @@ import {
   BoldCell,
   ClickableRow,
   ColumnsControl,
-  Emphasis,
   EmptyCell,
-  Note,
   Panel,
   PlainList,
   ReportAlert,
@@ -138,9 +136,9 @@ function renderCell(player: PlayerEligibility, key: SortKey, source: ReportSourc
     case 'name':
       return (
         <>
-          <Emphasis>
+          <Typography variant="body2" component="strong">
             {player.name}
-          </Emphasis>
+          </Typography>
           {source === 'csv' && (
             <Typography variant="caption" color="text.secondary">
               USA ID {player.playerId}
@@ -506,10 +504,10 @@ export function EligibilityReportView({
   return (
     <>
       {oneSide && (
-        <Note>
+        <Typography variant="body2" color="textSecondary" gutterBottom>
           Only one of this club&apos;s sides is in the data, so it is assessed as a one-side club:
           two qualifying matches, and no other side to compare.
-        </Note>
+        </Typography>
       )}
 
       {gaps.length > 0 && (

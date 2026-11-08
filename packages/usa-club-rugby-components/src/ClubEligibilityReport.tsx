@@ -17,7 +17,7 @@ import {
 import { formatDateTime } from './dates.ts';
 import { EligibilityReportView } from './EligibilityReportView.tsx';
 import { useEligibilityLinks } from './links.tsx';
-import { Lead, ReportAlert, Row } from './primitives.tsx';
+import { ReportAlert, Row } from './primitives.tsx';
 
 const LIVE_RECORD_STALE_MS = 10 * 60 * 1000;
 
@@ -66,7 +66,7 @@ export function ClubEligibilityReport({ club, saved, fixtures, live = false, clu
 
   return (
     <>
-      <Lead>
+      <Typography color="textSecondary" gutterBottom>
         {`Counted from the lineups and substitutions entered in Rugby Xplorer for every
              senior club league and local playoff match. Fixtures still to play before Super
              Regionals count towards the two-match minimums, shown as on track (experimental).
@@ -77,7 +77,7 @@ export function ClubEligibilityReport({ club, saved, fixtures, live = false, clu
         <MuiLink component={Link} href={routes.methodology()}>
           How this report is worked out
         </MuiLink>
-      </Lead>
+      </Typography>
 
       <Row gap={2} below={3}>
         <Typography variant="body2" color="text.secondary">

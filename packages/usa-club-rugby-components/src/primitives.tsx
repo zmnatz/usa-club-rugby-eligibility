@@ -59,35 +59,6 @@ export const Dim = styled('span')(({ theme }) => ({
   color: (theme.vars || theme).palette.text.disabled,
 })) as ComponentType<ComponentProps<'span'>>;
 
-// Text
-
-const Body2 = (props: TypographyProps) => <Typography variant="body2" {...props} />;
-const Body2Inline = (props: TypographyProps) => <Typography variant="body2" component="span" {...props} />;
-
-/** Secondary small print that ends a block. */
-export const Note = styled(Body2)(({ theme }) => ({
-  color: (theme.vars || theme).palette.text.secondary,
-  margin: theme.spacing(0, 0, 2),
-})) as ComponentType<TypographyProps>;
-
-/** Secondary small print that follows content. */
-export const Aside = styled(Body2)(({ theme }) => ({
-  color: (theme.vars || theme).palette.text.secondary,
-  margin: theme.spacing(2, 0, 0),
-})) as ComponentType<TypographyProps>;
-
-/** The paragraph that introduces a page. */
-export const Lead = styled(Typography)(({ theme }) => ({
-  color: (theme.vars || theme).palette.text.secondary,
-  margin: theme.spacing(0, 0, 2),
-  maxWidth: 840,
-})) as ComponentType<TypographyProps>;
-
-/** Small text with weight. */
-export const Emphasis = styled(Body2Inline)(({ theme }) => ({
-  fontWeight: theme.typography.fontWeightMedium,
-})) as ComponentType<TypographyProps>;
-
 export const ReportAlert = styled(Alert)(({ theme }) => ({
   marginBottom: theme.spacing(3),
 })) as ComponentType<AlertProps>;
@@ -125,8 +96,6 @@ export const FactRow = styled('div')(({ theme }) => ({
   gap: theme.spacing(2),
   padding: theme.spacing(0.5, 0),
 })) as ComponentType<ComponentProps<'div'>>;
-
-export const FactValue = styled(Emphasis)({ textAlign: 'right' }) as ComponentType<TypographyProps>;
 
 export const LinkLine = styled(Typography)(({ theme }) => ({
   marginTop: theme.spacing(0.5),
