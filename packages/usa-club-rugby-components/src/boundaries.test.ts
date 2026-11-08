@@ -33,4 +33,8 @@ describe('package boundaries', () => {
     );
     expect(forbidden).toEqual([]);
   });
+
+  it.each(sourceFiles.map(({ file, text }) => [file, text]))('%s holds no route strings', (_, text) => {
+    expect(text.match(/['"`]\/(?:club|player|methodology)\b[^'"`]*/g) ?? []).toEqual([]);
+  });
 });

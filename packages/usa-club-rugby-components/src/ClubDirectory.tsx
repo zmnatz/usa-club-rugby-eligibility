@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react';
-import { clubPath } from '@/utils/paths';
-import NextLink from 'next/link';
 import { Typography } from '@mui/material';
-import { ClubItem, ClubLink, ClubList, EmptyNote, Panel, Row, SearchField, SideLabels } from '@/theme';
-import type { PublishedClub } from '@/utils/published';
+import type { PublishedClub } from '@zmnatz/usa-club-rugby-data';
+import { useEligibilityLinks } from './links.tsx';
+import { ClubItem, ClubLink, ClubList, EmptyNote, Panel, Row, SearchField, SideLabels } from './primitives.tsx';
 
-/** The club list on the home page, filtered by name or side. Each club opens its
- *  own page at /club/<club-key>. */
+/** Every club, filtered by name or side. Each club opens the host's club route. */
 export function ClubDirectory({ clubs }: { clubs: PublishedClub[] }) {
+  const { Link, routes } = useEligibilityLinks();
   const [query, setQuery] = useState('');
 
   const sorted = useMemo(
@@ -41,7 +40,7 @@ export function ClubDirectory({ clubs }: { clubs: PublishedClub[] }) {
       <ClubList>
         {shown.map((club) => (
           <ClubItem key={club.key}>
-            <ClubLink component={NextLink} href={clubPath(club.key)} underline="hover">
+            <ClubLink component={Link} href={routes.club(club.key)} underline="hover">
               {club.name}
               <SideLabels component="span" variant="caption" color="text.secondary">
                 {club.sides.map((side) => side.label).join(' · ')}
