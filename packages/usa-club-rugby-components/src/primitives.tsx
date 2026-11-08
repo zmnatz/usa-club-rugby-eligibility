@@ -2,6 +2,9 @@ import type { ComponentProps, ComponentType } from 'react';
 import {
   Alert,
   type AlertProps,
+  Autocomplete,
+  Button,
+  DialogContent,
   FormControl,
   Link,
   Paper,
@@ -100,6 +103,20 @@ export const FactRow = styled('div')(({ theme }) => ({
 export const LinkLine = styled(Typography)(({ theme }) => ({
   marginTop: theme.spacing(0.5),
 })) as ComponentType<TypographyProps>;
+
+// Forms
+
+export const FileButton = styled(Button)({ height: 56 }) as unknown as typeof Button;
+
+export const FormDialogContent = styled(DialogContent)(({ theme }) => ({
+  paddingTop: theme.spacing(3),
+})) as typeof DialogContent;
+
+export const ClubPicker = styled(Autocomplete)({
+  minWidth: 280,
+  flex: '1 1 280px',
+  maxWidth: 420,
+}) as unknown as typeof Autocomplete;
 
 // Club directory
 

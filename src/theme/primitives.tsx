@@ -1,12 +1,7 @@
 import {
-  Button,
   Container,
-  DialogContent,
-  FormControl,
   Link,
   Paper,
-  TableCell,
-  TableRow,
   Typography,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
@@ -42,12 +37,9 @@ export const Panel = styled(Paper, { shouldForwardProp: notForwarded('pad', 'bel
   marginBottom: theme.spacing(below),
 }));
 
-export const PlainList = styled('ul')(({ theme }) => ({ margin: 0, paddingLeft: theme.spacing(2.5) }));
-
 export const ScrollX = styled('div')(({ theme }) => ({ overflowX: 'auto', margin: theme.spacing(2, 0) }));
 
 export const Pre = styled('pre')({ overflowX: 'auto' });
-
 
 // App shell
 
@@ -70,17 +62,5 @@ export const BrandLink = styled(Link)({ flexGrow: 1 }) as typeof Link;
 
 // Tables
 
-export const ClickableRow = styled(TableRow)({ cursor: 'pointer' });
-
-export const BoldCell = styled(TableCell)(({ theme }) => ({ fontWeight: theme.typography.fontWeightBold }));
-
-export const EmptyCell = styled(TableCell)(({ theme }) => ({ color: (theme.vars || theme).palette.text.secondary }));
-
 // Forms
-
-export const ColumnsControl = styled(FormControl)({ minWidth: 170 });
-
-export const FileButton = styled(Button)({ height: 56 }) as unknown as typeof Button;
-
-export const FormDialogContent = styled(DialogContent)(({ theme }) => ({ paddingTop: theme.spacing(3) }));
 

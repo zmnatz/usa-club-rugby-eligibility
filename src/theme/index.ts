@@ -41,13 +41,9 @@ export const theme = createTheme({
         },
       ],
     },
-    MuiAlert: { styleOverrides: { root: ({ theme }) => ({ marginBottom: theme.spacing(3) }) } },
     MuiBreadcrumbs: { styleOverrides: { root: ({ theme }) => ({ marginBottom: theme.spacing(2) }) } },
     MuiToolbar: {
       styleOverrides: { root: ({ theme }) => ({ gap: theme.spacing(2), flexWrap: 'wrap' }) },
-    },
-    MuiAutocomplete: {
-      styleOverrides: { root: { minWidth: 280, flex: '1 1 280px', maxWidth: 420 } },
     },
   },
 });

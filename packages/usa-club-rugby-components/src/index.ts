@@ -17,3 +17,4 @@ export {
 } from './PlayerDetail.tsx';
 export { ClubEligibilityReport, type ClubEligibilityReportProps } from './ClubEligibilityReport.tsx';
 export { EligibilityReportView, type EligibilityReportViewProps } from './EligibilityReportView.tsx';
+export { MatchParticipationReport, type MatchParticipationReportProps } from './MatchParticipationReport.tsx';
