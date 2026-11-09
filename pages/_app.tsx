@@ -11,6 +11,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { EligibilityLinksProvider, SkipToFirstPlayer } from '@zmnatz/usa-club-rugby-components';
 import { mdxComponents } from '@/components/Mdx';
 import { theme } from '@/theme';
+import '@/theme/theme.css';
 import { routes } from '@/utils/paths';
 import { queryClient } from '@/utils/queryClient';
 
@@ -45,10 +46,11 @@ export default function App({
 
   return (
     // _document supplies the cache it extracts into the <head> of the static HTML.
-    // Without it the theme's variables land at the end of <body>, after the content.
+    // Without it the components' styles land at the end of <body>, after the content.
     <AppCacheProvider emotionCache={emotionCache}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider theme={theme}>
+        {/* The theme's CSS variables come from theme.css, once, not from every page. */}
+        <ThemeProvider theme={theme} disableStyleSheetGeneration>
           <EligibilityLinksProvider Link={PackageLink} routes={routes}>
             <CssBaseline />
             <Head>
