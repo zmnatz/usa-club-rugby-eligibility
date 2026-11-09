@@ -18,4 +18,4 @@ Decisions:
 - **Name Withheld**: a hidden profile, not a player, so it gets no row.
 - **Divisions outside the NCS**: Men's IV and Women's III sides aren't assessed and don't affect a club's other sides.
 - **Not covered**: registration, playing for another club (Reg 3.4(e)) and waivers aren't in the data.
-- **Live pull**: the deployed page starts from the nightly data and pulls only the selected club's played fixtures that had no result in it. A partial pull counts as failed and falls back to the nightly data, saying so. Development uses only the nightly data.
+- **No live pull on the site**: dropped. Club pages show the nightly data only, and the browser makes no CMS requests. `loadClubRecord` stays in the data package for other consumers.

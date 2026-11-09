@@ -8,7 +8,7 @@ export default function NotFoundPage() {
         Page not found
       </Typography>
       <Typography color="text.secondary">
-        That club or page isn&apos;t here. <MuiLink component={NextLink} href="/">Choose a club
+        That club or page isn&apos;t here. <MuiLink component={NextLink} prefetch={false} href="/">Choose a club
         from the full list</MuiLink>.
       </Typography>
     </>

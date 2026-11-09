@@ -1,3 +1,28 @@
+import NextLink from 'next/link';
+import { MDXProvider } from '@mdx-js/react';
+import { Container, Link as MuiLink, Typography } from '@mui/material';
+
+export const elements = {
+  h1: (props) => <Typography component="h1" variant="h4" gutterBottom {...props} />,
+  h2: (props) => <Typography component="h2" variant="h5" gutterBottom {...props} />,
+  h3: (props) => <Typography component="h3" variant="h6" gutterBottom {...props} />,
+  p: (props) => <Typography gutterBottom {...props} />,
+  a: ({ href, ...props }) =>
+    /^(https?:|mailto:|\/\/)/.test(href) ? (
+      <MuiLink href={href} target="_blank" rel="noopener noreferrer" {...props} />
+    ) : (
+      <MuiLink component={NextLink} prefetch={false} href={href} {...props} />
+    ),
+};
+
+export default function Layout({ children }) {
+  return (
+    <Container maxWidth="md" disableGutters>
+      <MDXProvider components={elements}>{children}</MDXProvider>
+    </Container>
+  );
+}
+
 # How the eligibility report is worked out
 
 This page explains how the [eligibility report](/) reaches each verdict: the rules, the data, how the data stays current, and how to check any result yourself.
@@ -108,9 +133,7 @@ A correction in Rugby Xplorer clears these gaps. They don't catch everything, so
 
 Each update is all or nothing. If any request fails, the previous night's data stays in place, because a partial count could wrongly pass or fail a player. If the CMS answers but holds no details for a match, that isn't a failure, and the match shows as "No lineup recorded".
 
-**When the report is opened.** The nightly data can miss matches played since it ran, so the report goes back for the selected club's fixtures that have kicked off but had no result in the nightly data, and requests only those matches. A match counts only once it has a score. If any of those requests fail, the report uses the nightly data and says so. The report shows which data it used, and when.
-
-**What this doesn't catch until the next nightly run:** corrections to a match that already had a result, and fixtures added or rescheduled since the last run.
+**Between nightly runs** the report doesn't change. Matches played, corrections made and fixtures added or rescheduled since the last run appear after the next one. The report shows when its data was last updated.
 
 ## The CSV report
 

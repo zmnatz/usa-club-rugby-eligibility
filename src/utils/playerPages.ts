@@ -15,25 +15,24 @@ import { readClubSnapshot, readFixtures, readIndex } from '@/utils/published';
 // package functions the npm client uses work out their verdicts and fixtures. Never
 // import this from code that runs in the browser.
 
-const CACHE_KEY = '__playerPages';
-
 interface Cache {
   players: ReturnType<typeof buildPlayerIndex>['players'];
   /** Each club's verdicts, by club key. */
   contexts: Map<string, ClubContext>;
 }
 
+let built: Cache | undefined;
+
 /** Per build process, which every page asks. Every club's verdicts are worked out once
  *  here, since finding which clubs a player is in needs all of them. */
 function cache(): Cache {
-  const store = globalThis as unknown as Record<string, Cache | undefined>;
-  if (!store[CACHE_KEY]) {
+  if (!built) {
     const index = readIndex();
     const fixtures = readFixtures();
     const contexts = new Map(
       index.clubs.map((club) => [club.key, clubContext(club, readClubSnapshot(club.key), fixtures)] as const),
     );
-    store[CACHE_KEY] = {
+    built = {
       players: buildPlayerIndex(
         index.season,
         [...contexts].map(([, { club, breakdown }]) => ({ club, breakdown })),
@@ -41,7 +40,7 @@ function cache(): Cache {
       contexts,
     };
   }
-  return store[CACHE_KEY];
+  return built;
 }
 
 function context(key: string): ClubContext {

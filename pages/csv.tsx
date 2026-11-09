@@ -1,13 +1,16 @@
 import Head from 'next/head';
 import NextLink from 'next/link';
 import { Breadcrumbs, Link as MuiLink, Typography } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
 import { MatchParticipationReport } from '@zmnatz/usa-club-rugby-components';
-import { loadFixtures } from '@/utils/data';
+import { createPublishedClient } from '@zmnatz/usa-club-rugby-data';
+
+// A report can be for any club, so it needs the national fixture list, which is too
+// big to put in the page for visitors who never run one.
+const { fixtures: loadFixtures } = createPublishedClient({
+  baseUrl: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/data`,
+});
 
 export default function CsvPage() {
-  // A report can be for any club, so this is the national fixture list.
-  const { data: fixtures } = useQuery({ queryKey: ['eligibility-fixtures'], queryFn: loadFixtures });
   return (
     <>
       <Head>
@@ -18,7 +21,7 @@ export default function CsvPage() {
         />
       </Head>
       <Breadcrumbs aria-label="breadcrumb">
-        <MuiLink component={NextLink} href="/" underline="hover" color="inherit">
+        <MuiLink component={NextLink} prefetch={false} href="/" underline="hover" color="inherit">
           All clubs
         </MuiLink>
         <Typography color="text.primary">CSV report</Typography>
@@ -26,7 +29,7 @@ export default function CsvPage() {
       <Typography variant="h4" component="h1" gutterBottom>
         Match Participation Report
       </Typography>
-      <MatchParticipationReport fixtures={fixtures} />
+      <MatchParticipationReport loadFixtures={loadFixtures} />
     </>
   );
 }

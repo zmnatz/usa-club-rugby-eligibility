@@ -1,12 +1,8 @@
 import type { GetStaticProps } from 'next';
-import { clubPath } from '@/utils/paths';
 import Head from 'next/head';
 import NextLink from 'next/link';
-import { useRouter } from 'next/router';
-import { useEffect } from 'react';
 import { Button, Link as MuiLink, Typography } from '@mui/material';
 import { ClubDirectory } from '@zmnatz/usa-club-rugby-components';
-import { formatDateTime } from '@/utils/dates';
 import { readIndex, type PublishedClub } from '@/utils/published';
 
 interface HomeProps {
@@ -22,17 +18,11 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   };
 };
 
-export default function HomePage({ clubs, season, generatedAt }: HomeProps) {
-  const router = useRouter();
-  // The old report put the club in ?club=<key>. Keep those links working.
-  useEffect(() => {
-    if (!router.isReady) return;
-    const legacy = router.query.club;
-    if (typeof legacy === 'string' && clubs.some((club) => club.key === legacy)) {
-      router.replace(clubPath(legacy));
-    }
-  }, [router, clubs]);
+// A fixed locale and time zone, so the static HTML reads the same after hydration.
+const formatDateTime = (dateTime: string) =>
+  `${new Date(dateTime).toLocaleString('en-US', { timeZone: 'UTC', dateStyle: 'medium', timeStyle: 'short' })} UTC`;
 
+export default function HomePage({ clubs, season, generatedAt }: HomeProps) {
   return (
     <>
       <Head>
@@ -51,13 +41,13 @@ export default function HomePage({ clubs, season, generatedAt }: HomeProps) {
         league and local playoff match. Super Regionals, National Championships, 7s, friendlies,
         crossovers, Men&apos;s Division IV and Women&apos;s Division III don&apos;t count. Fixtures
         still to play before Super Regionals count towards the two-match minimums, shown as on
-        track (experimental). <MuiLink component={NextLink} href="/methodology">How this
+        track (experimental). <MuiLink component={NextLink} prefetch={false} href="/methodology">How this
         report is worked out</MuiLink>.
       </Typography>
       <Typography variant="body2" color="textSecondary" gutterBottom>
         {season} season · {clubs.length} clubs · data last changed {formatDateTime(generatedAt)}
       </Typography>
-      <Button component={NextLink} href="/csv" variant="outlined" sx={{ mb: 2 }}>
+      <Button component={NextLink} prefetch={false} href="/csv" variant="outlined" sx={{ mb: 2 }}>
         Check a Match Participation Report (CSV)
       </Button>
       <ClubDirectory clubs={clubs} autoFocus />

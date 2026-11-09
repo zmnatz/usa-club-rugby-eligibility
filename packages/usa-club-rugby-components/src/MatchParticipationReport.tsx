@@ -31,13 +31,14 @@ interface CsvFormProps {
   csvText: string;
   fileName: string;
   canClear: boolean;
+  loading: boolean;
   onFile: (event: ChangeEvent<HTMLInputElement>) => void;
   onTextChange: (value: string) => void;
   onRun: () => void;
   onClear: () => void;
 }
 
-function CsvForm({ csvText, fileName, canClear, onFile, onTextChange, onRun, onClear }: CsvFormProps) {
+function CsvForm({ csvText, fileName, canClear, loading, onFile, onTextChange, onRun, onClear }: CsvFormProps) {
   return (
     <Stack spacing={2} useFlexGap>
       <Stack direction="row" spacing={2} useFlexGap sx={wrapRow}>
@@ -56,7 +57,7 @@ function CsvForm({ csvText, fileName, canClear, onFile, onTextChange, onRun, onC
         />
       </Stack>
       <Stack direction="row" spacing={2} useFlexGap sx={wrapRow}>
-        <Button variant="contained" onClick={onRun} disabled={!csvText.trim()}>
+        <Button variant="contained" onClick={onRun} disabled={!csvText.trim()} loading={loading}>
           Run Breakdown
         </Button>
         <Button variant="text" onClick={onClear} disabled={!canClear}>
@@ -73,14 +74,17 @@ function CsvForm({ csvText, fileName, canClear, onFile, onTextChange, onRun, onC
 }
 
 export interface MatchParticipationReportProps {
-  /** Every fixture the report's clubs could still play, for on-track verdicts.
-   *  Leave undefined until they load: unknown isn't the same as none left. */
-  fixtures?: FeedFixture[];
+  /** Loads every fixture the report's clubs could still play, for on-track verdicts.
+   *  Called when a report is first run, and verdicts wait for it. Without it, or if it
+   *  fails, no player can be on track. */
+  loadFixtures?: () => Promise<FeedFixture[]>;
 }
 
 /** Checks a Rugby Xplorer Match Participation Report, uploaded or pasted, for any club. */
-export function MatchParticipationReport({ fixtures }: MatchParticipationReportProps) {
+export function MatchParticipationReport({ loadFixtures }: MatchParticipationReportProps) {
   const { Link, routes } = useEligibilityLinks();
+  const [fixtures, setFixtures] = useState<FeedFixture[]>();
+  const [loading, setLoading] = useState(false);
   const [csvClubName, setCsvClubName] = useState('');
   const [fileName, setFileName] = useState('');
   const [csvText, setCsvText] = useState('');
@@ -94,7 +98,7 @@ export function MatchParticipationReport({ fixtures }: MatchParticipationReportP
 
   const breakdown = useMemo(() => {
     if (!club || !csvRows) return null;
-    // Fixtures not loaded (yet) are unknown, which isn't the same as none left.
+    // Fixtures that didn't load are unknown, which isn't the same as none left.
     const remaining = fixtures ? remainingMatches(fixtures, club, DEFAULT_RULES) : {};
     return computeBreakdown(qualifyingRows(csvRows, DEFAULT_RULES), club.sides, DEFAULT_RULES, remaining);
   }, [club, csvRows, fixtures]);
@@ -112,10 +116,16 @@ export function MatchParticipationReport({ fixtures }: MatchParticipationReportP
     event.target.value = '';
   };
 
-  const handleRun = () => {
+  const handleRun = async () => {
     setError(null);
     try {
-      setCsvRows(parsePlayerRows(csvText));
+      const rows = parsePlayerRows(csvText);
+      if (loadFixtures && !fixtures) {
+        setLoading(true);
+        setFixtures(await loadFixtures().catch(() => undefined));
+        setLoading(false);
+      }
+      setCsvRows(rows);
     } catch (err) {
       setCsvRows(null);
       setError(err instanceof Error ? err.message : 'Could not read the CSV.');
@@ -171,6 +181,7 @@ export function MatchParticipationReport({ fixtures }: MatchParticipationReportP
               csvText={csvText}
               fileName={fileName}
               canClear={Boolean(csvText)}
+              loading={loading}
               onFile={handleFile}
               onTextChange={handleTextChange}
               onRun={handleRun}
@@ -212,6 +223,7 @@ export function MatchParticipationReport({ fixtures }: MatchParticipationReportP
             csvText={csvText}
             fileName={fileName}
             canClear={Boolean(csvText) || Boolean(csvRows)}
+            loading={loading}
             onFile={handleFile}
             onTextChange={handleTextChange}
             onRun={handleRun}

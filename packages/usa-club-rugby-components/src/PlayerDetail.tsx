@@ -143,7 +143,7 @@ function TeamRounds({
   const counted = rounds.filter((round) => round.counted).length;
   return (
     <Stack spacing={1} useFlexGap>
-      <Typography variant="subtitle2">
+      <Typography variant="subtitle2" component="h3">
         {teamName}: {counted} counted {counted === 1 ? 'match' : 'matches'}
       </Typography>
       <TableContainer component={Paper} variant="outlined">
@@ -226,7 +226,7 @@ function PlayedRounds({ sides, clubSlug }: { sides: SideRounds[]; clubSlug: stri
 function PossibleFixtures({ possible, clubSlug }: { possible: PossibleFixture[]; clubSlug: string | null }) {
   return (
     <Stack spacing={1} useFlexGap>
-      <Typography variant="subtitle2">Possible fixtures: {possible.length} left</Typography>
+      <Typography variant="subtitle2" component="h3">Possible fixtures: {possible.length} left</Typography>
       <Typography variant="caption" color="text.secondary">
         Why this player is on track. They could still reach the minimum in these fixtures, though
         availability isn&apos;t checked and a side may not reach a playoff. On track is experimental:
@@ -351,7 +351,7 @@ export function PlayerDetailBody({ player, source, ownLabel, fixtures, clubSlug 
         <>
           {player.rows.map((row) => (
             <div key={row.competition || 'report row'}>
-              <Typography variant="subtitle2">
+              <Typography variant="subtitle2" component="h3">
                 {row.competition || 'Report row'} — {row.teamName}
               </Typography>
               <Typography variant="caption" color="text.secondary">
@@ -360,7 +360,7 @@ export function PlayerDetailBody({ player, source, ownLabel, fixtures, clubSlug 
             </div>
           ))}
           <Stack spacing={1} useFlexGap>
-            <Typography variant="subtitle2">Rounds by competition</Typography>
+            <Typography variant="subtitle2" component="h3">Rounds by competition</Typography>
             <RoundsMatrix rows={player.rows} />
           </Stack>
         </>
