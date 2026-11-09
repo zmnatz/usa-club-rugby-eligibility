@@ -1,4 +1,4 @@
-import type { PublishedClubFile, PublishedFixturesFile, PublishedPlayersFile } from './data.ts';
+import type { PublishedClubFile, PublishedFixturesFile, PublishedPlayersFile, PublishedSeasonFile } from './data.ts';
 import type { Club, EligibilityBreakdown, EligibilityRules, PlayerEligibility } from './types.ts';
 import type { FeedFixture } from './feeds.ts';
 import { clubBreakdown, clubFixtures, type ParticipationSnapshot } from './participation.ts';
@@ -118,6 +118,8 @@ export function createPublishedClient({
     index,
     fixtures,
     club,
+    /** Everything published for one Locked Season, by its slug, e.g. "2024-25". */
+    season: (slug: string) => getJson<PublishedSeasonFile>(`seasons/${slug}.json`),
     /** Every club published for the current season. */
     clubs: async (): Promise<PublishedClub[]> => (await index()).clubs,
     /** Every team (side) of every club. */

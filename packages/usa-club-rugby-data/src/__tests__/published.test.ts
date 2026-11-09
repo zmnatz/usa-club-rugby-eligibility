@@ -135,3 +135,19 @@ describe('data file types', () => {
     expect((await client.club('nova')).snapshot.season).toBe(snapshot.season);
   });
 });
+
+describe('a Locked Season', () => {
+  it('reads the one file that season is published as', async () => {
+    const file = { season: '2024/2025', slug: '2024-25', clubs: [], fixtures: [], clubFiles: {}, unplacedTeams: [] };
+    const asked: string[] = [];
+    const client = createPublishedClient({
+      baseUrl: 'https://example.test/data/',
+      fetch: (async (url: string) => {
+        asked.push(url);
+        return new Response(JSON.stringify(file));
+      }) as unknown as typeof fetch,
+    });
+    expect(await client.season('2024-25')).toEqual(file);
+    expect(asked).toEqual(['https://example.test/data/seasons/2024-25.json']);
+  });
+});

@@ -42,7 +42,7 @@ The same options are inputs on the workflow's manual run (Actions, "Snapshot and
 
 ## Locked Seasons
 
-The Archive can hold every season the feeds list. Each one from 2022-23 on is published as its own file, `public/data/seasons/<slug>.json`, with the regulations of its year (`rulesForSeason`, ADR 006), and becomes pages at `/season/<slug>/` and `/season/<slug>/club/<club-key>/`. The current season's files aren't affected. A Locked Season's files carry no timestamp, so later nights leave them alone.
+The Archive can hold every season the feeds list. Each one from 2022-23 on is published as its own file, `public/data/seasons/<slug>.json`, with the regulations of its year (`rulesForSeason`, ADR 006), and read in the browser by the one `/season` page, as `/season?season=<slug>&club=<club-key>`, so past seasons add nothing to the build. The current season's files aren't affected. A Locked Season's files carry no timestamp, so later nights leave them alone.
 
 To fill the archive:
 

@@ -5,14 +5,13 @@ import type {
   ParticipationSnapshot,
   PublishedIndex,
   PublishedSeason,
-  PublishedSeasonFile,
   PublishedSeasonsFile,
 } from '@zmnatz/usa-club-rugby-data';
 
 // Reads the nightly data at build time, for getStaticPaths and getStaticProps.
 // Never import this from code that runs in the browser.
 
-export type { PublishedClub, PublishedIndex, PublishedSeason, PublishedSeasonFile } from '@zmnatz/usa-club-rugby-data';
+export type { PublishedClub, PublishedIndex, PublishedSeason } from '@zmnatz/usa-club-rugby-data';
 
 const PUBLISHED = path.join(process.cwd(), 'public', 'data');
 
@@ -34,17 +33,4 @@ export function readClubSnapshot(key: string): ParticipationSnapshot {
 export function readSeasons(): PublishedSeason[] {
   if (!existsSync(path.join(PUBLISHED, 'seasons.json'))) return [];
   return readJson<PublishedSeasonsFile>('seasons.json').seasons;
-}
-
-const seasonFiles = new Map<string, PublishedSeasonFile>();
-
-/** One Locked Season's file, read once per build process since every one of its
- *  pages needs it. */
-export function readSeasonFile(slug: string): PublishedSeasonFile {
-  let file = seasonFiles.get(slug);
-  if (!file) {
-    file = readJson<PublishedSeasonFile>(path.join('seasons', `${slug}.json`));
-    seasonFiles.set(slug, file);
-  }
-  return file;
 }
