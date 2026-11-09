@@ -18,6 +18,9 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   };
 };
 
+// Text, links and a filter, which ClubDirectory's small script runs, so the page ships no JavaScript.
+export const config = { unstable_runtimeJS: false };
+
 // A fixed locale and time zone, so the static HTML reads the same after hydration.
 const formatDateTime = (dateTime: string) =>
   `${new Date(dateTime).toLocaleString('en-US', { timeZone: 'UTC', dateStyle: 'medium', timeStyle: 'short' })} UTC`;
@@ -50,7 +53,8 @@ export default function HomePage({ clubs, season, generatedAt }: HomeProps) {
       <Button component={NextLink} prefetch={false} href="/csv" variant="outlined" sx={{ mb: 2 }}>
         Check a Match Participation Report (CSV)
       </Button>
-      <ClubDirectory clubs={clubs} autoFocus />
+      {/* Next only drops the JavaScript in production. In dev, React runs the filter. */}
+      <ClubDirectory clubs={clubs} autoFocus staticFilter={process.env.NODE_ENV === 'production'} />
     </>
   );
 }
