@@ -124,22 +124,99 @@ describe('an Archive holding a Locked Season', () => {
         .map((name) => [name, readFileSync(path.join(root, name), 'utf8')]),
     );
 
-  it('publishes the same data as one holding only the current season', async () => {
+  const archiveLocked = (season: string, fixtures: FeedFixture[], matches: Record<string, MatchCentreData | null>) => {
+    const file = seasonFile(season);
+    writeFileSync(path.join(archiveDir, 'fixtures', file), serializeSeasonFixtures(season, fixtures));
+    writeFileSync(path.join(archiveDir, 'matches', file), serializeSeasonMatches(season, matches));
+    const manifest = JSON.parse(readFileSync(path.join(archiveDir, 'manifest.json'), 'utf8'));
+    manifest.seasons = [season, ...manifest.seasons];
+    writeFileSync(path.join(archiveDir, 'manifest.json'), JSON.stringify(manifest));
+  };
+  const readPublished = <T>(name: string): T => JSON.parse(readFileSync(path.join(publishedDir, name), 'utf8')) as T;
+
+  it('leaves the current season as it was and adds the Locked Season beside it', async () => {
     await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
     const currentOnly = files(publishedDir);
 
-    const file = seasonFile(LOCKED_SEASON);
-    writeFileSync(path.join(archiveDir, 'fixtures', file), serializeSeasonFixtures(LOCKED_SEASON, [lockedFixture]));
-    writeFileSync(path.join(archiveDir, 'matches', file), serializeSeasonMatches(LOCKED_SEASON, { o1: lockedMatch }));
-    writeFileSync(
-      path.join(archiveDir, 'manifest.json'),
-      JSON.stringify({ fields: 'x', currentSeason: '2026/2027', seasons: [LOCKED_SEASON, '2026/2027'], clubIds: [] }),
-    );
+    archiveLocked(LOCKED_SEASON, [lockedFixture], { o1: lockedMatch });
     const withHistory = path.join(dir, 'data-with-history');
     await runSnapshot({ archiveDir, publishedDir: withHistory, offline: true, now: NOW });
-    expect(files(withHistory)).toEqual(currentOnly);
-    // Both sets of files reproduce from the Archive that now holds the Locked Season.
-    expect(verifyPublished({ archiveDir, publishedDir }).ok).toBe(true);
+
+    const published = files(withHistory);
+    const current = Object.fromEntries(Object.entries(published).filter(([name]) => !name.startsWith('season')));
+    expect(current).toEqual(currentOnly);
+    expect(Object.keys(published).filter((name) => name.startsWith('season')).sort()).toEqual([
+      'seasons.json',
+      'seasons/2025-26/clubs/nova.json',
+      'seasons/2025-26/clubs/potomac.json',
+      'seasons/2025-26/fixtures.json',
+      'seasons/2025-26/index.json',
+    ]);
     expect(verifyPublished({ archiveDir, publishedDir: withHistory }).ok).toBe(true);
+  });
+
+  it('lists the Locked Seasons, newest first', async () => {
+    archiveLocked('2023/2024', [{ ...lockedFixture, id: 'a1', season: '2023/2024' }], {});
+    archiveLocked(LOCKED_SEASON, [lockedFixture], { o1: lockedMatch });
+    await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
+    expect(readPublished('seasons.json')).toEqual({
+      seasons: [
+        { season: '2025/2026', slug: '2025-26', clubs: 2, unplacedTeams: 0 },
+        { season: '2023/2024', slug: '2023-24', clubs: 2, unplacedTeams: 0 },
+      ],
+    });
+  });
+
+  it('marks a Locked Season\'s club file locked, with no time that would change it', async () => {
+    archiveLocked(LOCKED_SEASON, [lockedFixture], { o1: lockedMatch });
+    await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
+    const club = readPublished<Record<string, unknown>>('seasons/2025-26/clubs/nova.json');
+    expect(club).toMatchObject({ season: LOCKED_SEASON, locked: true });
+    expect(club.generatedAt).toBeUndefined();
+    expect((club.rows as { firstName: string }[])[0].firstName).toBe('Old');
+  });
+
+  it('places a team by its competition when its name has no division', async () => {
+    const named: FeedFixture = {
+      ...lockedFixture,
+      id: 'w1',
+      season: '2023/2024',
+      compName: "Empire Men's D3",
+      homeTeam: { name: 'White Plains M', score: '5' },
+      awayTeam: { name: 'Saratoga M', score: '3' },
+    };
+    archiveLocked('2023/2024', [named], {});
+    await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
+    const index = readPublished<{ clubs: { key: string; sides: { label: string }[] }[] }>('seasons/2023-24/index.json');
+    expect(index.clubs.map((club) => [club.key, club.sides[0].label])).toEqual([
+      ['saratoga', 'D3'],
+      ['white-plains', 'D3'],
+    ]);
+  });
+
+  it('does not publish a season older than the regulations encoded', async () => {
+    archiveLocked('2021/2022', [{ ...lockedFixture, id: 'z1', season: '2021/2022' }], {});
+    await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
+    expect(existsSync(path.join(publishedDir, 'seasons.json'))).toBe(false);
+  });
+
+  it('leaves a Locked Season alone on a later night', async () => {
+    archiveLocked(LOCKED_SEASON, [lockedFixture], { o1: lockedMatch });
+    await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
+    const again = await runSnapshot({ archiveDir, publishedDir, offline: true, now: new Date('2026-12-01T12:00:00Z') });
+    expect(again.changed).toBe(false);
+  });
+
+  it('catches a Locked Season file that was edited by hand or left over', async () => {
+    archiveLocked(LOCKED_SEASON, [lockedFixture], { o1: lockedMatch });
+    await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
+    const club = path.join(publishedDir, 'seasons/2025-26/clubs/nova.json');
+    writeFileSync(club, readFileSync(club, 'utf8').replace('"played":1', '"played":9'));
+    writeFileSync(path.join(publishedDir, 'seasons/2025-26/clubs/old.json'), '{}');
+    expect(verifyPublished({ archiveDir, publishedDir })).toMatchObject({
+      ok: false,
+      different: ['seasons/2025-26/clubs/nova.json'],
+      extra: ['seasons/2025-26/clubs/old.json'],
+    });
   });
 });

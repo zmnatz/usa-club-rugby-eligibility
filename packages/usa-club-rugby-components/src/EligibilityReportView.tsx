@@ -116,6 +116,7 @@ interface DivisionTableProps {
   record: PlayerRecordInput | null;
   /** Whether the players have pages of their own; a CSV report's don't. */
   playerPages: boolean;
+  locked: boolean;
   /** Rugby Xplorer's own club slug, for match-report links. */
   clubSlug: string | null;
   summary: { total: number; eligible: number; onTrack: number; caution: number };
@@ -201,6 +202,7 @@ function DivisionTable({
   otherLabels,
   record,
   playerPages,
+  locked,
   clubSlug,
   summary,
   visibleCount,
@@ -266,7 +268,7 @@ function DivisionTable({
             >
               <ToggleButton value="all">All</ToggleButton>
               <ToggleButton value="eligible">Eligible</ToggleButton>
-              <ToggleButton value="caution">Caution</ToggleButton>
+              {!locked && <ToggleButton value="caution">Caution</ToggleButton>}
               <ToggleButton value="ineligible">Ineligible</ToggleButton>
             </ToggleButtonGroup>
             <Chip
@@ -476,6 +478,8 @@ export interface EligibilityReportViewProps {
   season?: string;
   /** Whether the players have pages of their own at the host's player route. */
   playerPages?: boolean;
+  /** A Locked Season: every verdict is final, so there is no Caution to filter by. */
+  locked?: boolean;
   /** Rugby Xplorer's own club slug. Match links use the council's path without one. */
   clubSlug?: string | null;
   /** The side on show, by its place in the breakdown. */
@@ -495,6 +499,7 @@ export function EligibilityReportView({
   record = null,
   season,
   playerPages = false,
+  locked = false,
   clubSlug = null,
   activeSide,
   onActiveSideChange,
@@ -610,6 +615,7 @@ export function EligibilityReportView({
           otherLabels={breakdown.sides.filter((entry) => entry.teamName !== side.teamName).map((entry) => entry.label)}
           record={record}
           playerPages={playerPages}
+          locked={locked}
           clubSlug={clubSlug}
           summary={side.summary}
           visibleCount={visiblePlayers.length}

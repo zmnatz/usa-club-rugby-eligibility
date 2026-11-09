@@ -10,9 +10,11 @@ export type {
   PublishedFixturesFile,
   PublishedIndexFile,
   PublishedPlayersFile,
+  PublishedSeasonsFile,
 } from './data.ts';
 export * from './eligibility.ts';
 export * from './feeds.ts';
+export * from './historicalSides.ts';
 export * from './live.ts';
 export type * from './match.ts';
 export * from './participation.ts';

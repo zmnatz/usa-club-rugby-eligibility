@@ -28,7 +28,7 @@ export default function App({
   emotionCache,
 }: AppProps & EmotionCacheProviderProps) {
   const router = useRouter();
-  const clubReport = router.pathname === '/club/[club]';
+  const clubReport = router.pathname === '/club/[club]' || router.pathname === '/season/[season]/club/[club]';
 
   return (
     // _document supplies the cache it extracts into the <head> of the static HTML.

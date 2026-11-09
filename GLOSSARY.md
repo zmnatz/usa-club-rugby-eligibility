@@ -52,8 +52,11 @@ The raw match records and fixture lists the nightly job saves in `archive/`, com
 _Avoid_: cache, snapshot (the snapshot is the published data)
 
 **Locked Season**:
-A season before the current one. Its archive is read once more as the next season begins and never again, unless the fields requested change or a `--full-history` run asks.
+A season before the current one. Its archive is read once more as the next season begins and never again, unless the fields requested change or a `--full-history` run asks. Its verdicts are final, under the regulations of that year: a player is eligible or not, with no On Track or Caution.
 _Avoid_: archived season, old data
+
+**Unplaced Team**:
+A team in a Locked Season that can't be given a division from its name or its competitions, or that shares a division with another name at its club, which leaves that club out. It isn't assessed.
 
 **National Championship Series (NCS)**:
 USA Rugby's postseason competition for Men's Divisions I, II and III and Women's Divisions I and II.

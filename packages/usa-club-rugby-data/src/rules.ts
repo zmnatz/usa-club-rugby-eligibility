@@ -1,4 +1,4 @@
-import type { EligibilityRules } from './types.ts';
+import type { EligibilityRules, ScheduleShareLimit } from './types.ts';
 
 /**
  * The 2026-27 USA Club Rugby Senior Club Regulations (§3.4.2, §3.5) as thresholds.
@@ -35,3 +35,29 @@ export const DEFAULT_RULES: EligibilityRules = {
     'Qualifier Rosters',
   ],
 };
+
+/** Thresholds for the seasons whose regulations differ from today's, 2022-23 to
+ *  2024-25: a lower side is lost at 66% of the upper side's schedule rather than
+ *  after four matches, and half a player's matches with an upper side is too many
+ *  rather than level being enough. Rugby Xplorer holds nothing earlier. The wording
+ *  each encodes is in docs/adr/006-historical-eligibility.md. */
+const scheduleShareRules = (scheduleShare: ScheduleShareLimit): EligibilityRules => ({
+  ...DEFAULT_RULES,
+  upperMatchLimit: null,
+  scheduleShare,
+  upperSideWinsTie: true,
+});
+
+/** 2023-24 and 2024-25: Figure 1 reads 4 for a five-match schedule, not 66% of it. */
+const SUMMED_UPPER_LEVELS = scheduleShareRules({ combineUpperSides: true, exceptions: { 5: 4 } });
+
+const SEASON_RULES: Record<string, EligibilityRules> = {
+  '2022/2023': scheduleShareRules({ combineUpperSides: false }),
+  '2023/2024': SUMMED_UPPER_LEVELS,
+  '2024/2025': SUMMED_UPPER_LEVELS,
+};
+
+/** The regulations a season was played under. 2025-26 onward are today's. */
+export function rulesForSeason(season: string): EligibilityRules {
+  return SEASON_RULES[season] ?? DEFAULT_RULES;
+}

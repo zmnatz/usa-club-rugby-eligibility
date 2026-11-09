@@ -1,6 +1,7 @@
 import { clubsFromTeamNames, computeBreakdown } from './eligibility.ts';
 import type {
   Club,
+  EligibilityBreakdown,
   EligibilityRules,
   PlayerEligibility,
   PlayerRow,
@@ -14,6 +15,7 @@ import {
   type PlayerGameLog,
   type PlayerHistory,
 } from './playerHistory.ts';
+import { rulesForSeason } from './rules.ts';
 
 /** A fixture with a final score, as the player-history feed reports it. */
 export interface ResultFixture {
@@ -57,6 +59,8 @@ export interface ParticipationSnapshot {
   generatedAt?: string;
   /** The fixtures already accounted for, so a live pull can skip them. */
   resultIds?: string[];
+  /** A Locked Season: verdicts have no On Track or Caution. */
+  locked?: boolean;
   rows: PlayerRow[];
   gaps: ParticipationGap[];
 }
@@ -198,7 +202,7 @@ export function buildParticipationSnapshot(
 const isClubSide = (club: Club, teamName: string) =>
   club.sides.some((side) => side.teamName === teamName);
 
-function isQualifying(competition: string, rules: EligibilityRules): boolean {
+export function isQualifying(competition: string, rules: EligibilityRules): boolean {
   const name = competition.toLowerCase();
   return !rules.nonQualifyingCompetitions.some((term) => name.includes(term.toLowerCase()));
 }
@@ -332,6 +336,23 @@ export function remainingMatches(
   );
 }
 
+/** Each side's Qualifying fixtures in the record, played or not, for a limit set as a
+ *  share of the schedule. The regulations use the schedule as of the first weekend,
+ *  which the CMS doesn't keep, so this is the final list without postponed matches. */
+export function scheduledMatches(
+  fixtures: ScheduleFixture[],
+  club: Pick<Club, 'sides'>,
+  rules: EligibilityRules,
+): Record<string, number> {
+  const counted = fixtures.filter((fixture) => fixture.status !== 'Postponed' && isQualifying(fixture.compName, rules));
+  return Object.fromEntries(
+    club.sides.map(({ teamName }) => [
+      teamName,
+      counted.filter((fixture) => fixture.homeTeam.name === teamName || fixture.awayTeam.name === teamName).length,
+    ]),
+  );
+}
+
 /** The club's rows that count towards Match Participation. As in a Match
  *  Participation Report, every player has a row on every side, so a player only
  *  ever listed on one side still gets a verdict for the others. */
@@ -366,6 +387,23 @@ export function participationRows(
   return [...rows, ...emptyRows];
 }
 
+/** A club's verdicts from a saved record, under the regulations of the record's season
+ *  unless others are given. A Locked Season's record gives final verdicts. */
+export function clubBreakdown(
+  snapshot: ParticipationSnapshot,
+  fixtures: ScheduleFixture[],
+  club: Club,
+  { rules = rulesForSeason(snapshot.season), now = new Date() }: { rules?: EligibilityRules; now?: Date } = {},
+): EligibilityBreakdown {
+  return computeBreakdown(
+    participationRows(snapshot, club, rules),
+    club.sides,
+    rules,
+    remainingMatches(fixtures, club, rules, now),
+    { locked: snapshot.locked, scheduled: scheduledMatches(fixtures, club, rules) },
+  );
+}
+
 /** Gaps that could change the club's verdicts. */
 export function clubGaps(
   snapshot: ParticipationSnapshot,
@@ -396,9 +434,8 @@ export function playerSeasonEligibility(
   return listClubs(fixtures, rules)
     .filter((club) => club.sides.some((side) => teams.has(side.teamName)))
     .flatMap((club) => {
-      const rows = participationRows(own, club, rules);
-      if (rows.length === 0) return [];
-      const { sides } = computeBreakdown(rows, club.sides, rules, remainingMatches(fixtures, club, rules, now));
+      if (participationRows(own, club, rules).length === 0) return [];
+      const { sides } = clubBreakdown(own, fixtures, club, { rules, now });
       return [{ club, verdicts: sides.flatMap((side) => side.players) }];
     });
 }

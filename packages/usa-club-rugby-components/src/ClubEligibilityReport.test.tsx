@@ -327,3 +327,34 @@ describe('skipping to the first player', () => {
     expect(document.activeElement?.textContent).toBe('No players match the current filters.');
   });
 });
+
+describe('a Locked Season', () => {
+  it('gives only eligible or ineligible', async () => {
+    await renderClubReport({ locked: true });
+    await openD3();
+    expect(within(rowOf(NAMES.caution)).getByText('ELIGIBLE')).toBeTruthy();
+    expect(within(rowOf(NAMES.onTrack)).getByText('INELIGIBLE')).toBeTruthy();
+    expect(within(rowOf(NAMES.onTrack)).getByText('Needs 2 D3 matches (has 1)')).toBeTruthy();
+  });
+
+  it('has no Caution filter or talk of fixtures to come', async () => {
+    await renderClubReport({ locked: true });
+    await openD3();
+    const filters = within(screen.getByRole('group', { name: 'Eligibility status' }));
+    expect(filters.queryByRole('button', { name: 'Caution' })).toBeNull();
+    expect(screen.queryByText(/on track/i)).toBeNull();
+    expect(screen.queryByText(/caution/i)).toBeNull();
+    expect(screen.getByText(/final/i)).toBeTruthy();
+  });
+
+  it('warns when a team that looks like the club\'s has no division', async () => {
+    await renderClubReport({ locked: true, unplacedTeams: ['Harbor City Men Senior'] });
+    expect(screen.getByText(/Harbor City Men Senior/)).toBeTruthy();
+  });
+
+  it('keeps the current season\'s report as it was', async () => {
+    await renderClubReport();
+    expect(screen.getByRole('group', { name: 'Eligibility status' })).toBeTruthy();
+    expect(screen.queryByText(/final/i)).toBeNull();
+  });
+});

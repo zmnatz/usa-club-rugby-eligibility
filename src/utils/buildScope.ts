@@ -6,7 +6,16 @@
  */
 export function selectClubs<Club extends { key: string }>(
   clubs: Club[],
-  { scope = process.env.BUILD_CLUBS, ci = process.env.GITHUB_ACTIONS }: { scope?: string; ci?: string } = {},
+  {
+    scope = process.env.BUILD_CLUBS,
+    ci = process.env.GITHUB_ACTIONS,
+    strict = true,
+  }: {
+    scope?: string;
+    ci?: string;
+    /** Whether a named club must exist. A past season needn't hold them all. */
+    strict?: boolean;
+  } = {},
 ): Club[] {
   const wanted = scope?.trim();
   if (!wanted || ci) return clubs;
@@ -14,6 +23,6 @@ export function selectClubs<Club extends { key: string }>(
 
   const keys = wanted.split(',').map((key) => key.trim());
   const unknown = keys.filter((key) => !clubs.some((club) => club.key === key));
-  if (unknown.length > 0) throw new Error(`BUILD_CLUBS names unknown clubs: ${unknown.join(', ')}`);
+  if (strict && unknown.length > 0) throw new Error(`BUILD_CLUBS names unknown clubs: ${unknown.join(', ')}`);
   return clubs.filter((club) => keys.includes(club.key));
 }

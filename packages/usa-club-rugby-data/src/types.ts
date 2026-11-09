@@ -113,12 +113,35 @@ export interface EligibilityRules {
   /** Minimum NCS Qualifying Matches (Reg 3.4.2(e), 3.5.2). */
   minimumMatches: number;
   /** A player reaching this many matches on any upper side loses eligibility for
-   *  the sides below it (Reg 3.5(d)(i)). */
-  upperMatchLimit: number;
+   *  the sides below it (Reg 3.5(d)(i)). Null in a season whose limit is a share of
+   *  the schedule instead. */
+  upperMatchLimit: number | null;
+  /** The limit in seasons that set it as 66% of an upper side's schedule. */
+  scheduleShare?: ScheduleShareLimit;
+  /** Half of a player's matches being with the upper sides loses the lower side.
+   *  Otherwise being level with them is enough to keep it. */
+  upperSideWinsTie?: boolean;
   /** Competition-name fragments (case-insensitive) that are not NCS Qualifying
    *  Matches. Applied to the match record; a CSV report is taken as given. */
   nonQualifyingCompetitions: string[];
 }
 
+/** A season's upper-side limit as 66% of the schedule (Figure 1 of that season). */
+export interface ScheduleShareLimit {
+  /** Whether a side's upper levels are added together, or each is judged alone. */
+  combineUpperSides: boolean;
+  /** Figure 1 values, by schedule length, that aren't 66% rounded to the nearest match. */
+  exceptions?: Record<number, number>;
+}
+
 /** Each side's fixtures still to play before the Super Regionals deadline, by team name. */
 export type RemainingMatches = Record<string, number>;
+
+/** What a verdict needs beyond the rows and the rules. */
+export interface BreakdownOptions {
+  /** A Locked Season: nothing is left to play, so a player is eligible or not, with
+   *  no On Track or Caution. */
+  locked?: boolean;
+  /** Each side's Qualifying fixtures, by team name, for a `scheduleShare` limit. */
+  scheduled?: Record<string, number>;
+}

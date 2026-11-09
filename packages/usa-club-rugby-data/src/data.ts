@@ -4,6 +4,10 @@
 //   public/data/index.json           PublishedIndexFile
 //   public/data/fixtures.json        PublishedFixturesFile
 //   public/data/clubs/<key>.json     PublishedClubFile
+//   public/data/seasons.json         PublishedSeasonsFile
+//   public/data/seasons/<slug>/      index.json PublishedSeasonIndex,
+//                                    fixtures.json PublishedFixturesFile,
+//                                    clubs/<key>.json ParticipationSnapshot
 //   archive/manifest.json            ArchiveManifest
 //   archive/fixtures/<season>.json   ArchiveFixturesFile
 //   archive/matches/<season>.json    ArchiveMatchesFile
@@ -12,7 +16,7 @@ import type { ArchiveManifest } from './archive.ts';
 import type { FeedFixture } from './feeds.ts';
 import type { ParticipationSnapshot } from './participation.ts';
 import type { MatchCentreData } from './playerHistory.ts';
-import type { PublishedIndex } from './published.ts';
+import type { PublishedIndex, PublishedSeason } from './published.ts';
 
 /** `index.json`: the current season's clubs and their sides, and when the
  *  published data last changed. */
@@ -29,6 +33,11 @@ export interface PublishedFixturesFile {
 export interface PublishedClubFile extends ParticipationSnapshot {
   /** When the data last changed; always present in a published file. */
   generatedAt: string;
+}
+
+/** `seasons.json`: the Locked Seasons published, newest first. Absent until one is. */
+export interface PublishedSeasonsFile {
+  seasons: PublishedSeason[];
 }
 
 /** Which clubs each player is in the record of, by CMS id, for finding a player from

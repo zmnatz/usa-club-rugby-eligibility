@@ -13,6 +13,8 @@ export interface ClubDirectoryProps {
   /** Add a small script that runs the filter, for a page served without React.
    *  It does nothing when React renders the directory in the browser. Off by default. */
   staticFilter?: boolean;
+  /** Where each club links, when not the host's club route: a past season's pages. */
+  clubHref?: (clubKey: string) => string;
 }
 
 /** Everything the filter matches. */
@@ -45,7 +47,7 @@ const STATIC_FILTER = `(() => {
 })();`;
 
 /** Every club, filtered by name or side. Each club opens the host's club route. */
-export function ClubDirectory({ clubs, autoFocus = false, staticFilter = false }: ClubDirectoryProps) {
+export function ClubDirectory({ clubs, autoFocus = false, staticFilter = false, clubHref }: ClubDirectoryProps) {
   const { Link, routes } = useEligibilityLinks();
   const [query, setQuery] = useState('');
 
@@ -80,7 +82,7 @@ export function ClubDirectory({ clubs, autoFocus = false, staticFilter = false }
         <ClubList>
           {shown.map((club) => (
             <li key={club.key} data-search={searchText(club)}>
-              <Link href={routes.club(club.key)}>
+              <Link href={(clubHref ?? routes.club)(club.key)}>
                 {club.name}
                 <span>{club.sides.map((side) => side.label).join(' · ')}</span>
               </Link>

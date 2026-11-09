@@ -82,6 +82,25 @@ For example, at a club with divisions 1, 2 and 3, a player with two matches in e
 - Recognized Competitive Matches not entered as a competition in Rugby Xplorer (Reg 3.4.3).
 - Waivers.
 
+## Past seasons
+
+Each season from 2022-23 is shown with the regulations of that year. The season is over, so a player is eligible or not, and there is no on track or caution. Rugby Xplorer holds nothing earlier.
+
+| Season | A lower side is lost by | Half a player's matches with upper sides |
+| --- | --- | --- |
+| 2025-26 | A fourth match for any one upper side | Keeps the lower side, if level |
+| 2023-24, 2024-25 | Reaching 66% of the upper side's schedule, adding the upper levels together | Loses the lower side |
+| 2022-23 | Reaching 66% of the schedule on any one upper side | Loses the lower side |
+
+Every season needs two matches at the side's level or lower, or two at any level for the top side.
+
+**Interpretations to review for past seasons:**
+
+- The regulations fix the 66% mark from the league schedule on the first weekend of play, which Rugby Xplorer doesn't keep. We use the final fixture list: every qualifying fixture for the side, played or not, except postponed ones. A side with two upper sides is measured against the one with fewer matches, as the regulations say.
+- The comparison of half a player's matches adds their upper sides together, in every season.
+- 66% is rounded to the nearest match, which matches each year's Figure 1, apart from the five-match schedule printed as 4 in 2023-24 and 2024-25. 2022-23 doesn't print the figure in the record we have, so it uses 2021-22's.
+- Team names often had no division then, so a team takes the division named by the competitions of most of its fixtures, and its club from the rest of its name. A team we can't place isn't assessed, and is named on its club's page if it looks like that club's, because a missing upper side can make players below it look eligible. A club with two names at one division is left out, as they can't be ranked.
+
 ## How we get data from Rugby Xplorer
 
 Everything entered in Rugby Xplorer is stored in its content management system (CMS), which has a public GraphQL API at `https://rugby-au-cms.graphcdn.app`. We read the same data entered for Rugby Xplorer rather than retyping it, and we don't copy anything from the xplorer.rugby website. We know of no published documentation for the API, so it could change without notice.
@@ -129,7 +148,7 @@ A correction in Rugby Xplorer clears these gaps. They don't catch everything, so
 3. It saves each match's full record in an archive, then works out each club's participation and gaps from the archive.
 4. It publishes the result with the page.
 
-**Results before the current season are locked.** A season gets a last read as the next one begins, and is then kept as archived, so a later change to it in Rugby Xplorer doesn't appear here. Past seasons don't affect the current verdicts.
+**Results before the current season are locked.** A season gets a last read as the next one begins, and is then kept as archived, so a later change to it in Rugby Xplorer doesn't appear here. Past seasons don't affect the current verdicts, and their own verdicts don't change once published.
 
 Each update is all or nothing. If any request fails, the previous night's data stays in place, because a partial count could wrongly pass or fail a player. If the CMS answers but holds no details for a match, that isn't a failure, and the match shows as "No lineup recorded".
 

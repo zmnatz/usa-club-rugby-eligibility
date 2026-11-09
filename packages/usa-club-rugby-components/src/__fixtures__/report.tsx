@@ -124,11 +124,13 @@ export async function renderInHost(ui: ReactElement) {
 export const renderClubReport = ({
   extraFixtures = [] as FeedFixture[],
   clubSlug = undefined as string | undefined,
+  locked = false,
+  unplacedTeams = undefined as string[] | undefined,
 } = {}) =>
   renderInHost(
     <ClubEligibilityReport
-      club={club}
-      saved={saved}
+      club={unplacedTeams ? { ...club, unplacedTeams } : club}
+      saved={locked ? { ...saved, locked } : saved}
       fixtures={[...fixtures, ...extraFixtures]}
       clubSlug={clubSlug}
     />,

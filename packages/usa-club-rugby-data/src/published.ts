@@ -1,10 +1,8 @@
 import type { PublishedClubFile, PublishedFixturesFile, PublishedPlayersFile } from './data.ts';
 import type { Club, EligibilityBreakdown, EligibilityRules, PlayerEligibility } from './types.ts';
-import { computeBreakdown } from './eligibility.ts';
 import type { FeedFixture } from './feeds.ts';
-import { clubFixtures, type ParticipationSnapshot, participationRows, remainingMatches } from './participation.ts';
+import { clubBreakdown, clubFixtures, type ParticipationSnapshot } from './participation.ts';
 import { buildPlayerIndex, clubContext, type PlayerClubEntry, type PlayerProfile, playerEntries, sortEntries } from './players.ts';
-import { DEFAULT_RULES } from './rules.ts';
 import { parseTeamSide, type TeamSide } from './teamSide.ts';
 
 // Readers for the data the nightly job publishes: public/data/index.json,
@@ -17,6 +15,27 @@ export const DEFAULT_PUBLISHED_URL = 'https://zmnatz.github.io/usa-club-rugby-el
 export interface PublishedClub extends Club {
   /** The club's page path and file name, e.g. "rocky-gorge". */
   key: string;
+  /** Locked Seasons only: teams that look like this club's but have no division, so
+   *  its players may have matches the verdicts don't count. */
+  unplacedTeams?: string[];
+}
+
+/** A Locked Season as `seasons.json` lists it. */
+export interface PublishedSeason {
+  /** As the CMS names it, e.g. "2025/2026". */
+  season: string;
+  /** Its page path and directory, e.g. "2025-26". */
+  slug: string;
+  clubs: number;
+  unplacedTeams: number;
+}
+
+/** A Locked Season's `seasons/<slug>/index.json`. */
+export interface PublishedSeasonIndex {
+  season: string;
+  slug: string;
+  clubs: PublishedClub[];
+  unplacedTeams: string[];
 }
 
 export interface PublishedIndex {
@@ -69,10 +88,9 @@ export function clubEligibility(
   snapshot: ParticipationSnapshot,
   fixtures: FeedFixture[],
   club: Club,
-  { rules = DEFAULT_RULES, now = new Date() }: EligibilityOptions = {},
+  options: EligibilityOptions = {},
 ): EligibilityBreakdown {
-  const remaining = remainingMatches(clubFixtures(fixtures, club), club, rules, now);
-  return computeBreakdown(participationRows(snapshot, club, rules), club.sides, rules, remaining);
+  return clubBreakdown(snapshot, clubFixtures(fixtures, club), club, options);
 }
 
 export function createPublishedClient({

@@ -3,7 +3,9 @@ import path from 'node:path';
 import { requestStats, rateLimitState } from '../api.ts';
 import {
   type ArchiveManifest,
+  buildLockedSeason,
   buildPublished,
+  lockedSeasons,
   parseSeasonFixtures,
   parseSeasonMatches,
   type PublishedData,
@@ -19,7 +21,7 @@ import { MATCH_CENTRE_QUERY, type MatchCentreData } from '../playerHistory.ts';
 import { DEFAULT_RULES } from '../rules.ts';
 import { DEFAULT_SOURCES, type SourcesConfig } from '../sources.ts';
 import type { EligibilityRules } from '../types.ts';
-import { listJson, prune, readJson, readText, withoutStamp, writeIfChanged } from './files.ts';
+import { listDirs, listJson, prune, readJson, readText, withoutStamp, writeIfChanged } from './files.ts';
 
 // The nightly job as a library: refresh the raw archive from the CMS, calculate the
 // published files from it, and check that the published files can be recalculated.
@@ -73,6 +75,28 @@ export function renderPublished(data: PublishedData, generatedAt: string): Map<s
     files.set(`clubs/${key}.json`, JSON.stringify({ ...snapshot, generatedAt }));
   }
   files.set('index.json', JSON.stringify({ generatedAt, season: data.season, clubs: data.clubs }));
+  const history = data.history ?? [];
+  if (history.length > 0) {
+    files.set(
+      'seasons.json',
+      JSON.stringify({
+        seasons: history.map(({ season, slug, clubs, unplacedTeams }) => ({
+          season,
+          slug,
+          clubs: clubs.length,
+          unplacedTeams: unplacedTeams.length,
+        })),
+      }),
+    );
+  }
+  // A Locked Season doesn't change, so its files carry no time.
+  for (const { season, slug, fixtures, clubs, clubFiles, unplacedTeams } of history) {
+    files.set(`seasons/${slug}/index.json`, JSON.stringify({ season, slug, clubs, unplacedTeams }));
+    files.set(`seasons/${slug}/fixtures.json`, JSON.stringify({ season, fixtures }));
+    for (const [key, snapshot] of Object.entries(clubFiles)) {
+      files.set(`seasons/${slug}/clubs/${key}.json`, JSON.stringify(snapshot));
+    }
+  }
   return files;
 }
 
@@ -85,20 +109,29 @@ export function publishFromArchive(
   const manifest = readManifest(archiveDir);
   if (!manifest) throw new Error(`No archive at ${archiveDir}: run without --offline first.`);
   const { fixtures, matches } = readSeason(archiveDir, manifest.currentSeason);
-  return buildPublished(fixtures, matches, rules, now);
+  const history = lockedSeasons(manifest).map((season) => {
+    const locked = readSeason(archiveDir, season);
+    return buildLockedSeason(locked.fixtures, locked.matches, season, now);
+  });
+  return { ...buildPublished(fixtures, matches, rules, now), history };
 }
 
 /** Writes the published files, changing only those whose content changed. The
  *  index's time is when the published data last changed, not when it was checked. */
 export function writePublished(publishedDir: string, files: Map<string, string>, generatedAt: string): boolean {
   let changed = false;
-  const keep = new Set<string>();
+  const keep = new Map<string, Set<string>>([['clubs', new Set()]]);
   for (const [name, content] of files) {
     if (name === 'index.json') continue;
-    if (name.startsWith('clubs/')) keep.add(name.slice('clubs/'.length));
+    if (path.posix.basename(path.posix.dirname(name)) === 'clubs') {
+      const dir = path.posix.dirname(name);
+      keep.set(dir, (keep.get(dir) ?? new Set()).add(path.posix.basename(name)));
+    }
     changed = writeIfChanged(path.join(publishedDir, name), content) || changed;
   }
-  changed = prune(path.join(publishedDir, 'clubs'), keep) > 0 || changed;
+  for (const [dir, names] of keep) {
+    changed = prune(path.join(publishedDir, dir), names) > 0 || changed;
+  }
   const indexFile = path.join(publishedDir, 'index.json');
   const saved = readJson<{ generatedAt?: string }>(indexFile);
   const index = (files.get('index.json') as string).replace(
@@ -213,8 +246,9 @@ export function verifyPublished(options: SnapshotPaths & { rules?: EligibilityRu
     if (saved === null) missing.push(name);
     else if (withoutStamp(saved) !== withoutStamp(content)) different.push(name);
   }
-  const extra = listJson(path.join(publishedDir, 'clubs'))
-    .map((name) => `clubs/${name}`)
+  const clubDirs = ['clubs', ...listDirs(path.join(publishedDir, 'seasons')).map((slug) => `seasons/${slug}/clubs`)];
+  const extra = clubDirs
+    .flatMap((dir) => listJson(path.join(publishedDir, dir)).map((name) => `${dir}/${name}`))
     .filter((name) => !expected.has(name));
   return {
     ok: different.length + missing.length + extra.length === 0,

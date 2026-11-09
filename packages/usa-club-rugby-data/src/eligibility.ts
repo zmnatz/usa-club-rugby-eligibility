@@ -1,6 +1,7 @@
 import { parseCsv } from './csv.ts';
 import { isNcsSide, parseTeamSide, sideLabel, type TeamSide } from './teamSide.ts';
 import type {
+  BreakdownOptions,
   Club,
   DivisionSummary,
   EligibilityBreakdown,
@@ -127,6 +128,7 @@ function evaluate(
   rosters: Roster[],
   rules: EligibilityRules,
   remaining: RemainingMatches,
+  { locked, scheduled }: Required<BreakdownOptions>,
 ): PlayerEligibility {
   const key = row.playerId.trim();
   const counts = rosters.map((roster) => participation(roster.combined.get(key)));
@@ -163,20 +165,41 @@ function evaluate(
     checkMinimum(sum(counts), 'qualifying');
   } else {
     checkMinimum(atOrBelow, ownLabel);
-    for (const [aboveIndex, count] of above.entries()) {
-      if (count >= rules.upperMatchLimit) {
-        reasons.push(
-          `Played ${count} ${rosters[aboveIndex].side.label} matches — playing ${rules.upperMatchLimit} for an upper side loses ${own.label} eligibility`,
-        );
-      } else if (count === rules.upperMatchLimit - 1) {
-        cautions.push(
-          `One more ${rosters[aboveIndex].side.label} match (${count} played) loses ${own.label} eligibility for the rest of the season`,
-        );
+    const { upperMatchLimit, scheduleShare } = rules;
+    if (upperMatchLimit !== null) {
+      for (const [aboveIndex, count] of above.entries()) {
+        if (count >= upperMatchLimit) {
+          reasons.push(
+            `Played ${count} ${rosters[aboveIndex].side.label} matches — playing ${upperMatchLimit} for an upper side loses ${own.label} eligibility`,
+          );
+        } else if (count === upperMatchLimit - 1) {
+          cautions.push(
+            `One more ${rosters[aboveIndex].side.label} match (${count} played) loses ${own.label} eligibility for the rest of the season`,
+          );
+        }
       }
     }
-    if (atOrBelow < sum(above)) {
-      reasons.push(`Upper-side participation (${sum(above)}) exceeds ${ownLabel} participation (${atOrBelow})`);
-    } else if (atOrBelow === sum(above) && fixturesLeft === 0 && fixturesKnown) {
+    if (scheduleShare) {
+      const schedules = rosters.slice(0, index).map((roster) => scheduled[roster.side.teamName] ?? 0).filter((n) => n > 0);
+      if (schedules.length > 0) {
+        const schedule = Math.min(...schedules);
+        const limit = scheduleShare.exceptions?.[schedule] ?? Math.round(schedule * 0.66);
+        const loses = `reaching ${limit} (66% of a ${schedule}-match schedule) loses ${own.label} eligibility`;
+        if (scheduleShare.combineUpperSides) {
+          if (sum(above) >= limit) reasons.push(`Played ${sum(above)} upper-side matches — ${loses}`);
+        } else {
+          for (const [aboveIndex, count] of above.entries()) {
+            if (count >= limit) reasons.push(`Played ${count} ${rosters[aboveIndex].side.label} matches — ${loses}`);
+          }
+        }
+      }
+    }
+    const upperTotal = sum(above);
+    if (atOrBelow < upperTotal) {
+      reasons.push(`Upper-side participation (${upperTotal}) exceeds ${ownLabel} participation (${atOrBelow})`);
+    } else if (rules.upperSideWinsTie && upperTotal > 0 && atOrBelow === upperTotal) {
+      reasons.push(`Upper-side participation (${upperTotal}) is half of this player's matches, which loses ${own.label} eligibility`);
+    } else if (atOrBelow === upperTotal && fixturesLeft === 0 && fixturesKnown) {
       cautions.push(
         `One more upper-side match loses ${own.label} eligibility for the rest of the season (level at ${atOrBelow} with no ${ownLabel} fixtures left)`,
       );
@@ -205,7 +228,7 @@ function evaluate(
     eligible: reasons.length === 0,
     reasons,
     pending,
-    cautions: reasons.length === 0 ? cautions : [],
+    cautions: reasons.length === 0 && !locked ? cautions : [],
   };
 }
 
@@ -292,6 +315,7 @@ export function computeBreakdown(
   sides: Side[],
   rules: EligibilityRules,
   remaining: RemainingMatches = {},
+  { locked = false, scheduled = {} }: BreakdownOptions = {},
 ): EligibilityBreakdown {
   const rosters = sides.map((side) => buildRoster(side, rows));
   const teamNames = new Set(sides.map((side) => side.teamName));
@@ -299,7 +323,7 @@ export function computeBreakdown(
   return {
     sides: rosters.map((roster, index) => {
       const players = [...roster.combined.values()]
-        .map((row) => evaluate(row, index, rosters, rules, remaining))
+        .map((row) => evaluate(row, index, rosters, rules, locked ? {} : remaining, { locked, scheduled }))
         .sort(byName);
       return {
         ...roster.side,

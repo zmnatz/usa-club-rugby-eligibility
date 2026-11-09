@@ -1,15 +1,13 @@
-import { computeBreakdown } from './eligibility.ts';
 import type { PublishedPlayersFile } from './data.ts';
 import type { FeedFixture } from './feeds.ts';
 import {
+  clubBreakdown,
   clubFixtures,
   type ParticipationSnapshot,
-  participationRows,
   type PlayerRound,
   playerRounds,
   type PossibleFixture,
   possibleFixtures,
-  remainingMatches,
 } from './participation.ts';
 import { isNameWithheld } from './playerHistory.ts';
 import type { PublishedClub } from './published.ts';
@@ -50,16 +48,10 @@ export function clubContext(
   club: PublishedClub,
   snapshot: ParticipationSnapshot,
   allFixtures: FeedFixture[],
-  { rules = DEFAULT_RULES, now = new Date() }: PlayerOptions = {},
+  options: PlayerOptions = {},
 ): ClubContext {
   const fixtures = clubFixtures(allFixtures, club);
-  const remaining = remainingMatches(fixtures, club, rules, now);
-  return {
-    club,
-    snapshot,
-    fixtures,
-    breakdown: computeBreakdown(participationRows(snapshot, club, rules), club.sides, rules, remaining),
-  };
+  return { club, snapshot, fixtures, breakdown: clubBreakdown(snapshot, fixtures, club, options) };
 }
 
 /** One side's fixtures for one player. */
