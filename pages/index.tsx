@@ -3,6 +3,7 @@ import Head from 'next/head';
 import NextLink from 'next/link';
 import { Button, Link as MuiLink, Typography } from '@mui/material';
 import { ClubDirectory } from '@zmnatz/usa-club-rugby-components';
+import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';
 import { readIndex, type PublishedClub } from '@/utils/published';
 
 interface HomeProps {
@@ -18,7 +19,8 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   };
 };
 
-// Text, links and a filter, which ClubDirectory's small script runs, so the page ships no JavaScript.
+// Text, links and a filter, which ClubDirectory's small script runs. The page ships
+// no Next runtime; its inline scripts run the filter and reload on history navigation.
 export const config = { unstable_runtimeJS: false };
 
 // A fixed locale and time zone, so the static HTML reads the same after hydration.
@@ -28,6 +30,8 @@ const formatDateTime = (dateTime: string) =>
 export default function HomePage({ clubs, season, generatedAt }: HomeProps) {
   return (
     <>
+      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed string, with no data in it */}
+      <script dangerouslySetInnerHTML={{ __html: HISTORY_RELOAD_SCRIPT }} />
       <Head>
         <title>USA Club Rugby Eligibility</title>
         <meta
