@@ -70,6 +70,8 @@ Every club, filtered as the user types.
 
 Pass `autoFocus` to put the cursor in the filter when the directory appears, on a page that is mainly the directory. Off by default.
 
+Pass `staticFilter` when the host serves the rendered HTML without React. It adds a small script that runs the same filter. Don't pass it on a page that hydrates. Off by default.
+
 ### `ClubEligibilityReport`
 
 One club's report from its Match Record, with when the records were last updated.

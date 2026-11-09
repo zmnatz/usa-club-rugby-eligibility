@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -56,6 +57,57 @@ describe('ClubDirectory', () => {
   it('leaves focus alone by default', () => {
     renderDirectory();
     expect(document.activeElement).toBe(document.body);
+  });
+});
+
+describe('ClubDirectory without React', () => {
+  /** The static HTML with its script run, and a way to type in the filter. */
+  function loadStaticPage() {
+    const page = document.createElement('div');
+    page.innerHTML = renderToStaticMarkup(
+      <ThemeProvider theme={createTheme()}>
+        <EligibilityLinksProvider Link="a" routes={routes}>
+          <ClubDirectory clubs={clubs} staticFilter />
+        </EligibilityLinksProvider>
+      </ThemeProvider>,
+    );
+    document.body.append(page);
+    new Function(page.querySelector('script')?.textContent ?? '')();
+    const input = page.querySelector('input') as HTMLInputElement;
+    const type = (value: string) => {
+      input.value = value;
+      input.dispatchEvent(new Event('input'));
+    };
+    const shown = () =>
+      [...page.querySelectorAll('li')].filter((club) => !club.hidden).map((club) => club.querySelector('a')?.getAttribute('href'));
+    const text = (selector: string) => page.querySelector(selector) as HTMLElement;
+    return { page, type, shown, count: text('[data-club-count]'), none: text('[data-no-club]') };
+  }
+
+  it('filters by name or side, the same as React', () => {
+    const { page, type, shown, count, none } = loadStaticPage();
+    type('  md2 ');
+    expect(shown()).toEqual(['/teams/bayside.html']);
+    expect(count.textContent).toBe('1 of 2 clubs');
+    expect(none.hidden).toBe(true);
+    page.remove();
+  });
+
+  it('says when nothing matches, and restores the list when cleared', () => {
+    const { page, type, shown, count, none } = loadStaticPage();
+    type('nowhere');
+    expect(shown()).toEqual([]);
+    expect(none.hidden).toBe(false);
+    type('');
+    expect(shown()).toHaveLength(2);
+    expect(count.textContent).toBe('2 of 2 clubs');
+    expect(none.hidden).toBe(true);
+    page.remove();
+  });
+
+  it('adds no script unless asked to', () => {
+    const { container } = renderDirectory();
+    expect(container.querySelector('script')).toBeNull();
   });
 });
 
