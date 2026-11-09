@@ -1,11 +1,18 @@
 import { createTheme } from '@mui/material/styles';
 
+declare module '@mui/material/styles' {
+  // Types the ThemeProvider props that only apply to a CSS-variables theme.
+  interface CssThemeVariables {
+    enabled: true;
+  }
+}
+
 // Neutral on purpose: this tool serves every club, so it carries no club's colours.
 // The theme sets the look. Layout is on the components, so they work without it.
 
 export const theme = createTheme({
-  // The static HTML carries both schemes behind prefers-color-scheme, so the browser
-  // picks the visitor's before any JavaScript runs and there's no light flash.
+  // theme.css carries both schemes behind prefers-color-scheme, so the browser picks
+  // the visitor's before any JavaScript runs and there's no light flash.
   cssVariables: { colorSchemeSelector: 'media' },
   colorSchemes: { light: true, dark: true },
   palette: { primary: { main: '#1f4e8c' } },

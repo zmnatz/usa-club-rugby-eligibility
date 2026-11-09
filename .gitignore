@@ -6,4 +6,5 @@ next-env.d.ts
 *.tsbuildinfo
 .DS_Store
 /screenshots
+/src/theme/theme.css
 *.log
