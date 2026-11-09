@@ -24,3 +24,15 @@ Decisions, so they aren't "fixed" later:
 - **Club pages only.** A past season gets `/season/<slug>/` and `/season/<slug>/club/<key>/`; the player detail opens in the report's dialog. Player pages would multiply the build.
 - **Each Locked Season is one file**, `public/data/seasons/<slug>.json`, as in the Archive, where each has a fixtures and a matches file. It has no timestamp, so it doesn't change on later nights.
 - **Not covered:** WPL and RSL participation limits (earlier seasons than the record), the 2019-20 and earlier division tables (no match records), and the rule against moving between 28-player rosters during the NCS.
+
+Assumptions, each open to correction by someone who knows that season's regulations in full. The source covers divisional eligibility only, so anything else is carried from today's regulations (ADR 000):
+
+- **What counts as a match** is today's in every season: Played plus Substitute, Reg 3.4(h) for forfeits, and the current list of excluded competitions.
+- **The NCS divisions** are Men's I to III and Women's I and II in every season, so a Men's IV or Women's III side isn't assessed.
+- **2025-26 uses the 2026-27 regulations**, because the source lists the two under one heading.
+- **The schedule includes local playoffs**, as the count of Qualifying fixtures does, though the text says "league schedule". It can only be approximated either way.
+- **A schedule below five matches** isn't in any Figure 1, so the same rounding applies to it.
+- **A club name** is what's left of a team name without its trailing gender, division, XV and words such as "Senior" or "Club". Differently spelled names are different clubs, and a team whose name and competition don't say is taken as men's.
+- **A letter side** ("B Side") ranks as that XV at its division, as "2nd XV" does.
+- **"No warnings" means no player status warnings.** On Track and Caution are gone. The notices about gaps in the record and about Unplaced Teams stay, because they say the data behind a final verdict may be incomplete.
+- **Older records are taken as entered.** Lineups and substitutions may be thinner in older seasons, which shows as gaps or low counts.
