@@ -4,10 +4,12 @@ import NextLink from 'next/link';
 import { Breadcrumbs, Card, CardContent, Link as MuiLink, Stack, Typography } from '@mui/material';
 import { EligibilityStatusChip, PlayerDetailBody } from '@zmnatz/usa-club-rugby-components';
 import type { PlayerClubEntry, PlayerProfile } from '@zmnatz/usa-club-rugby-data';
+import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';
 import { clubPath } from '@/utils/paths';
 import { listPlayerIds, readPlayerPage } from '@/utils/playerPages';
 
-// The page is only text and links, so it ships no JavaScript and links out of it are full page loads.
+// The page is only text and links, so it ships no Next runtime and links out of it
+// are full page loads. The inline script only reloads it on history navigation.
 export const config = { unstable_runtimeJS: false };
 
 /** Every player in the nightly data. Players can change clubs, so a player's page
@@ -60,6 +62,8 @@ function PlayerInClub({ entry }: { entry: PlayerClubEntry }) {
 export default function PlayerPage({ data }: { data: PlayerProfile }) {
   return (
     <>
+      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed string, with no data in it */}
+      <script dangerouslySetInnerHTML={{ __html: HISTORY_RELOAD_SCRIPT }} />
       <Head>
         <title>{`${data.name} · USA Club Rugby Eligibility`}</title>
         <meta
