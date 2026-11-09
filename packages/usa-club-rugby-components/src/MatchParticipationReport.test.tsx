@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'bun:test';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { FeedFixture } from '@zmnatz/usa-club-rugby-data';
@@ -12,10 +12,10 @@ beforeEach(() => {
   user = userEvent.setup();
 });
 
-const renderCsvReport = (fixtures?: FeedFixture[]) =>
+const renderCsvReport = (loadFixtures?: () => Promise<FeedFixture[]>) =>
   render(
     <EligibilityLinksProvider Link="a" routes={routes}>
-      <MatchParticipationReport fixtures={fixtures} />
+      <MatchParticipationReport loadFixtures={loadFixtures} />
     </EligibilityLinksProvider>,
   );
 
@@ -77,20 +77,51 @@ describe('a Match Participation Report', () => {
     expect(fields.every((field) => field.value === '')).toBe(true);
   });
 
-  it('counts the fixtures the host supplies towards on-track verdicts', async () => {
-    const upcoming = fixture('b9', 'Harbor City MD1', '2099-05-01T17:00:00Z', {
-      status: 'Scheduled',
-      homeTeam: { name: 'Harbor City MD1', score: '' },
-      awayTeam: { name: 'Bayside MD1', score: '' },
-    });
-    renderCsvReport([upcoming]);
-    await pasteReport(REPORT);
-    await run();
-    expect(within(screen.getByText('Ona Track').closest('tr') as HTMLElement).getByText('ON TRACK')).toBeTruthy();
+  const upcoming = fixture('b9', 'Harbor City MD1', '2099-05-01T17:00:00Z', {
+    status: 'Scheduled',
+    homeTeam: { name: 'Harbor City MD1', score: '' },
+    awayTeam: { name: 'Bayside MD1', score: '' },
   });
 
-  it('does not treat fixtures still loading as none left', async () => {
-    await runReport(REPORT);
-    expect(within(screen.getByText('Ona Track').closest('tr') as HTMLElement).getByText('INELIGIBLE')).toBeTruthy();
+  it('counts the fixtures the host loads towards on-track verdicts', async () => {
+    renderCsvReport(async () => [upcoming]);
+    await pasteReport(REPORT);
+    await run();
+    const row = (await screen.findByText('Ona Track')).closest('tr') as HTMLElement;
+    expect(within(row).getByText('ON TRACK')).toBeTruthy();
+  });
+
+  it('loads the fixtures only once a report is run', async () => {
+    const loadFixtures = mock(async () => [upcoming]);
+    renderCsvReport(loadFixtures);
+    await pasteReport(REPORT);
+    expect(loadFixtures).not.toHaveBeenCalled();
+    await run();
+    await screen.findByText('Ona Track');
+    expect(loadFixtures).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not load the fixtures for a report that cannot be read', async () => {
+    const loadFixtures = mock(async () => [upcoming]);
+    renderCsvReport(loadFixtures);
+    await pasteReport('USA ID,First Name\n');
+    await run();
+    await screen.findByText('The CSV contains a header but no player rows.');
+    expect(loadFixtures).not.toHaveBeenCalled();
+  });
+
+  it('shows no verdicts until the fixtures have loaded', async () => {
+    renderCsvReport(() => new Promise(() => {}));
+    await pasteReport(REPORT);
+    await run();
+    expect(screen.queryByText('Ona Track')).toBeNull();
+  });
+
+  it('still runs the report if the fixtures fail to load', async () => {
+    renderCsvReport(() => Promise.reject(new Error('unavailable')));
+    await pasteReport(REPORT);
+    await run();
+    const row = (await screen.findByText('Ona Track')).closest('tr') as HTMLElement;
+    expect(within(row).getByText('INELIGIBLE')).toBeTruthy();
   });
 });

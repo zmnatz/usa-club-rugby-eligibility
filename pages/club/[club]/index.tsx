@@ -11,10 +11,6 @@ import {
 import { selectClubs } from '@/utils/buildScope';
 import { readClubSnapshot, readFixtures, readIndex, type PublishedClub } from '@/utils/published';
 
-// Deployed pages let a visitor check for newer matches; dev has only the saved
-// snapshot, so working on the page doesn't hit the CMS.
-const LIVE_RECORD = process.env.NODE_ENV === 'production';
-
 interface ClubPageProps {
   club: PublishedClub;
   saved: ParticipationSnapshot;
@@ -55,7 +51,7 @@ export default function ClubPage({ club, saved, fixtures }: ClubPageProps) {
         />
       </Head>
       <Breadcrumbs aria-label="breadcrumb">
-        <MuiLink component={NextLink} href="/" underline="hover" color="inherit">
+        <MuiLink component={NextLink} prefetch={false} href="/" underline="hover" color="inherit">
           All clubs
         </MuiLink>
         <Typography color="text.primary">{club.name}</Typography>
@@ -66,7 +62,7 @@ export default function ClubPage({ club, saved, fixtures }: ClubPageProps) {
       <Typography variant="body2" color="textSecondary" gutterBottom>
         {club.sides.map((side) => side.teamName).join(' · ')}
       </Typography>
-      <ClubEligibilityReport club={club} saved={saved} fixtures={fixtures} live={LIVE_RECORD} />
+      <ClubEligibilityReport club={club} saved={saved} fixtures={fixtures} />
     </>
   );
 }

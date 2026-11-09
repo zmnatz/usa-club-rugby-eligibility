@@ -19,12 +19,11 @@ jobs:
       - run: bun run typecheck
       - run: bun run test
       - run: bun run verify
-      - run: bun run build
 
-  # A build of the branch to look at before it merges. GitHub Pages serves one
-  # site per repository, so a preview can't be hosted beside it; this one is built
-  # for the root path, so unzip it and serve the folder with any static server
-  # (for example `bunx serve dist`). Checks stay in the job above.
+  # A build of the branch to look at before it merges, and the PR's full build.
+  # GitHub Pages serves one site per repository, so a preview can't be hosted beside
+  # it; this one is built for the root path, so unzip it and serve the folder with
+  # any static server (for example `bunx serve dist`). Checks stay in the job above.
   preview:
     name: Preview build
     runs-on: ubuntu-latest

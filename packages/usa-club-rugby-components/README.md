@@ -75,13 +75,12 @@ Pass `autoFocus` to put the cursor in the filter when the directory appears, on 
 One club's report from its Match Record, with when the records were last updated.
 
 ```tsx
-<ClubEligibilityReport club={club} saved={snapshot} fixtures={fixtures} live clubSlug="your-club" />
+<ClubEligibilityReport club={club} saved={snapshot} fixtures={fixtures} clubSlug="your-club" />
 ```
 
 | Prop | Purpose |
 | --- | --- |
 | `club`, `saved`, `fixtures` | From the data package's published client or your own copy of the data |
-| `live` | Offer a "Check for newer matches" button, which pulls from the CMS when clicked and replaces the saved data. Off by default. |
 | `clubSlug` | The club's Rugby Xplorer slug for match links. Without it, links use the council's path. |
 
 ### `MatchParticipationReport`
@@ -89,10 +88,10 @@ One club's report from its Match Record, with when the records were last updated
 Upload or paste a Match Participation Report, for any club.
 
 ```tsx
-<MatchParticipationReport fixtures={fixtures} />
+<MatchParticipationReport loadFixtures={client.fixtures} />
 ```
 
-Leave `fixtures` undefined until they load. Players short of a minimum can only be on track once the fixtures are known.
+`loadFixtures` is called when a report is first run, and verdicts wait for it. Without it, or if it fails, players short of a minimum can't be on track.
 
 ### `SkipToFirstPlayer`
 

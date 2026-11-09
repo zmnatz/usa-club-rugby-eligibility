@@ -26,7 +26,6 @@ rules:
       - path: /club/pittsburgh-forge/
   - files:
       - pages/player/**
-      - src/components/PlayerPage.tsx
       - packages/usa-club-rugby-components/src/PlayerDetail.tsx
       - packages/usa-club-rugby-components/src/EligibilityStatusChip.tsx
     routes:
@@ -38,6 +37,5 @@ rules:
       - path: /csv/
   - files:
       - pages/methodology.mdx
-      - src/components/Mdx.tsx
     routes:
       - path: /methodology/

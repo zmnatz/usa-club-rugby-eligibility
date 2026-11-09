@@ -122,7 +122,6 @@ export async function renderInHost(ui: ReactElement) {
 // Tests go through this, so only this file changes when the report's props do.
 
 export const renderClubReport = ({
-  live = false,
   extraFixtures = [] as FeedFixture[],
   clubSlug = undefined as string | undefined,
 } = {}) =>
@@ -131,7 +130,6 @@ export const renderClubReport = ({
       club={club}
       saved={saved}
       fixtures={[...fixtures, ...extraFixtures]}
-      live={live}
       clubSlug={clubSlug}
     />,
   );
