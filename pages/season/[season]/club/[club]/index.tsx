@@ -6,13 +6,7 @@ import { ClubEligibilityReport } from '@zmnatz/usa-club-rugby-components';
 import { clubFixtures, type FeedFixture, type ParticipationSnapshot } from '@zmnatz/usa-club-rugby-data';
 import { selectClubs } from '@/utils/buildScope';
 import { seasonPath } from '@/utils/paths';
-import {
-  type PublishedClub,
-  readSeasonClubSnapshot,
-  readSeasonFixtures,
-  readSeasonIndex,
-  readSeasons,
-} from '@/utils/published';
+import { type PublishedClub, readSeasonFile, readSeasons } from '@/utils/published';
 
 interface SeasonClubProps {
   slug: string;
@@ -23,7 +17,7 @@ interface SeasonClubProps {
 
 export const getStaticPaths: GetStaticPaths = async () => ({
   paths: readSeasons().flatMap(({ slug }) =>
-    selectClubs(readSeasonIndex(slug).clubs, { strict: false }).map((club) => ({
+    selectClubs(readSeasonFile(slug).clubs, { strict: false }).map((club) => ({
       params: { season: slug, club: club.key },
     })),
   ),
@@ -32,14 +26,15 @@ export const getStaticPaths: GetStaticPaths = async () => ({
 
 export const getStaticProps: GetStaticProps<SeasonClubProps> = async ({ params }) => {
   const slug = params?.season as string;
-  const club = readSeasonIndex(slug).clubs.find((candidate) => candidate.key === params?.club);
+  const season = readSeasonFile(slug);
+  const club = season.clubs.find((candidate) => candidate.key === params?.club);
   if (!club) return { notFound: true };
   return {
     props: {
       slug,
       club,
-      saved: readSeasonClubSnapshot(slug, club.key),
-      fixtures: clubFixtures(readSeasonFixtures(slug), club),
+      saved: season.clubFiles[club.key],
+      fixtures: clubFixtures(season.fixtures, club),
     },
   };
 };

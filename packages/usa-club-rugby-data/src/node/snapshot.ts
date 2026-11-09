@@ -21,7 +21,7 @@ import { MATCH_CENTRE_QUERY, type MatchCentreData } from '../playerHistory.ts';
 import { DEFAULT_RULES } from '../rules.ts';
 import { DEFAULT_SOURCES, type SourcesConfig } from '../sources.ts';
 import type { EligibilityRules } from '../types.ts';
-import { listDirs, listJson, prune, readJson, readText, withoutStamp, writeIfChanged } from './files.ts';
+import { listJson, prune, readJson, readText, withoutStamp, writeIfChanged } from './files.ts';
 
 // The nightly job as a library: refresh the raw archive from the CMS, calculate the
 // published files from it, and check that the published files can be recalculated.
@@ -89,14 +89,8 @@ export function renderPublished(data: PublishedData, generatedAt: string): Map<s
       }),
     );
   }
-  // A Locked Season doesn't change, so its files carry no time.
-  for (const { season, slug, fixtures, clubs, clubFiles, unplacedTeams } of history) {
-    files.set(`seasons/${slug}/index.json`, JSON.stringify({ season, slug, clubs, unplacedTeams }));
-    files.set(`seasons/${slug}/fixtures.json`, JSON.stringify({ season, fixtures }));
-    for (const [key, snapshot] of Object.entries(clubFiles)) {
-      files.set(`seasons/${slug}/clubs/${key}.json`, JSON.stringify(snapshot));
-    }
-  }
+  // One file a season. A Locked Season doesn't change, so it carries no time.
+  for (const locked of history) files.set(`seasons/${locked.slug}.json`, JSON.stringify(locked));
   return files;
 }
 
@@ -120,13 +114,13 @@ export function publishFromArchive(
  *  index's time is when the published data last changed, not when it was checked. */
 export function writePublished(publishedDir: string, files: Map<string, string>, generatedAt: string): boolean {
   let changed = false;
-  const keep = new Map<string, Set<string>>([['clubs', new Set()]]);
+  const keep = new Map<string, Set<string>>([
+    ['clubs', new Set()],
+    ['seasons', new Set()],
+  ]);
   for (const [name, content] of files) {
     if (name === 'index.json') continue;
-    if (path.posix.basename(path.posix.dirname(name)) === 'clubs') {
-      const dir = path.posix.dirname(name);
-      keep.set(dir, (keep.get(dir) ?? new Set()).add(path.posix.basename(name)));
-    }
+    keep.get(path.posix.dirname(name))?.add(path.posix.basename(name));
     changed = writeIfChanged(path.join(publishedDir, name), content) || changed;
   }
   for (const [dir, names] of keep) {
@@ -246,8 +240,7 @@ export function verifyPublished(options: SnapshotPaths & { rules?: EligibilityRu
     if (saved === null) missing.push(name);
     else if (withoutStamp(saved) !== withoutStamp(content)) different.push(name);
   }
-  const clubDirs = ['clubs', ...listDirs(path.join(publishedDir, 'seasons')).map((slug) => `seasons/${slug}/clubs`)];
-  const extra = clubDirs
+  const extra = ['clubs', 'seasons']
     .flatMap((dir) => listJson(path.join(publishedDir, dir)).map((name) => `${dir}/${name}`))
     .filter((name) => !expected.has(name));
   return {

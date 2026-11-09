@@ -11,7 +11,7 @@ The page is static. Its data is calculated each night by `usa-club-rugby-data sn
 | `public/data/fixtures.json` | The current season's fixtures | Yes |
 | `public/data/clubs/<club>.json` | One club's Match Participation rows, gaps and result ids | Yes |
 | `public/data/seasons.json` | The Locked Seasons published, newest first. Absent until the Archive holds one | Yes |
-| `public/data/seasons/<slug>/` | One Locked Season's `index.json`, `fixtures.json` and `clubs/<club>.json` | Yes |
+| `public/data/seasons/<slug>.json` | One Locked Season in a single file: its clubs, Unplaced Teams, fixtures and each club's Match Participation | Yes |
 
 Each club's file becomes that club's page at `/club/<club-key>/` at build time, and each player in any of them a page at `/player/<cms-id>/` (except players whose name is withheld; under no club, since players change clubs; the page has a section for each club they appear in), so a report can be linked to and shared. Player pages are built from `public/data` at build time (`src/utils/playerPages.ts` works out each player's verdict on every side they're listed for and the fixtures behind it, once per build process), so each page's HTML carries its own verdict and match table.
 
@@ -42,7 +42,7 @@ The same options are inputs on the workflow's manual run (Actions, "Snapshot and
 
 ## Locked Seasons
 
-The Archive can hold every season the feeds list. Each one from 2022-23 on is published under `public/data/seasons/<slug>/` with the regulations of its year (`rulesForSeason`, ADR 006), and becomes pages at `/season/<slug>/` and `/season/<slug>/club/<club-key>/`. The current season's files aren't affected. A Locked Season's files carry no timestamp, so later nights leave them alone.
+The Archive can hold every season the feeds list. Each one from 2022-23 on is published as its own file, `public/data/seasons/<slug>.json`, with the regulations of its year (`rulesForSeason`, ADR 006), and becomes pages at `/season/<slug>/` and `/season/<slug>/club/<club-key>/`. The current season's files aren't affected. A Locked Season's files carry no timestamp, so later nights leave them alone.
 
 To fill the archive:
 

@@ -10,6 +10,7 @@ export type {
   PublishedFixturesFile,
   PublishedIndexFile,
   PublishedPlayersFile,
+  PublishedSeasonFile,
   PublishedSeasonsFile,
 } from './data.ts';
 export * from './eligibility.ts';

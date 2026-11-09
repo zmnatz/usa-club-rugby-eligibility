@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 export const readText = (file: string): string | null => (existsSync(file) ? readFileSync(file, 'utf8') : null);
@@ -32,6 +32,3 @@ export function prune(dir: string, keep: Set<string>): number {
 
 export const listJson = (dir: string): string[] =>
   existsSync(dir) ? readdirSync(dir).filter((name) => name.endsWith('.json')) : [];
-
-export const listDirs = (dir: string): string[] =>
-  existsSync(dir) ? readdirSync(dir).filter((name) => statSync(path.join(dir, name)).isDirectory()) : [];

@@ -5,7 +5,7 @@ import { Breadcrumbs, Link as MuiLink, Typography } from '@mui/material';
 import { ClubDirectory } from '@zmnatz/usa-club-rugby-components';
 import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';
 import { seasonClubPath } from '@/utils/paths';
-import { readSeasonIndex, readSeasons, type PublishedSeasonIndex } from '@/utils/published';
+import { type PublishedSeasonFile, readSeasonFile, readSeasons } from '@/utils/published';
 
 // Text, links and a filter, as on the home page: no Next runtime.
 export const config = { unstable_runtimeJS: false };
@@ -15,13 +15,16 @@ export const getStaticPaths: GetStaticPaths = async () => ({
   fallback: false,
 });
 
-export const getStaticProps: GetStaticProps<{ data: PublishedSeasonIndex }> = async ({ params }) => {
-  const slug = typeof params?.season === 'string' ? params.season : null;
-  return slug ? { props: { data: readSeasonIndex(slug) } } : { notFound: true };
+type SeasonSummary = Pick<PublishedSeasonFile, 'season' | 'slug' | 'clubs' | 'unplacedTeams'>;
+
+export const getStaticProps: GetStaticProps<{ data: SeasonSummary }> = async ({ params }) => {
+  if (typeof params?.season !== 'string') return { notFound: true };
+  const { season, slug, clubs, unplacedTeams } = readSeasonFile(params.season);
+  return { props: { data: { season, slug, clubs, unplacedTeams } } };
 };
 
 /** The clubs of one Locked Season, each linking to that season's report. */
-export default function SeasonPage({ data }: { data: PublishedSeasonIndex }) {
+export default function SeasonPage({ data }: { data: SeasonSummary }) {
   const { season, slug, clubs, unplacedTeams } = data;
   return (
     <>

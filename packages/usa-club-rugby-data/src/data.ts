@@ -5,14 +5,12 @@
 //   public/data/fixtures.json        PublishedFixturesFile
 //   public/data/clubs/<key>.json     PublishedClubFile
 //   public/data/seasons.json         PublishedSeasonsFile
-//   public/data/seasons/<slug>/      index.json PublishedSeasonIndex,
-//                                    fixtures.json PublishedFixturesFile,
-//                                    clubs/<key>.json ParticipationSnapshot
+//   public/data/seasons/<slug>.json  PublishedSeasonFile
 //   archive/manifest.json            ArchiveManifest
 //   archive/fixtures/<season>.json   ArchiveFixturesFile
 //   archive/matches/<season>.json    ArchiveMatchesFile
 
-import type { ArchiveManifest } from './archive.ts';
+import type { ArchiveManifest, LockedSeasonData } from './archive.ts';
 import type { FeedFixture } from './feeds.ts';
 import type { ParticipationSnapshot } from './participation.ts';
 import type { MatchCentreData } from './playerHistory.ts';
@@ -39,6 +37,10 @@ export interface PublishedClubFile extends ParticipationSnapshot {
 export interface PublishedSeasonsFile {
   seasons: PublishedSeason[];
 }
+
+/** `seasons/<slug>.json`: everything published for one Locked Season, in one file:
+ *  its clubs, Unplaced Teams, fixtures, and each club's Match Participation by club key. */
+export type PublishedSeasonFile = LockedSeasonData;
 
 /** Which clubs each player is in the record of, by CMS id, for finding a player from
  *  their id. Not published: worked out from the club files by `buildPlayerIndex`, which

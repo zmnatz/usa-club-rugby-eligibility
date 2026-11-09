@@ -24,18 +24,10 @@ export interface PublishedClub extends Club {
 export interface PublishedSeason {
   /** As the CMS names it, e.g. "2025/2026". */
   season: string;
-  /** Its page path and directory, e.g. "2025-26". */
+  /** Its page path and file name, e.g. "2025-26". */
   slug: string;
   clubs: number;
   unplacedTeams: number;
-}
-
-/** A Locked Season's `seasons/<slug>/index.json`. */
-export interface PublishedSeasonIndex {
-  season: string;
-  slug: string;
-  clubs: PublishedClub[];
-  unplacedTeams: string[];
 }
 
 export interface PublishedIndex {
