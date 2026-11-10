@@ -12,6 +12,7 @@ import {
 } from '@zmnatz/usa-club-rugby-data';
 import { formatDateTime } from './dates.ts';
 import { EligibilityReportView } from './EligibilityReportView.tsx';
+import { ReportProblemNote } from './ReportProblemNote.tsx';
 import { SeasonRules } from './SeasonRules.tsx';
 import { useEligibilityLinks } from './links.tsx';
 
@@ -57,6 +58,7 @@ export function ClubEligibilityReport({ club, saved, fixtures, clubSlug = null }
           How this report is worked out
         </MuiLink>
       </Typography>
+      <ReportProblemNote season={saved.season} club={club} locked={locked} />
 
       <Stack spacing={2} useFlexGap>
         <div>

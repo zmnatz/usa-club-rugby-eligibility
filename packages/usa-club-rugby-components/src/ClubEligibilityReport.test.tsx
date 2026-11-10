@@ -389,3 +389,19 @@ describe('a player who played for another club', () => {
     expect(dialog.getByText('Bayside · Bayside MD3: 1 counted match')).toBeTruthy();
   });
 });
+
+describe('reporting a problem', () => {
+  const reportProblem = (report?: { kind: string; season: string; club?: { key: string } }) =>
+    report ? `/report/${report.kind}/${report.season}/${report.club?.key ?? ''}` : '/report';
+
+  it('sends this season’s problems to Rugby Xplorer first, then to the host', async () => {
+    await renderClubReport({ reportProblem });
+    expect(screen.getByText(/check and correct it in Rugby Xplorer first/)).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'open an issue' }).getAttribute('href')).toBe('/report');
+  });
+
+  it('shows no note when the host gives nowhere to report', async () => {
+    await renderClubReport();
+    expect(screen.queryByText(/check and correct it in Rugby Xplorer first/)).toBeNull();
+  });
+});

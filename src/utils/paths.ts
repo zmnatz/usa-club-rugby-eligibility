@@ -1,5 +1,7 @@
 // Routes, relative to the site's base path (Next adds that).
 
+import type { EligibilityRoutes } from '@zmnatz/usa-club-rugby-components';
+
 export const clubPath = (clubKey: string): string => `/club/${clubKey}`;
 
 /** A player's page is not under a club: they can play for several over time. */
@@ -17,9 +19,13 @@ export const statsPath = (slug: string): string => (slug ? `/stats/${slug}` : '/
 export const REPO_URL = 'https://github.com/zmnatz/usa-club-rugby-eligibility';
 export const ISSUES_URL = `${REPO_URL}/issues`;
 
+/** Where to report a problem with a report. */
+export const reportProblemUrl = (): string => ISSUES_URL;
+
 /** This site's pages, for the component package. */
-export const routes = {
+export const routes: EligibilityRoutes = {
   club: clubPath,
   player: playerPath,
   methodology: () => '/methodology',
+  reportProblem: reportProblemUrl,
 };

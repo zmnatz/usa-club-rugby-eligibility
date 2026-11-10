@@ -5,6 +5,20 @@ export interface EligibilityRoutes {
   club: (clubKey: string) => string;
   player: (playerId: string) => string;
   methodology: () => string;
+  /** Where people report a problem with a report. Without it, no report-a-problem note shows. */
+  reportProblem?: (report?: ProblemReport) => string;
+}
+
+/** A report about a Locked Season, filled in so it can be reproduced from the archive.
+ *  - `rules-engine`: the record is right, but a verdict looks wrong under that season's
+ *    rules or team matching.
+ *  - `archive-correction`: the archived record is wrong, or was corrected in Rugby Xplorer
+ *    after the season locked. */
+export interface ProblemReport {
+  kind: 'rules-engine' | 'archive-correction';
+  /** As the CMS names it, e.g. "2024/2025". */
+  season: string;
+  club?: { key: string; name: string };
 }
 
 export interface EligibilityLinks {
