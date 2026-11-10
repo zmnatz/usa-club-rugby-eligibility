@@ -1,9 +1,8 @@
 import type { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
-import NextLink from 'next/link';
-import { Breadcrumbs, Card, CardContent, Link as MuiLink, Stack, Typography } from '@mui/material';
-import { EligibilityStatusChip, PlayerDetailBody } from '@zmnatz/usa-club-rugby-components';
 import type { PlayerClubEntry, PlayerProfile } from '@zmnatz/usa-club-rugby-data';
+import { Crumbs, PageLink } from '@/components/Crumbs';
+import { EligibilityStatusChip, PlayerDetailBody } from '@/eligibility';
 import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';
 import { clubPath } from '@/utils/paths';
 import { listPlayerIds, published } from '@/utils/published';
@@ -28,30 +27,17 @@ export const getStaticProps: GetStaticProps<{ data: PlayerProfile }> = async ({ 
 function PlayerInClub({ entry }: { entry: PlayerClubEntry }) {
   return (
     <section>
-      <Stack direction="row" spacing={2} useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'center', mb: 1 }}>
-        <Typography variant="h5" component="h2">
-          <MuiLink component={NextLink} prefetch={false} href={clubPath(entry.clubKey)} underline="hover">
-            {entry.clubName}
-          </MuiLink>
+      <div className="ec-row" style={{ marginBottom: 8 }}>
+        <h2 style={{ margin: 0 }}>
+          <PageLink href={clubPath(entry.clubKey)}>{entry.clubName}</PageLink>
           {entry.sideLabel && ` · ${entry.sideLabel}`}
-        </Typography>
+        </h2>
         <EligibilityStatusChip player={entry.player} />
-        {entry.showCmsId && (
-          <Typography variant="body2" color="text.secondary">
-            CMS ID {entry.player.playerId}
-          </Typography>
-        )}
-      </Stack>
-      <Card component="section">
-        <CardContent>
-          <PlayerDetailBody
-            player={entry.player}
-            source="record"
-            ownLabel={entry.sideLabel}
-            fixtures={entry.fixtures}
-          />
-        </CardContent>
-      </Card>
+        {entry.showCmsId && <span className="ec-muted ec-small">CMS ID {entry.player.playerId}</span>}
+      </div>
+      <div className="ec-card">
+        <PlayerDetailBody player={entry.player} source="record" ownLabel={entry.sideLabel} fixtures={entry.fixtures} />
+      </div>
     </section>
   );
 }
@@ -71,25 +57,18 @@ export default function PlayerPage({ data }: { data: PlayerProfile }) {
           content={`NCS eligibility for ${data.name}, worked out from the Rugby Xplorer match record.`}
         />
       </Head>
-      <Breadcrumbs aria-label="breadcrumb">
-        <MuiLink component={NextLink} prefetch={false} href="/" underline="hover" color="inherit">
-          All clubs
-        </MuiLink>
-        <Typography color="text.primary">{data.name}</Typography>
-      </Breadcrumbs>
-      <Typography variant="h4" component="h1" gutterBottom>
-        {data.name}
-      </Typography>
+      <Crumbs trail={[{ label: 'All clubs', href: '/' }, { label: data.name }]} />
+      <h1>{data.name}</h1>
       {data.clubs.length > 1 && (
-        <Typography variant="body2" color="textSecondary" gutterBottom>
+        <p className="small">
           Listed {data.clubs.length} times in the record, for different clubs or sides. Each is assessed on its own.
-        </Typography>
+        </p>
       )}
-      <Stack spacing={4} useFlexGap>
+      <div className="ec-stack" style={{ gap: 32 }}>
         {data.clubs.map((entry) => (
           <PlayerInClub key={`${entry.clubKey}-${entry.player.teamName}`} entry={entry} />
         ))}
-      </Stack>
+      </div>
     </>
   );
 }

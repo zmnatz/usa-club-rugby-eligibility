@@ -1,20 +1,7 @@
 import type { GetStaticProps } from 'next';
 import Head from 'next/head';
-import NextLink from 'next/link';
-import {
-  Breadcrumbs,
-  Link as MuiLink,
-  Paper,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-} from '@mui/material';
 import { type SeasonSummary, seasonSummary } from '@zmnatz/usa-club-rugby-data';
+import { Crumbs, PageLink } from '@/components/Crumbs';
 import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';
 import { statsPath } from '@/utils/paths';
 import { published } from '@/utils/published';
@@ -55,38 +42,36 @@ function BySeason({
   rows: { name: string; values: string[]; total: string }[];
 }) {
   return (
-    <TableContainer component={Paper} variant="outlined">
-      <Table size="small" aria-label={label}>
-        <TableHead>
-          <TableRow>
-            <TableCell>{label}</TableCell>
+    <div className="ec-table-wrap ec-table-outlined">
+      <table className="ec-table" aria-label={label}>
+        <thead>
+          <tr>
+            <th>{label}</th>
             {seasons.map(({ season, slug }) => (
-              <TableCell key={slug} align="right">
-                <MuiLink component={NextLink} prefetch={false} href={statsPath(slug)}>
-                  {season}
-                </MuiLink>
-              </TableCell>
+              <th key={slug} className="ec-num">
+                <PageLink href={statsPath(slug)}>{season}</PageLink>
+              </th>
             ))}
-            <TableCell align="right">All seasons</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
+            <th className="ec-num">All seasons</th>
+          </tr>
+        </thead>
+        <tbody>
           {rows.map((row) => (
-            <TableRow key={row.name}>
-              <TableCell>{row.name}</TableCell>
+            <tr key={row.name}>
+              <td>{row.name}</td>
               {row.values.map((value, index) => (
-                <TableCell key={seasons[index].slug} align="right">
+                <td key={seasons[index].slug} className="ec-num">
                   {value}
-                </TableCell>
+                </td>
               ))}
-              <TableCell align="right">
+              <td className="ec-num">
                 <strong>{row.total}</strong>
-              </TableCell>
-            </TableRow>
+              </td>
+            </tr>
           ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -111,22 +96,15 @@ export default function AllSeasonsStatsPage({ seasons }: { seasons: SeasonStats[
           content="NCS eligibility across every USA Club Rugby senior club in each past season, from the Rugby Xplorer match record."
         />
       </Head>
-      <Breadcrumbs aria-label="breadcrumb">
-        <MuiLink component={NextLink} prefetch={false} href="/" underline="hover" color="inherit">
-          All clubs
-        </MuiLink>
-        <Typography color="text.primary">Past season stats</Typography>
-      </Breadcrumbs>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Past season stats
-      </Typography>
+      <Crumbs trail={[{ label: 'All clubs', href: '/' }, { label: 'Past season stats' }]} />
+      <h1>Past season stats</h1>
       {seasons.length === 0 ? (
-        <Typography color="textSecondary">No past seasons are published yet.</Typography>
+        <p className="lead">No past seasons are published yet.</p>
       ) : (
-        <Stack spacing={3} useFlexGap>
-          <Typography color="textSecondary">
+        <div className="ec-stack">
+          <p className="lead" style={{ margin: 0 }}>
             Every past season, each under its own year&apos;s rules. Open a season for its own page.
-          </Typography>
+          </p>
           <BySeason
             label="The season"
             seasons={seasons}
@@ -169,11 +147,11 @@ export default function AllSeasonsStatsPage({ seasons }: { seasons: SeasonStats[
               { name: 'Results with no substitutions entered', ...counted((summary) => summary.gaps.noSubstitutions) },
             ]}
           />
-          <Typography variant="caption" color="text.secondary">
+          <span className="ec-caption ec-muted">
             &quot;All seasons&quot; adds the seasons together, so a player is counted once for each season they played,
             and once for each side they played for in the division table. A verdict can have more than one reason.
-          </Typography>
-        </Stack>
+          </span>
+        </div>
       )}
     </>
   );

@@ -8,10 +8,11 @@
 # `{player}` stands for any player in the build.
 rules:
   - files:
-      - src/theme/**
+      - src/styles/**
+      - src/eligibility/styles.css
       - pages/_app.tsx
       - pages/_document.tsx
-      - packages/usa-club-rugby-components/src/primitives.tsx
+      - src/eligibility/enhance.ts
     routes:
       - path: /club/pittsburgh-forge/
       - path: /player/{player}/
@@ -19,20 +20,20 @@ rules:
       - path: /methodology/
   - files:
       - pages/club/**
-      - packages/usa-club-rugby-components/src/ClubEligibilityReport.tsx
-      - packages/usa-club-rugby-components/src/EligibilityReportView.tsx
-      - packages/usa-club-rugby-components/src/EligibilityStatusChip.tsx
+      - src/eligibility/ClubEligibilityReport.tsx
+      - src/eligibility/EligibilityReportView.tsx
+      - src/eligibility/EligibilityStatusChip.tsx
     routes:
       - path: /club/pittsburgh-forge/
   - files:
       - pages/player/**
-      - packages/usa-club-rugby-components/src/PlayerDetail.tsx
-      - packages/usa-club-rugby-components/src/EligibilityStatusChip.tsx
+      - src/eligibility/PlayerDetail.tsx
+      - src/eligibility/EligibilityStatusChip.tsx
     routes:
       - path: /player/{player}/
   - files:
       - pages/csv.tsx
-      - packages/usa-club-rugby-components/src/MatchParticipationReport.tsx
+      - src/eligibility/MatchParticipationReport.tsx
     routes:
       - path: /csv/
   - files:

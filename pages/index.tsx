@@ -1,8 +1,7 @@
 import type { GetStaticProps } from 'next';
 import Head from 'next/head';
-import NextLink from 'next/link';
-import { Button, Link as MuiLink, Typography } from '@mui/material';
-import { ClubDirectory } from '@zmnatz/usa-club-rugby-components';
+import { ClubDirectory } from '@/eligibility';
+import { PageLink } from '@/components/Crumbs';
 import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';
 import { seasonPath, statsPath } from '@/utils/paths';
 import { published, type PublishedClub, type PublishedSeason } from '@/utils/published';
@@ -21,8 +20,8 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   };
 };
 
-// Text, links and a filter, which ClubDirectory's small script runs. The page ships
-// no Next runtime; its inline scripts run the filter and reload on history navigation.
+// Text, links and a filter. Nothing on the page needs React, so it ships no Next runtime:
+// the filter is the site-wide script, and an inline one reloads on history navigation.
 export const config = { unstable_runtimeJS: false };
 
 // A fixed locale and time zone, so the static HTML reads the same after hydration.
@@ -41,48 +40,37 @@ export default function HomePage({ clubs, season, generatedAt, pastSeasons }: Ho
           content="NCS player eligibility for every USA Club Rugby senior club, worked out from the Rugby Xplorer match record."
         />
       </Head>
-      <Typography variant="h4" component="h1" gutterBottom>
-        NCS Eligibility
-      </Typography>
-      <Typography color="textSecondary" gutterBottom>
+      <h1>NCS Eligibility</h1>
+      <p className="lead">
         Pick a club to see which players are eligible for the National Championship Series,
         counted from the lineups and substitutions entered in Rugby Xplorer for every senior club
         league and local playoff match. Super Regionals, National Championships, 7s, friendlies,
         crossovers, Men&apos;s Division IV and Women&apos;s Division III don&apos;t count. Fixtures
         still to play before Super Regionals count towards the two-match minimums, shown as on
-        track (experimental). <MuiLink component={NextLink} prefetch={false} href="/methodology">How this
-        report is worked out</MuiLink>.
-      </Typography>
-      <Typography variant="body2" color="textSecondary" gutterBottom>
+        track (experimental). <PageLink href="/methodology">How this report is worked out</PageLink>.
+      </p>
+      <p className="small">
         {season} season · {clubs.length} clubs · data last changed {formatDateTime(generatedAt)}
-      </Typography>
+      </p>
       {pastSeasons.length > 0 && (
-        <Typography variant="body2" color="textSecondary" gutterBottom>
+        <p className="small">
           Past seasons:{' '}
           {pastSeasons.map(({ season: past, slug }, index) => (
             <span key={slug}>
               {index > 0 && ' · '}
-              <MuiLink component={NextLink} prefetch={false} href={seasonPath(slug)}>
-                {past}
-              </MuiLink>{' '}
-              (
-              <MuiLink component={NextLink} prefetch={false} href={statsPath(slug)}>
-                stats
-              </MuiLink>
-              )
+              <PageLink href={seasonPath(slug)}>{past}</PageLink> (<PageLink href={statsPath(slug)}>stats</PageLink>)
             </span>
           ))}
           {' · '}
-          <MuiLink component={NextLink} prefetch={false} href={statsPath('')}>
-            Stats across all past seasons
-          </MuiLink>
-        </Typography>
+          <PageLink href={statsPath('')}>Stats across all past seasons</PageLink>
+        </p>
       )}
-      <Button component={NextLink} prefetch={false} href="/csv" variant="outlined" sx={{ mb: 2 }}>
-        Check a Match Participation Report (CSV)
-      </Button>
-      {/* Next only drops the JavaScript in production. In dev, React runs the filter. */}
-      <ClubDirectory clubs={clubs} autoFocus staticFilter={process.env.NODE_ENV === 'production'} />
+      <p>
+        <PageLink href="/csv" className="ec-btn">
+          Check a Match Participation Report (CSV)
+        </PageLink>
+      </p>
+      <ClubDirectory clubs={clubs} autoFocus />
     </>
   );
 }
