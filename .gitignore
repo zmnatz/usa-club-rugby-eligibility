@@ -8,3 +8,4 @@ next-env.d.ts
 /screenshots
 /src/theme/theme.css
 *.log
+/public/player-data

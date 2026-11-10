@@ -115,9 +115,16 @@ export function filterFindings(findings: Finding[], noise: NoiseRule[]): Finding
   );
 }
 
+// The player a requested path names: `/player/?id=<cms-id>`, or the old `/player/<cms-id>/`.
+function requestedPlayer(path: string): string | undefined {
+  const [pathname, query = ''] = path.split('?');
+  if (/^\/player\/?$/.test(pathname)) return new URLSearchParams(query).get('id') ?? undefined;
+  return pathname.match(/^\/player\/([^/]+)/)?.[1];
+}
+
 // The clubs a PR's build needs: the defaults, each club a requested page shows,
 // and every club a requested player is listed for. Unknown clubs and players are
-// left out, so the build still runs and the comment reports their page as a 404.
+// left out, so the build still runs and the comment shows their page as not found.
 export function clubsToBuild({
   defaults,
   requested,
@@ -135,7 +142,7 @@ export function clubsToBuild({
     if (club && clubs.includes(club)) {
       wanted.add(club);
     }
-    const player = path.match(/^\/player\/([^/]+)/)?.[1];
+    const player = requestedPlayer(path);
     for (const key of player ? (playerClubs.get(player) ?? []) : []) {
       wanted.add(key);
     }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { reportProblemUrl } from './paths';
+import { legacyPlayerId, playerPath, reportProblemUrl } from './paths';
 
 describe('reportProblemUrl', () => {
   it('opens the issues with nothing to fill in', () => {
@@ -24,5 +24,19 @@ describe('reportProblemUrl', () => {
     expect(url.searchParams.get('title')).toBe('2023/2024: ');
     expect(url.searchParams.get('body')).toContain('Season: 2023/2024');
     expect(url.searchParams.get('body')).not.toContain('Club:');
+  });
+});
+
+describe('player paths', () => {
+  it('names the player in the query of the one player page', () => {
+    expect(playerPath('27ZCFXTnfWs8iEaz9')).toBe('/player?id=27ZCFXTnfWs8iEaz9');
+  });
+
+  it('reads the player from an old /player/<cms-id>/ URL, and nothing else', () => {
+    expect(legacyPlayerId('/player/27ZCFXTnfWs8iEaz9/')).toBe('27ZCFXTnfWs8iEaz9');
+    expect(legacyPlayerId('/player/27ZCFXTnfWs8iEaz9')).toBe('27ZCFXTnfWs8iEaz9');
+    expect(legacyPlayerId('/player/')).toBeNull();
+    expect(legacyPlayerId('/club/nova/')).toBeNull();
+    expect(legacyPlayerId('/player/a/b/')).toBeNull();
   });
 });

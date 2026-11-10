@@ -4,8 +4,16 @@ import type { EligibilityRoutes, ProblemReport } from '@zmnatz/usa-club-rugby-co
 
 export const clubPath = (clubKey: string): string => `/club/${clubKey}`;
 
-/** A player's page is not under a club: they can play for several over time. */
-export const playerPath = (playerId: string): string => `/player/${encodeURIComponent(playerId)}`;
+/** A player's page is not under a club: they can play for several over time. One page
+ *  serves every player, chosen by the query (ADR 007). */
+export const playerPath = (playerId: string): string => `/player?id=${encodeURIComponent(playerId)}`;
+
+/** The player a pre-ADR 007 player URL, `/player/<cms-id>/`, names, so it can be sent on.
+ *  `pathname` is without the base path. */
+export const legacyPlayerId = (pathname: string): string | null => {
+  const match = pathname.match(/^\/player\/([^/?#]+)\/?$/);
+  return match ? decodeURIComponent(match[1]) : null;
+};
 
 /** A Locked Season's list of clubs, and a club's report for it. */
 export const seasonPath = (slug: string): string => `/season?season=${encodeURIComponent(slug)}`;
