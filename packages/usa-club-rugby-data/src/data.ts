@@ -12,7 +12,7 @@
 
 import type { ArchiveManifest, LockedSeasonData } from './archive.ts';
 import type { FeedFixture } from './feeds.ts';
-import type { ParticipationSnapshot } from './participation.ts';
+import type { ParticipationSnapshot } from './snapshot.ts';
 import type { MatchCentreData } from './playerHistory.ts';
 import type { PublishedIndex, PublishedSeason } from './published.ts';
 
@@ -72,7 +72,8 @@ export type {
   MatchStatsSummary,
   Team,
 } from './match.ts';
-export type { ParticipationGap, PlayerRoundStatus } from './participation.ts';
+export type { PlayerRoundStatus } from './clubReport.ts';
+export type { ParticipationGap } from './snapshot.ts';
 export type { PlayerGameLog, PlayerHistory, PlayerScoringEvent } from './playerHistory.ts';
 export type { PublishedClub } from './published.ts';
 export type * from './types.ts';

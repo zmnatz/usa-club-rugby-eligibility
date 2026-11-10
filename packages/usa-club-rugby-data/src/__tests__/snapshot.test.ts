@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { seasonFile, serializeSeasonFixtures, serializeSeasonMatches } from '../archive.ts';
 import type { FeedFixture } from '../feeds.ts';
 import { runSnapshot, verifyPublished } from '../node/snapshot.ts';
-import type { ParticipationSnapshot } from '../participation.ts';
+import type { ParticipationSnapshot } from '../snapshot.ts';
 import type { MatchCentreData } from '../playerHistory.ts';
 
 const NOW = new Date('2026-11-07T12:00:00Z');

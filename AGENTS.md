@@ -19,9 +19,11 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 - `packages/usa-club-rugby-data/`: the engine, published to npm as `@zmnatz/usa-club-rugby-data`. Framework-free (no React, Next or `@/` aliases); relative imports end in `.ts`. The site imports it by that name, so it must be built (`bun run lib`) first.
   - `src/eligibility.ts`: the rules. `src/__tests__/eligibility-regulation.test.ts` holds the regulations' Figure 1; a change that breaks a row is wrong.
   - `src/rules.ts`, `src/sources.ts`: `DEFAULT_RULES` (thresholds, excluded competitions) and `DEFAULT_SOURCES` (the council and unions read each night).
-  - `src/participation.ts`: Match Participation from match records, possible fixtures, the live pull.
+  - `src/qualifying.ts`: what counts as a Qualifying Match. The rule most likely to change by season (ADR 006).
+  - `src/snapshot.ts`: Match Participation and its gaps from match records. `src/clubFixtures.ts`: clubs, their sides and fixtures, and one club's slice of the record.
+  - `src/schedule.ts`: possible, remaining and scheduled matches. `src/clubReport.ts`: a club's and a player's verdicts from the record, and a player's rounds.
   - `src/teamSide.ts`: club and division from a team name. `src/historicalSides.ts`: the same for a Locked Season, using competition names (ADR 006).
-  - `src/feeds.ts`, `src/archive.ts`, `src/live.ts`: the nightly pull. `src/api.ts`: CMS requests and the shared rate-limit gate.
+  - `src/feeds.ts`, `src/archive.ts`, `src/live.ts`: the nightly pull. `live.ts` also has the live pull of one club's record (`loadClubRecord`). `src/api.ts`: CMS requests and the shared rate-limit gate.
   - `src/published.ts`: the client for the published data. Its file shapes are a public interface.
   - `src/node/`: the only filesystem code: `runSnapshot`, `verifyPublished`. `src/cli.ts` is the `usa-club-rugby-data` command.
 - `packages/usa-club-rugby-components/`: the eligibility UI, published to npm as `@zmnatz/usa-club-rugby-components`. React and MUI, with its peers supplied by the host. No Next.js imports or `@/` aliases (`src/boundaries.test.ts` fails on them), and no colours, defaults or copy for one club or union. Relative imports end in `.ts` or `.tsx`. Use standard MUI components with layout on their props, so every screen renders properly under MUI's default theme; a theme only changes the look. See ADR 005.

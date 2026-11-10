@@ -1,15 +1,10 @@
 import type { PublishedPlayersFile } from './data.ts';
 import type { FeedFixture } from './feeds.ts';
-import {
-  clubBreakdown,
-  clubFixtures,
-  isQualifying,
-  type ParticipationSnapshot,
-  type PlayerRound,
-  playerRounds,
-  type PossibleFixture,
-  possibleFixtures,
-} from './participation.ts';
+import { clubFixtures } from './clubFixtures.ts';
+import { clubBreakdown, type PlayerRound, playerRounds } from './clubReport.ts';
+import { isQualifying } from './qualifying.ts';
+import { type PossibleFixture, possibleFixtures } from './schedule.ts';
+import type { ParticipationSnapshot } from './snapshot.ts';
 import { isNameWithheld } from './playerHistory.ts';
 import type { PublishedClub } from './published.ts';
 import { DEFAULT_RULES, rulesForSeason } from './rules.ts';
