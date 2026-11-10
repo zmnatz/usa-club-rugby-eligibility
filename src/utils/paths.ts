@@ -10,6 +10,9 @@ export const seasonPath = (slug: string): string => `/season?season=${encodeURIC
 export const seasonClubPath = (slug: string, clubKey: string): string =>
   `${seasonPath(slug)}&club=${encodeURIComponent(clubKey)}`;
 
+/** A Locked Season's stats, built as a page of its own; with no season, every season's. */
+export const statsPath = (slug: string): string => (slug ? `/stats/${slug}` : '/stats');
+
 /** This site's pages, for the component package. */
 export const routes = {
   club: clubPath,

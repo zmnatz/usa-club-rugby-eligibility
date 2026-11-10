@@ -5,6 +5,7 @@ import type {
   ParticipationSnapshot,
   PublishedIndex,
   PublishedSeason,
+  PublishedSeasonFile,
   PublishedSeasonsFile,
 } from '@zmnatz/usa-club-rugby-data';
 
@@ -33,4 +34,9 @@ export function readClubSnapshot(key: string): ParticipationSnapshot {
 export function readSeasons(): PublishedSeason[] {
   if (!existsSync(path.join(PUBLISHED, 'seasons.json'))) return [];
   return readJson<PublishedSeasonsFile>('seasons.json').seasons;
+}
+
+/** One Locked Season's file, for building its stats page. */
+export function readSeasonFile(slug: string): PublishedSeasonFile {
+  return readJson<PublishedSeasonFile>(path.join('seasons', `${slug}.json`));
 }

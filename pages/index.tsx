@@ -4,7 +4,7 @@ import NextLink from 'next/link';
 import { Button, Link as MuiLink, Typography } from '@mui/material';
 import { ClubDirectory } from '@zmnatz/usa-club-rugby-components';
 import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';
-import { seasonPath } from '@/utils/paths';
+import { seasonPath, statsPath } from '@/utils/paths';
 import { readIndex, readSeasons, type PublishedClub, type PublishedSeason } from '@/utils/published';
 
 interface HomeProps {
@@ -64,9 +64,18 @@ export default function HomePage({ clubs, season, generatedAt, pastSeasons }: Ho
               {index > 0 && ' · '}
               <MuiLink component={NextLink} prefetch={false} href={seasonPath(slug)}>
                 {past}
+              </MuiLink>{' '}
+              (
+              <MuiLink component={NextLink} prefetch={false} href={statsPath(slug)}>
+                stats
               </MuiLink>
+              )
             </span>
           ))}
+          {' · '}
+          <MuiLink component={NextLink} prefetch={false} href={statsPath('')}>
+            Stats across all past seasons
+          </MuiLink>
         </Typography>
       )}
       <Button component={NextLink} prefetch={false} href="/csv" variant="outlined" sx={{ mb: 2 }}>
