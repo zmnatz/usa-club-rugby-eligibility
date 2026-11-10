@@ -1,0 +1,9 @@
+# The site is the Next.js app at the repo root, a static export to dist/.
+# The packages in packages/ are libraries it builds first (`bun run lib`), not sites.
+[build]
+  base = ""
+  command = "bun run build"
+  publish = "dist"
+
+[build.environment]
+  BUN_VERSION = "1.4.4"
