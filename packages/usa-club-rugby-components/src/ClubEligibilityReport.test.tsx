@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'bun:test';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NAMES, renderClubReport, transfers } from './__fixtures__/report.tsx';
+import type { ProblemReport } from './links.tsx';
 import { SkipToFirstPlayer } from './SkipToFirstPlayer.tsx';
 
 let user: ReturnType<typeof userEvent.setup>;
@@ -391,13 +392,13 @@ describe('a player who played for another club', () => {
 });
 
 describe('reporting a problem', () => {
-  const reportProblem = (report?: { kind: string; season: string; club?: { key: string } }) =>
+  const reportProblem = (report?: ProblemReport) =>
     report ? `/report/${report.kind}/${report.season}/${report.club?.key ?? ''}` : '/report';
 
   it('sends this season’s problems to Rugby Xplorer first, then to the host', async () => {
     await renderClubReport({ reportProblem });
     expect(screen.getByText(/check and correct it in Rugby Xplorer first/)).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'open an issue' }).getAttribute('href')).toBe('/report');
+    expect(screen.getByRole('link', { name: 'report it' }).getAttribute('href')).toBe('/report');
   });
 
   it('shows no note when the host gives nowhere to report', async () => {

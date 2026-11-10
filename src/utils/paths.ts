@@ -30,6 +30,8 @@ export const reportProblemUrl = (report?: ProblemReport): string => {
   if (!report) return ISSUES_URL;
   const { kind, season, club } = report;
   const body = [
+    // GitHub drops `labels` for reporters who can't triage, so the kind is in the body too.
+    `Kind: ${kind}`,
     `Season: ${season}`,
     ...(club ? [`Club: ${club.name} (\`${club.key}\`)`] : []),
     '',

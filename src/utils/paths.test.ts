@@ -13,6 +13,7 @@ describe('reportProblemUrl', () => {
     expect(url.origin + url.pathname).toBe('https://github.com/zmnatz/usa-club-rugby-eligibility/issues/new');
     expect(url.searchParams.get('labels')).toBe('rules-engine');
     expect(url.searchParams.get('title')).toBe('Harbor City 2024/2025: ');
+    expect(url.searchParams.get('body')).toContain('Kind: rules-engine');
     expect(url.searchParams.get('body')).toContain('Season: 2024/2025');
     expect(url.searchParams.get('body')).toContain('Club: Harbor City (`harbor-city`)');
   });
