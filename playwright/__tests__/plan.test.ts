@@ -131,8 +131,8 @@ describe('clubsToBuild', () => {
 
 describe('fillSamplePlayer', () => {
   it('replaces the placeholder with a player from the build and leaves other paths alone', () => {
-    expect(fillSamplePlayer([{ path: '/player/?id={player}' }, { path: '/csv/' }], ['z', 'a'])).toEqual([
-      { path: '/player/?id=a' },
+    expect(fillSamplePlayer([{ path: '/player/{player}/' }, { path: '/csv/' }], ['z', 'a'])).toEqual([
+      { path: '/player/a/' },
       { path: '/csv/' },
     ]);
   });

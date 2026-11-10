@@ -14,8 +14,7 @@ rules:
       - packages/usa-club-rugby-components/src/primitives.tsx
     routes:
       - path: /club/pittsburgh-forge/
-      - path: /player/?id={player}
-        waitFor: h2
+      - path: /player/{player}/
       - path: /csv/
       - path: /methodology/
   - files:
@@ -30,8 +29,7 @@ rules:
       - packages/usa-club-rugby-components/src/PlayerDetail.tsx
       - packages/usa-club-rugby-components/src/EligibilityStatusChip.tsx
     routes:
-      - path: /player/?id={player}
-        waitFor: h2
+      - path: /player/{player}/
   - files:
       - pages/csv.tsx
       - packages/usa-club-rugby-components/src/MatchParticipationReport.tsx

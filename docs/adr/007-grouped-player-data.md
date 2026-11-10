@@ -1,5 +1,7 @@
 # Player pages load grouped files, not one page per player
 
+**Superseded by [ADR 008](008-static-player-pages.md).**
+
 Player pages landed on 8 November 2026 (ade4d52) as one static page per player, about 9,400 of them, each with its own `_next/data` JSON. A deploy grew from a few hundred files to about 19,800 (409 MB). GitHub Pages took 75 to 100 seconds to process each one, up from about 30, and four deploys in two days stalled at `syncing_files` until the 10-minute limit. No two deploys overlapped and GitHub's status page was green. Retrying with the same files (#52) stalled too. GitHub publishes no file-count limit, so the count can't be proved to be the cause, but it was the only thing that changed when the stalls began, and processing time grows with it.
 
 So there is one player page, `/player/?id=<cms-id>`, and the players' profiles are published in 256 files, `player-data/<bucket>.json`, keyed by a hash of the CMS id (`playerBucket` in `src/utils/playerBuckets.ts`). A deploy is back to a few hundred files.

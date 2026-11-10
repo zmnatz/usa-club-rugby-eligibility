@@ -1,20 +1,20 @@
 import { useEffect, useState } from 'react';
 import NextLink from 'next/link';
 import { CircularProgress, Link as MuiLink, Typography } from '@mui/material';
-import { legacyPlayerId } from '@/utils/paths';
+import { playerPath, queryPlayerId } from '@/utils/paths';
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 
-/** Player pages were once at /player/<cms-id>/, which the static host now answers with
- *  this page. Sends those links on to the player's page (ADR 007). */
+/** Player pages were briefly one page at /player/?id=<cms-id> (ADR 007), which the host
+ *  now answers with this page. Sends those links on to the player's own page. */
 function useLegacyPlayerRedirect(): boolean {
   const [redirecting, setRedirecting] = useState(false);
   useEffect(() => {
-    const { pathname, hash } = window.location;
-    const id = legacyPlayerId(pathname.startsWith(BASE_PATH) ? pathname.slice(BASE_PATH.length) : pathname);
+    const { pathname, search, hash } = window.location;
+    const id = queryPlayerId(pathname.startsWith(BASE_PATH) ? pathname.slice(BASE_PATH.length) : pathname, search);
     if (id === null) return;
     setRedirecting(true);
-    window.location.replace(`${BASE_PATH}/player/?id=${encodeURIComponent(id)}${hash}`);
+    window.location.replace(`${BASE_PATH}${playerPath(id)}/${hash}`);
   }, []);
   return redirecting;
 }
