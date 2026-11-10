@@ -1,5 +1,7 @@
 import type { PublishedSeasonFile } from './data.ts';
-import { clubBreakdown, clubFixtures, clubGaps, isQualifying } from './participation.ts';
+import { clubFixtures } from './clubFixtures.ts';
+import { clubBreakdown, clubGaps } from './clubReport.ts';
+import { isQualifying } from './qualifying.ts';
 import { rulesForSeason } from './rules.ts';
 
 // A Locked Season at a glance, from its published file: the same verdicts its club

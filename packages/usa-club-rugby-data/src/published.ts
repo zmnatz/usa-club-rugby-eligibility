@@ -1,7 +1,9 @@
 import type { PublishedClubFile, PublishedFixturesFile, PublishedPlayersFile, PublishedSeasonFile } from './data.ts';
 import type { Club, EligibilityBreakdown, EligibilityRules, PlayerEligibility } from './types.ts';
 import type { FeedFixture } from './feeds.ts';
-import { clubBreakdown, clubFixtures, type ParticipationSnapshot } from './participation.ts';
+import { clubFixtures } from './clubFixtures.ts';
+import { clubBreakdown } from './clubReport.ts';
+import type { ParticipationSnapshot } from './snapshot.ts';
 import { buildPlayerIndex, clubContext, type PlayerClubEntry, type PlayerProfile, playerEntries, sortEntries } from './players.ts';
 import { parseTeamSide, type TeamSide } from './teamSide.ts';
 

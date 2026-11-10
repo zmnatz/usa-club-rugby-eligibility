@@ -2,7 +2,9 @@ import type { ArchiveFixturesFile, ArchiveMatchesFile } from './data.ts';
 import type { Club, EligibilityRules } from './types.ts';
 import { currentSeason, type FeedFixture, isResult, sortFixtures } from './feeds.ts';
 import { historicalClubs, type HistoricalClub } from './historicalSides.ts';
-import { buildParticipationSnapshot, clubSnapshot, inExcludedMonth, listClubs, type ParticipationSnapshot } from './participation.ts';
+import { clubSnapshot, listClubs } from './clubFixtures.ts';
+import { inExcludedMonth } from './qualifying.ts';
+import { buildParticipationSnapshot, type ParticipationSnapshot } from './snapshot.ts';
 import { assignTransfers } from './players.ts';
 import {
   aggregatePlayerHistory,

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { FeedFixture } from '../feeds.ts';
-import type { ParticipationSnapshot } from '../participation.ts';
+import type { ParticipationSnapshot } from '../snapshot.ts';
 import { computeBreakdown } from '../eligibility.ts';
-import { participationRows, playerRounds } from '../participation.ts';
+import { participationRows, playerRounds } from '../clubReport.ts';
 import { assignTransfers, transferRecords } from '../players.ts';
 import { DEFAULT_RULES } from '../rules.ts';
 import type { PublishedClub } from '../published.ts';

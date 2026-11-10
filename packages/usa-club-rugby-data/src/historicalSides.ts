@@ -1,5 +1,5 @@
 import { CLUB_ALIASES, clubIdentity, clubNameId } from './clubAliases.ts';
-import { isQualifyingMatch } from './participation.ts';
+import { isQualifyingMatch } from './qualifying.ts';
 import { isNcsSide, sideLabel } from './teamSide.ts';
 import type { Club, EligibilityRules } from './types.ts';
 

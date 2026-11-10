@@ -3,6 +3,8 @@
 export * from './api.ts';
 export * from './archive.ts';
 export * from './clubAliases.ts';
+export { clubFixtures, clubSnapshot, listClubs } from './clubFixtures.ts';
+export * from './clubReport.ts';
 export * from './csv.ts';
 export type {
   ArchiveFixturesFile,
@@ -19,14 +21,16 @@ export * from './feeds.ts';
 export * from './historicalSides.ts';
 export * from './live.ts';
 export type * from './match.ts';
-export * from './participation.ts';
 export * from './players.ts';
 export * from './playerHistory.ts';
 export * from './published.ts';
+export * from './qualifying.ts';
 export * from './rugbyXplorer.ts';
 export * from './rules.ts';
+export { type PossibleFixture, possibleFixtures, remainingMatches, scheduledMatches } from './schedule.ts';
 export * from './scoring.ts';
 export * from './seasonSummary.ts';
+export * from './snapshot.ts';
 export * from './sources.ts';
 export * from './teamSide.ts';
 export type * from './types.ts';

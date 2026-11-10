@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { PublishedClubFile, PublishedFixturesFile, PublishedIndexFile } from '../data.ts';
 import type { FeedFixture } from '../feeds.ts';
 import { clubEligibility, createPublishedClient, type PublishedIndex } from '../published.ts';
-import type { ParticipationSnapshot } from '../participation.ts';
+import type { ParticipationSnapshot } from '../snapshot.ts';
 
 const index: PublishedIndex = {
   generatedAt: '2026-11-07T00:00:00.000Z',

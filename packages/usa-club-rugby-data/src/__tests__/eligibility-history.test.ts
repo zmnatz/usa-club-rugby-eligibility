@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeBreakdown } from '../eligibility.ts';
-import { inExcludedMonth, isQualifyingMatch } from '../participation.ts';
+import { inExcludedMonth, isQualifyingMatch } from '../qualifying.ts';
 import { DEFAULT_RULES, rulesForSeason } from '../rules.ts';
 import type { PlayerRow, Side } from '../types.ts';
 
