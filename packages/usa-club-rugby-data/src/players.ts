@@ -1,7 +1,7 @@
 import type { PublishedPlayersFile } from './data.ts';
 import type { FeedFixture } from './feeds.ts';
-import { clubFixtures } from './clubFixtures.ts';
-import { clubBreakdown, type PlayerRound, playerRounds } from './clubReport.ts';
+import { type PlayerRound, playerRounds } from './clubReport.ts';
+import { clubSeason } from './clubSeason.ts';
 import { isQualifying } from './qualifying.ts';
 import { type PossibleFixture, possibleFixtures } from './schedule.ts';
 import type { ParticipationSnapshot } from './snapshot.ts';
@@ -39,15 +39,16 @@ export interface PlayerRecordInput {
   fixtures: FeedFixture[];
 }
 
-/** A club's verdicts and the fixtures they're counted from. */
+/** A club's verdicts and the fixtures they're counted from.
+ *  @deprecated Use `clubSeason`, which also gives the gaps and the rules. */
 export function clubContext(
   club: PublishedClub,
   snapshot: ParticipationSnapshot,
   allFixtures: FeedFixture[],
   options: PlayerOptions = {},
 ): ClubContext {
-  const fixtures = clubFixtures(allFixtures, club);
-  return { club, snapshot, fixtures, breakdown: clubBreakdown(snapshot, fixtures, club, options) };
+  const { fixtures, breakdown } = clubSeason(snapshot, allFixtures, club, options);
+  return { club, snapshot, fixtures, breakdown };
 }
 
 /** One side's fixtures for one player. */
