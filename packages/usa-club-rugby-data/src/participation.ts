@@ -15,6 +15,7 @@ import {
   type PlayerGameLog,
   type PlayerHistory,
 } from './playerHistory.ts';
+import type { TransferRecords } from './players.ts';
 import { rulesForSeason } from './rules.ts';
 
 /** A fixture with a final score, as the player-history feed reports it. */
@@ -61,6 +62,9 @@ export interface ParticipationSnapshot {
   resultIds?: string[];
   /** A Locked Season: verdicts have no On Track or Caution. */
   locked?: boolean;
+  /** Locked Seasons only: players shown here who also played for another club that
+   *  season, with those games, which aren't counted here. */
+  transfers?: TransferRecords;
   rows: PlayerRow[];
   gaps: ParticipationGap[];
 }

@@ -1,4 +1,4 @@
-export { EligibilityStatusChip, type EligibilityStatusChipProps } from './EligibilityStatusChip.tsx';
+export { EligibilityStatusChip, type EligibilityStatusChipProps, WaiverChip } from './EligibilityStatusChip.tsx';
 export { ClubDirectory, type ClubDirectoryProps } from './ClubDirectory.tsx';
 export {
   type EligibilityLinks,

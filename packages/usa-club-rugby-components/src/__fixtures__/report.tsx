@@ -5,6 +5,7 @@ import type {
   ParticipationSnapshot,
   PlayerRow,
   PublishedClub,
+  TransferRecords,
 } from '@zmnatz/usa-club-rugby-data';
 import { ClubEligibilityReport } from '../ClubEligibilityReport.tsx';
 import { EligibilityLinksProvider, type EligibilityRoutes } from '../links.tsx';
@@ -127,12 +128,42 @@ export const renderClubReport = ({
   locked = false,
   unplacedTeams = undefined as string[] | undefined,
   notes = undefined as string[] | undefined,
+  transfers = undefined as TransferRecords | undefined,
 } = {}) =>
   renderInHost(
     <ClubEligibilityReport
       club={{ ...club, ...(unplacedTeams ? { unplacedTeams } : {}), ...(notes ? { notes } : {}) }}
-      saved={locked ? { ...saved, locked } : saved}
+      saved={{ ...saved, ...(locked ? { locked } : {}), ...(transfers ? { transfers } : {}) }}
       fixtures={[...fixtures, ...extraFixtures]}
       clubSlug={clubSlug}
     />,
   );
+
+/** Eli Clear also played a match for Bayside. */
+export const transfers: TransferRecords = {
+  eli: [
+    {
+      clubKey: 'bayside',
+      clubName: 'Bayside',
+      sides: [
+        {
+          teamName: 'Bayside MD3',
+          rounds: [
+            {
+              fixtureId: 'z1',
+              round: 'Round 4',
+              competition: 'Test League Men D3',
+              dateTime: '2026-10-03T17:00:00Z',
+              opponent: 'Harbor City MD3',
+              scoreFor: '7',
+              scoreAgainst: '12',
+              status: 'started',
+              counted: true,
+              substitutionsMissing: false,
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};

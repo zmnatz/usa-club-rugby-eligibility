@@ -58,5 +58,8 @@ _Avoid_: archived season, old data
 **Unplaced Team**:
 A team in a Locked Season that can't be assessed: a round or one-off entry, a team with no division at a club with other teams, or one sharing a division with another name at its club, which leaves that club out. Listed on the season's page.
 
+**Waiver Required**:
+A player in a Locked Season who played for more than one club that season. Shown only at the last club they played for, with their other clubs' games listed but not counted.
+
 **National Championship Series (NCS)**:
 USA Rugby's postseason competition for Men's Divisions I, II and III and Women's Divisions I and II.

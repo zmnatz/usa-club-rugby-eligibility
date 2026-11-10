@@ -3,6 +3,7 @@ import type { Club, EligibilityRules } from './types.ts';
 import { currentSeason, type FeedFixture, isResult, sortFixtures } from './feeds.ts';
 import { historicalClubs, type HistoricalClub } from './historicalSides.ts';
 import { buildParticipationSnapshot, clubSnapshot, listClubs, type ParticipationSnapshot } from './participation.ts';
+import { assignTransfers } from './players.ts';
 import {
   aggregatePlayerHistory,
   fetchMatchCentre,
@@ -223,8 +224,13 @@ export function buildLockedSeason(
   const participation = buildParticipationSnapshot(aggregatePlayerHistory(seasonMatches).values(), results, now);
   const { clubs: found, unplacedTeams } = historicalClubs(seasonFixtures, rules);
   const clubs = withClubKeys(found);
-  const clubFiles = Object.fromEntries(
-    clubs.map((club) => [club.key, { ...clubSnapshot(participation, club, results), season, locked: true }]),
+  const clubFiles = assignTransfers(
+    clubs.map((club) => ({
+      club,
+      fixtures: seasonFixtures,
+      snapshot: { ...clubSnapshot(participation, club, results), season, locked: true },
+    })),
+    rules,
   );
   return { season, slug: seasonSlug(season), fixtures: seasonFixtures, clubs, clubFiles, unplacedTeams };
 }

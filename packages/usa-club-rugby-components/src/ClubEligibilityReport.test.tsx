@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { NAMES, renderClubReport } from './__fixtures__/report.tsx';
+import { NAMES, renderClubReport, transfers } from './__fixtures__/report.tsx';
 import { SkipToFirstPlayer } from './SkipToFirstPlayer.tsx';
 
 let user: ReturnType<typeof userEvent.setup>;
@@ -362,5 +362,23 @@ describe('a Locked Season', () => {
     await renderClubReport();
     expect(screen.getByRole('group', { name: 'Eligibility status' })).toBeTruthy();
     expect(screen.queryByText(/final/i)).toBeNull();
+  });
+});
+
+describe('a player who played for another club', () => {
+  it('is marked as needing a waiver, and no one else is', async () => {
+    await renderClubReport({ transfers });
+    await openD3();
+    expect(within(rowOf(NAMES.eligible)).getByText('Waiver Required')).toBeTruthy();
+    expect(within(rowOf(NAMES.caution)).queryByText('Waiver Required')).toBeNull();
+  });
+
+  it('shows their games for the other club in their detail', async () => {
+    await renderClubReport({ transfers });
+    await openD3();
+    await user.click(screen.getByText(NAMES.eligible));
+    const dialog = within(await screen.findByRole('dialog'));
+    expect(dialog.getByText('Waiver Required')).toBeTruthy();
+    expect(dialog.getByText('Bayside · Bayside MD3: 1 counted match')).toBeTruthy();
   });
 });

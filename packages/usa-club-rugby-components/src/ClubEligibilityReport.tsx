@@ -98,6 +98,7 @@ export function ClubEligibilityReport({ club, saved, fixtures, clubSlug = null }
           season={saved.season}
           playerPages={!locked}
           locked={locked}
+          transfers={saved.transfers}
           clubSlug={clubSlug}
           activeSide={activeSide}
           onActiveSideChange={setActiveSide}
