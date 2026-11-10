@@ -120,6 +120,7 @@ describe('clubsToBuild', () => {
 
   it('adds a requested club and every club a requested player is listed for', () => {
     expect(build('/club/c-club/')).toEqual(['a-club', 'c-club']);
+    expect(build('/player/?id=p1')).toEqual(['a-club', 'b-club', 'c-club']);
     expect(build('/player/p1/')).toEqual(['a-club', 'b-club', 'c-club']);
   });
 
@@ -130,8 +131,8 @@ describe('clubsToBuild', () => {
 
 describe('fillSamplePlayer', () => {
   it('replaces the placeholder with a player from the build and leaves other paths alone', () => {
-    expect(fillSamplePlayer([{ path: '/player/{player}/' }, { path: '/csv/' }], ['z', 'a'])).toEqual([
-      { path: '/player/a/' },
+    expect(fillSamplePlayer([{ path: '/player/?id={player}' }, { path: '/csv/' }], ['z', 'a'])).toEqual([
+      { path: '/player/?id=a' },
       { path: '/csv/' },
     ]);
   });

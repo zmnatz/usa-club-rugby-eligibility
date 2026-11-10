@@ -18,7 +18,7 @@ import { ReportProblemNote, SeasonRules } from '@zmnatz/usa-club-rugby-component
 import { type SeasonSummary, seasonSummary } from '@zmnatz/usa-club-rugby-data';
 import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';
 import { seasonPath, statsPath } from '@/utils/paths';
-import { readSeasonFile, readSeasons } from '@/utils/published';
+import { published } from '@/utils/published';
 
 // One page per Locked Season, worked out at build time from its file, so it opens at
 // once, can be linked to and needs no JavaScript. There are only a few seasons, so
@@ -32,13 +32,13 @@ interface StatsProps {
 }
 
 export const getStaticPaths: GetStaticPaths = async () => ({
-  paths: readSeasons().map(({ slug }) => ({ params: { season: slug } })),
+  paths: (await published.seasons()).map(({ slug }) => ({ params: { season: slug } })),
   fallback: false,
 });
 
 export const getStaticProps: GetStaticProps<StatsProps> = async ({ params }) => {
   if (typeof params?.season !== 'string') return { notFound: true };
-  const file = readSeasonFile(params.season);
+  const file = await published.season(params.season);
   return { props: { season: file.season, slug: file.slug, summary: seasonSummary(file) } };
 };
 

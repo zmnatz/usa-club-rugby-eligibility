@@ -91,14 +91,22 @@ async function main() {
       .map(parsePageSpec)
       .filter((spec): spec is PageSpec => spec !== null),
   ];
-  const playerDir = path.join(path.resolve(values.site), 'player');
+  // The players in the build, from the grouped files the player page loads (ADR 007).
+  const playerDir = path.join(path.resolve(values.site), 'player-data');
+  const playerIds = fs.existsSync(playerDir)
+    ? fs
+        .readdirSync(playerDir)
+        .flatMap((file) =>
+          Object.keys(JSON.parse(fs.readFileSync(path.join(playerDir, file), 'utf-8')).players ?? {})
+        )
+    : [];
   const pages = fillSamplePlayer(
     planPages({
       changedFiles: changedFiles(values['base-ref'], values['changed-files']),
       rules,
       requested,
     }),
-    fs.existsSync(playerDir) ? fs.readdirSync(playerDir) : []
+    playerIds
   );
 
   const browser = await chromium.launch();

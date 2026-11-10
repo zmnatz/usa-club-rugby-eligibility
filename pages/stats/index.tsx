@@ -17,7 +17,7 @@ import {
 import { type SeasonSummary, seasonSummary } from '@zmnatz/usa-club-rugby-data';
 import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';
 import { statsPath } from '@/utils/paths';
-import { readSeasonFile, readSeasons } from '@/utils/published';
+import { published } from '@/utils/published';
 
 // Every Locked Season's stats side by side, worked out at build time like each
 // season's own stats page.
@@ -31,10 +31,12 @@ interface SeasonStats {
 
 export const getStaticProps: GetStaticProps<{ seasons: SeasonStats[] }> = async () => ({
   props: {
-    seasons: readSeasons().map(({ slug }) => {
-      const file = readSeasonFile(slug);
-      return { season: file.season, slug, summary: seasonSummary(file) };
-    }),
+    seasons: await Promise.all(
+      (await published.seasons()).map(async ({ slug }) => {
+        const file = await published.season(slug);
+        return { season: file.season, slug, summary: seasonSummary(file) };
+      }),
+    ),
   },
 });
 

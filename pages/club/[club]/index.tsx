@@ -9,7 +9,7 @@ import {
   type ParticipationSnapshot,
 } from '@zmnatz/usa-club-rugby-data';
 import { selectClubs } from '@/utils/buildScope';
-import { readClubSnapshot, readFixtures, readIndex, type PublishedClub } from '@/utils/published';
+import { published, type PublishedClub } from '@/utils/published';
 
 interface ClubPageProps {
   club: PublishedClub;
@@ -19,23 +19,24 @@ interface ClubPageProps {
 
 export const getStaticPaths: GetStaticPaths = async () => {
   return {
-    paths: selectClubs(readIndex().clubs).map((club) => ({ params: { club: club.key } })),
+    paths: selectClubs(await published.clubs()).map((club) => ({ params: { club: club.key } })),
     fallback: false,
   };
 };
 
 export const getStaticProps: GetStaticProps<ClubPageProps> = async ({ params }) => {
   const key = Array.isArray(params?.club) ? params?.club[0] : params?.club;
-  const club = readIndex().clubs.find((candidate) => candidate.key === key);
+  const club = (await published.clubs()).find((candidate) => candidate.key === key);
   if (!club) return { notFound: true };
+  const [{ snapshot }, fixtures] = await Promise.all([published.club(club.key), published.fixtures()]);
 
   return {
     props: {
       club,
-      saved: readClubSnapshot(club.key),
+      saved: snapshot,
       // The fixtures in the club's divisions, including playoff dates with no
       // teams assigned, which its possible matches are worked out from.
-      fixtures: clubFixtures(readFixtures(), club),
+      fixtures: clubFixtures(fixtures, club),
     },
   };
 };

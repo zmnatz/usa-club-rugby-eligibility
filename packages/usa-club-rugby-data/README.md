@@ -21,7 +21,19 @@ const clubs = await client.clubs();               // every club and its sides
 const teams = await client.teams();               // every team, with parsed gender/division
 const players = await client.players('rocky-gorge'); // a verdict per player per side
 const report = await client.eligibility('rocky-gorge'); // the same, grouped by side
+const ann = await client.player('12345');          // one player's verdict on every side they're listed on
+const past = await client.seasons();               // the Locked Seasons published
 ```
+
+The client reads each file once and keeps it. It reads through a `PublishedReader`, `(file) => Promise<unknown>`, given a path such as `clubs/rocky-gorge.json`. By default that is `httpReader({ baseUrl, fetch })`. Pass `read` for anything else: `fsReader(dir)` from `@zmnatz/usa-club-rugby-data/node` reads a checkout's `public/data`, and `memoryReader(files)` reads from an object, which is handy in tests. A reader rejects with `MissingPublishedFile` when a file isn't there.
+
+```ts
+import { fsReader } from '@zmnatz/usa-club-rugby-data/node';
+
+const local = createPublishedClient({ read: fsReader('public/data') });
+```
+
+`playerIndex` and `player` work out every club's verdicts on the first lookup. Later lookups with the same options object, or with none, reuse them, so pass a new options object to count from a new `now`.
 
 A player record carries `participation` (Match Participation: matches started plus matches entered as a substitute), `eligible`, `reasons` for a failure, `pending` for the matches an eligible player still needs, `cautions` when one more upper-side match would end an eligible player's eligibility for the rest of the season, and per-round detail in `rows[].rounds`.
 
@@ -72,7 +84,7 @@ npx @zmnatz/usa-club-rugby-data verify --archive archive --published public/data
 | `verify` | Recalculate and compare; exit 1 on any difference |
 | `rules` | Print the rules and sources in effect |
 
-The same operations are available from `@zmnatz/usa-club-rugby-data/node` (`runSnapshot`, `verifyPublished`, `publishFromArchive`), which is the only entry point that touches the filesystem. The full walkthrough is in [docs/reproducing.md](https://github.com/zmnatz/usa-club-rugby-eligibility/blob/main/docs/reproducing.md).
+The same operations are available from `@zmnatz/usa-club-rugby-data/node` (`runSnapshot`, `verifyPublished`, `publishFromArchive`, and `fsReader` for the client), which is the only entry point that touches the filesystem. The full walkthrough is in [docs/reproducing.md](https://github.com/zmnatz/usa-club-rugby-eligibility/blob/main/docs/reproducing.md).
 
 ## Development
 

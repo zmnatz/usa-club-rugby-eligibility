@@ -5,7 +5,7 @@ import { Button, Link as MuiLink, Typography } from '@mui/material';
 import { ClubDirectory } from '@zmnatz/usa-club-rugby-components';
 import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';
 import { seasonPath, statsPath } from '@/utils/paths';
-import { readIndex, readSeasons, type PublishedClub, type PublishedSeason } from '@/utils/published';
+import { published, type PublishedClub, type PublishedSeason } from '@/utils/published';
 
 interface HomeProps {
   clubs: PublishedClub[];
@@ -15,9 +15,9 @@ interface HomeProps {
 }
 
 export const getStaticProps: GetStaticProps<HomeProps> = async () => {
-  const index = readIndex();
+  const [index, pastSeasons] = await Promise.all([published.index(), published.seasons()]);
   return {
-    props: { clubs: index.clubs, season: index.season, generatedAt: index.generatedAt, pastSeasons: readSeasons() },
+    props: { clubs: index.clubs, season: index.season, generatedAt: index.generatedAt, pastSeasons },
   };
 };
 

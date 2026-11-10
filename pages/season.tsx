@@ -15,14 +15,14 @@ import {
 import { ClubDirectory, ClubEligibilityReport, ReportProblemNote, SeasonRules } from '@zmnatz/usa-club-rugby-components';
 import { clubFixtures, createPublishedClient, type PublishedSeasonFile } from '@zmnatz/usa-club-rugby-data';
 import { seasonClubPath, seasonPath, statsPath } from '@/utils/paths';
-import { readSeasons, type PublishedSeason } from '@/utils/published';
+import { published, type PublishedSeason } from '@/utils/published';
 
 // One page for every Locked Season, so past seasons add nothing to the build. The
 // query says which season and club; the season's file is loaded in the browser.
 const client = createPublishedClient({ baseUrl: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/data` });
 
 export const getStaticProps: GetStaticProps<{ seasons: PublishedSeason[] }> = async () => ({
-  props: { seasons: readSeasons() },
+  props: { seasons: await published.seasons() },
 });
 
 type Loaded = { slug: string; file: PublishedSeasonFile | null };
