@@ -13,6 +13,10 @@ export const seasonClubPath = (slug: string, clubKey: string): string =>
 /** A Locked Season's stats, built as a page of its own; with no season, every season's. */
 export const statsPath = (slug: string): string => (slug ? `/stats/${slug}` : '/stats');
 
+/** The site's code, and where people report a problem with it. */
+export const REPO_URL = 'https://github.com/zmnatz/usa-club-rugby-eligibility';
+export const ISSUES_URL = `${REPO_URL}/issues`;
+
 /** This site's pages, for the component package. */
 export const routes = {
   club: clubPath,
