@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment-retry.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -106,8 +106,25 @@ jobs:
       - run: bun run build
 
       - uses: actions/configure-pages@v5
+      # Named per attempt: a re-run keeps the earlier attempt's artifact, and
+      # deploy-pages refuses to choose between two with the same name.
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+          name: github-pages-${{ github.run_attempt }}
+      # Pages sometimes stalls in deployment_queued or syncing_files well past
+      # deploy-pages' 10-minute default, though a normal sync takes seconds.
+      # Wait longer, and if it still times out (deploy-pages cancels its own
+      # deployment then), try once more with the same artifact.
       - id: deployment
         uses: actions/deploy-pages@v4
+        continue-on-error: true
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}
+          timeout: 1200000
+      - id: deployment-retry
+        if: steps.deployment.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}
+          timeout: 1200000
