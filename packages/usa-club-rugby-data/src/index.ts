@@ -25,6 +25,7 @@ export * from './published.ts';
 export * from './rugbyXplorer.ts';
 export * from './rules.ts';
 export * from './scoring.ts';
+export * from './seasonSummary.ts';
 export * from './sources.ts';
 export * from './teamSide.ts';
 export type * from './types.ts';

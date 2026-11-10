@@ -1,11 +1,25 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { GetStaticProps } from 'next';
 import Head from 'next/head';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
-import { Alert, Breadcrumbs, CircularProgress, Link as MuiLink, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Breadcrumbs,
+  CircularProgress,
+  Link as MuiLink,
+  Paper,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
 import { ClubDirectory, ClubEligibilityReport, SeasonRules } from '@zmnatz/usa-club-rugby-components';
-import { clubFixtures, createPublishedClient, type PublishedSeasonFile } from '@zmnatz/usa-club-rugby-data';
+import { clubFixtures, createPublishedClient, type PublishedSeasonFile, seasonSummary } from '@zmnatz/usa-club-rugby-data';
 import { seasonClubPath, seasonPath } from '@/utils/paths';
 import { readSeasons, type PublishedSeason } from '@/utils/published';
 
@@ -76,6 +90,70 @@ function SeasonList({ seasons }: { seasons: PublishedSeason[] }) {
   );
 }
 
+const count = (n: number, one: string, many = `${one}s`) => `${n.toLocaleString('en-US')} ${n === 1 ? one : many}`;
+const percent = (part: number, whole: number) => (whole === 0 ? '—' : `${Math.round((100 * part) / whole)}%`);
+
+/** The season's verdicts counted across every club. */
+function SeasonAtAGlance({ file }: { file: PublishedSeasonFile }) {
+  const summary = useMemo(() => seasonSummary(file), [file]);
+  const { ineligible, gaps } = summary;
+  return (
+    <section>
+      <Typography variant="subtitle1" component="h2" gutterBottom>
+        The season at a glance
+      </Typography>
+      <Stack spacing={1.5} useFlexGap>
+        <Typography variant="body2">
+          {count(summary.players, 'player')} played {count(summary.matches, 'counted match', 'counted matches')} for{' '}
+          {count(summary.clubs, 'club')}, {summary.multiSideClubs.toLocaleString('en-US')} of them with more than one side (
+          {count(summary.sides, 'side')} in all), with {count(summary.transfers, 'transfer')} between clubs.
+        </Typography>
+        <TableContainer component={Paper} variant="outlined">
+          <Table size="small" aria-label="Eligibility by division">
+            <TableHead>
+              <TableRow>
+                <TableCell>Division</TableCell>
+                <TableCell align="right">Sides</TableCell>
+                <TableCell align="right">Players</TableCell>
+                <TableCell align="right">Eligible</TableCell>
+                <TableCell align="right">Share</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {summary.divisions.map((row) => (
+                <TableRow key={row.division}>
+                  <TableCell>{row.division}</TableCell>
+                  <TableCell align="right">{row.sides.toLocaleString('en-US')}</TableCell>
+                  <TableCell align="right">{row.players.toLocaleString('en-US')}</TableCell>
+                  <TableCell align="right">{row.eligible.toLocaleString('en-US')}</TableCell>
+                  <TableCell align="right">{percent(row.eligible, row.players)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <Typography variant="caption" color="text.secondary">
+          Players are counted for each side they played for, so a player at a club with several sides can appear in more
+          than one division.
+        </Typography>
+        {ineligible.verdicts > 0 && (
+          <Typography variant="body2">
+            Of the {count(ineligible.verdicts, 'time', 'times')} a player wasn&apos;t eligible for a side they played for,{' '}
+            {ineligible.shortOfMinimum.toLocaleString('en-US')} were short of the minimum,{' '}
+            {ineligible.upperSideLimit.toLocaleString('en-US')} reached the upper-side limit and{' '}
+            {ineligible.upperSideShare.toLocaleString('en-US')} had too many matches for the sides above. Some had more than
+            one reason.
+          </Typography>
+        )}
+        <Typography variant="body2" color="text.secondary">
+          Gaps in the record: {count(gaps.noLineup, 'result')} with no lineup and {count(gaps.noSubstitutions, 'result')} with
+          no substitutions entered. Players in those matches may be undercounted.
+        </Typography>
+      </Stack>
+    </section>
+  );
+}
+
 function SeasonClubs({ file }: { file: PublishedSeasonFile }) {
   const { season, slug, clubs, unplacedTeams } = file;
   return (
@@ -97,6 +175,7 @@ function SeasonClubs({ file }: { file: PublishedSeasonFile }) {
       </Typography>
       <Stack spacing={2} useFlexGap sx={{ mb: 2 }}>
         <SeasonRules season={season} />
+        <SeasonAtAGlance file={file} />
       </Stack>
       <ClubDirectory clubs={clubs} autoFocus clubHref={(key) => seasonClubPath(slug, key)} />
       {unplacedTeams.length > 0 && (
