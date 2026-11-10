@@ -33,9 +33,9 @@ import { EligibilityStatusChip, WaiverChip } from './EligibilityStatusChip.tsx';
 import { wrapRow } from './layout.ts';
 import { useEligibilityLinks } from './links.tsx';
 
-/** Where a report's rows came from. Only a CSV report carries USA IDs and
- *  registration dates. */
-export type ReportSource = 'record' | 'csv';
+import { CAUTION_ADVICE, type ReportSource } from './reportModel.ts';
+
+export { CAUTION_ADVICE, type ReportSource };
 
 /** One labeled fact row in the player detail dialog. */
 function Fact({ label, value }: { label: string; value: ReactNode }) {
@@ -327,10 +327,6 @@ export function PlayerDetailHeading({
     </Stack>
   );
 }
-
-/** The advice that goes with Caution: a match missing from this report could change it. */
-export const CAUTION_ADVICE =
-  'Experimental: check the official Rugby Xplorer record for matches not counted here, as one could change this.';
 
 /** Everything about one player's verdict, shared by the dialog and the player page. */
 export function PlayerDetailBody({ player, source, ownLabel, fixtures, clubSlug = null, otherClubs, footer }: PlayerDetailProps) {
