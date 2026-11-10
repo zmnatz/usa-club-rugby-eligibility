@@ -2,6 +2,7 @@
 // "@zmnatz/usa-club-rugby-data/node".
 export * from './api.ts';
 export * from './archive.ts';
+export * from './clubAliases.ts';
 export * from './csv.ts';
 export type {
   ArchiveFixturesFile,

@@ -1,3 +1,4 @@
+import { aliasGroupOf, CLUB_ALIASES } from './clubAliases.ts';
 import { parseCsv } from './csv.ts';
 import { scheduleShareTrigger } from './rules.ts';
 import { isNcsSide, parseTeamSide, sideLabel, type TeamSide } from './teamSide.ts';
@@ -283,22 +284,25 @@ export function sameNamePlayers(sides: { players: PlayerEligibility[] }[]): { na
 /** Clubs and their NCS sides, highest division first, from team names. A team name
  *  that doesn't end in a division can't be ranked and is skipped. A club's 1st XV
  *  ranks above its 2nd XV at the same level. Sorted by name. */
-export function clubsFromTeamNames(teamNames: Iterable<string>): Club[] {
+export function clubsFromTeamNames(teamNames: Iterable<string>, aliases: string[][] = CLUB_ALIASES): Club[] {
+  const groupOf = aliasGroupOf(aliases);
   const clubs = new Map<string, Map<string, TeamSide>>();
   for (const teamName of teamNames) {
     const side = parseTeamSide(teamName);
     if (!side || !isNcsSide(side)) continue;
-    const sides = clubs.get(side.clubName) ?? new Map<string, TeamSide>();
+    // A club entered under several names (CLUB_ALIASES) is one club; other names
+    // stay apart however alike ("St. Louis", "St Louis").
+    const id = groupOf(side.clubName) ?? side.clubName;
+    const sides = clubs.get(id) ?? new Map<string, TeamSide>();
     sides.set(teamName, side);
-    clubs.set(side.clubName, sides);
+    clubs.set(id, sides);
   }
-  return [...clubs]
-    .map(([name, sides]) => ({
-      name,
-      sides: [...sides]
-        .sort(([, a], [, b]) => a.level - b.level || a.xv - b.xv)
-        .map(([teamName, side]) => ({ teamName, label: sideLabel(side) })),
-    }))
+  return [...clubs.values()]
+    .map((sides) => {
+      const ranked = [...sides].sort(([, a], [, b]) => a.level - b.level || a.xv - b.xv);
+      // It goes by its top side's name.
+      return { name: ranked[0][1].clubName, sides: ranked.map(([teamName, side]) => ({ teamName, label: sideLabel(side) })) };
+    })
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 

@@ -1,6 +1,7 @@
 import NextLink from 'next/link';
 import { MDXProvider } from '@mdx-js/react';
 import { Container, Link as MuiLink, Typography } from '@mui/material';
+import { CLUB_ALIASES } from '@zmnatz/usa-club-rugby-data';
 
 export const elements = {
   h1: (props) => <Typography component="h1" variant="h4" gutterBottom {...props} />,
@@ -95,8 +96,6 @@ Each season from 2022-23 is shown with the regulations of that year. The season 
 
 Every season needs two matches at the side's level or lower, or two at any level for the top side.
 
-**Clubs under several names.** Some clubs enter each side under its own name ("Houston United" and "HURT", or Chicago Griffins, Condors and Silverbacks). A confirmed list of these is treated as one club each, named after its top side that season.
-
 **Players who changed club.** A player with matches for more than one club in a past season appears only at the club they last played for, marked "Waiver Required". Their games for the other clubs are listed in their detail but don't count there: each club's verdict counts its own matches. Whether the move itself was allowed isn't checked.
 
 **Interpretations to review for past seasons:**
@@ -106,6 +105,18 @@ Every season needs two matches at the side's level or lower, or two at any level
 - The comparison of half a player's matches adds their upper sides together, in every season.
 - 66% is rounded to the nearest match, which matches each year's Figure 1, apart from the five-match schedule printed as 4 in 2023-24 and 2024-25. 2022-23 doesn't print the figure in the record we have, so it uses 2021-22's.
 - Team names often had no division then, so a team takes the division named by the competitions of most of its fixtures, and its club from the rest of its name. A 2nd XV or B side with no division is taken as one division below its club's lowest side, or Division 3 if the club has no other side. A 1st and 2nd XV with no division between them are ranked in that order. Age tags such as "18+" mark a senior team, and the Rocky Mountain union's 2022-23 tiers count as divisions: Premiership as Division 2 and Championship as Division 3. American Rugby Premiership sides, playoff placeholders, 7s, 10s, selects and all-star sides aren't assessed. Any other team with no division that is alone at its club is treated as a one-side club, which needs only the two-match minimum. Championship rounds and one-off entries aren't assessed, nor is a team with no division at a club with other teams; those are listed on the season's page, and named on the club's page if it is published, because a missing upper side can make players below it look eligible. A club with two names at one division is left out, as they can't be ranked.
+
+## Clubs entered under several names
+
+Some clubs enter each side under a name of its own, such as "Houston United" for the D2 side and "HURT" for the D3 side. The names alone can't show they are one club, so these were confirmed from the players the sides share. Each group below is one club in every season, the current one included, named after its top side that season, and its report notes each side entered under another name. Its players are judged across all its sides, as for any club.
+
+<Typography component="ul" variant="body2" gutterBottom>
+  {CLUB_ALIASES.map((names) => (
+    <li key={names[0]}>{names.join(', ')}</li>
+  ))}
+</Typography>
+
+Other clubs whose players move between them are still separate clubs, and in past seasons those players are marked Waiver Required.
 
 ## How we get data from Rugby Xplorer
 

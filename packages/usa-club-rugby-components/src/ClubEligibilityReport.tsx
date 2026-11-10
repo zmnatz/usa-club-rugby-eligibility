@@ -3,6 +3,7 @@ import { Alert, Link as MuiLink, Stack, Typography } from '@mui/material';
 import {
   clubBreakdown,
   clubGaps,
+  mergedClubNotes,
   type FeedFixture,
   type ParticipationSnapshot,
   type PlayerRecordInput,
@@ -30,6 +31,8 @@ export function ClubEligibilityReport({ club, saved, fixtures, clubSlug = null }
   const [activeSide, setActiveSide] = useState(0);
 
   const locked = saved.locked === true;
+  // A Locked Season's notes come with its file; this season's are worked out here.
+  const notes = locked ? club.notes : mergedClubNotes(club);
   const breakdown = useMemo(() => clubBreakdown(saved, fixtures, club), [club, saved, fixtures]);
   const gaps = useMemo(() => clubGaps(saved, club, rulesForSeason(saved.season)), [saved, club]);
   const playerRecord: PlayerRecordInput = { club, snapshot: saved, fixtures };
@@ -69,13 +72,13 @@ export function ClubEligibilityReport({ club, saved, fixtures, clubSlug = null }
 
         {locked && <SeasonRules season={saved.season} />}
 
-        {club.notes && (
+        {notes && notes.length > 0 && (
           <Alert severity="info">
             <Typography variant="body2" component="p" gutterBottom>
-              The record doesn&apos;t fully say how this club&apos;s teams were set up, so these were assumed:
+              How this club&apos;s teams were read from the record:
             </Typography>
             <Stack component="ul" spacing={0.5} useFlexGap sx={{ m: 0, pl: 2 }}>
-              {club.notes.map((note) => (
+              {notes.map((note) => (
                 <Typography key={note} component="li" variant="body2">
                   {note}
                 </Typography>

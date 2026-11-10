@@ -1,3 +1,4 @@
+import { CLUB_ALIASES, clubIdentity, clubNameId } from './clubAliases.ts';
 import { isQualifyingMatch } from './participation.ts';
 import { isNcsSide, sideLabel } from './teamSide.ts';
 import type { Club, EligibilityRules } from './types.ts';
@@ -49,23 +50,6 @@ const NOT_A_SIDE = /(?<!rmr )championship|(?<!rmr )premiership|\bARP\b|7s\b|10s\
 
 /** A one-side club's side when the record doesn't say its division. */
 const NO_DIVISION_LABEL = 'Senior';
-
-/** Clubs that enter their sides under different names, a group of names each. A
- *  merged club goes by the name of its top side that season. Confirmed by the project
- *  owner from the players these names share (PR 47); names alone can't show it.
- *  Women's clubs carry " Women". */
-export const CLUB_ALIASES: string[][] = [
-  ['Chicago Griffins', 'Chicago West Side Condors', 'Chicago Westside Condors', 'Chicago Condors', 'Westside Condors', 'Chicago Silverbacks'],
-  ['Eastside Banshees', 'Wailers'],
-  ['Fort Lauderdale Knights', 'FTL Knights'],
-  ['Houston United', 'HURT'],
-  ['Las Vegas Irish', 'Las Vegas Wolfhounds'],
-  ['New York Old Blue', 'Old Blue'],
-  ['NOVA Women', 'Northern Virginia Women'],
-  ['Schuylkill River', 'Schuylkill River Exiles'],
-  ['Utah Vipers Women', 'Utah Slugs Women', 'SLUGs Women', 'Salt City Slugs Women'],
-  ['Wisconsin', 'Wisconsin Sharks'],
-];
 
 /** The division a club's second side is taken to play in when nothing of its club,
  *  nor the record, says. */
@@ -194,14 +178,13 @@ export function historicalClubs(
   /** A club by its name with case, punctuation and spacing ignored, so "Philadelphia-
    *  Whitemarsh" and "Philadelphia Whitemarsh" are one club, shown as first spelled. */
   const shownName = new Map<string, string>();
-  const idOf = (name: string) => name.toLowerCase().replace(/[^a-z0-9+]+/g, ' ').trim();
-  /** Each alias's group, by the id of its first name. */
-  const group = new Map(aliases.flatMap((names) => names.map((name) => [idOf(name), idOf(names[0])] as const)));
+  const idOf = clubNameId;
+  const identity = clubIdentity(aliases);
   /** The club name each team was entered under. */
   const writtenName = new Map<string, string>();
   const clubName = (base: string, gender: Gender) => {
     const written = gender === 'W' ? `${base} Women` : base;
-    const id = group.get(idOf(written)) ?? idOf(written);
+    const id = identity(written);
     if (!shownName.has(id)) shownName.set(id, written);
     return id;
   };
