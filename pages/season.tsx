@@ -6,7 +6,11 @@ import { useRouter } from 'next/router';
 import {
   Alert,
   Breadcrumbs,
+  Button,
   CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   Link as MuiLink,
   Paper,
   Stack,
@@ -93,16 +97,12 @@ function SeasonList({ seasons }: { seasons: PublishedSeason[] }) {
 const count = (n: number, one: string, many = `${one}s`) => `${n.toLocaleString('en-US')} ${n === 1 ? one : many}`;
 const percent = (part: number, whole: number) => (whole === 0 ? '—' : `${Math.round((100 * part) / whole)}%`);
 
-/** The season's verdicts counted across every club. */
-function SeasonAtAGlance({ file }: { file: PublishedSeasonFile }) {
+/** The season's verdicts counted across every club, worked out when first opened. */
+function SeasonStatsBody({ file }: { file: PublishedSeasonFile }) {
   const summary = useMemo(() => seasonSummary(file), [file]);
   const { ineligible, gaps } = summary;
   return (
-    <section>
-      <Typography variant="subtitle1" component="h2" gutterBottom>
-        The season at a glance
-      </Typography>
-      <Stack spacing={1.5} useFlexGap>
+    <Stack spacing={1.5} useFlexGap>
         <Typography variant="body2">
           {count(summary.players, 'player')} played {count(summary.matches, 'counted match', 'counted matches')} for{' '}
           {count(summary.clubs, 'club')}, {summary.multiSideClubs.toLocaleString('en-US')} of them with more than one side (
@@ -149,8 +149,23 @@ function SeasonAtAGlance({ file }: { file: PublishedSeasonFile }) {
           Gaps in the record: {count(gaps.noLineup, 'result')} with no lineup and {count(gaps.noSubstitutions, 'result')} with
           no substitutions entered. Players in those matches may be undercounted.
         </Typography>
-      </Stack>
-    </section>
+    </Stack>
+  );
+}
+
+/** A button opening the season's stats. */
+function SeasonStats({ file }: { file: PublishedSeasonFile }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button variant="outlined" onClick={() => setOpen(true)} sx={{ alignSelf: 'flex-start' }}>
+        Season Stats
+      </Button>
+      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{file.season} Season Stats</DialogTitle>
+        <DialogContent dividers>{open && <SeasonStatsBody file={file} />}</DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -175,7 +190,7 @@ function SeasonClubs({ file }: { file: PublishedSeasonFile }) {
       </Typography>
       <Stack spacing={2} useFlexGap sx={{ mb: 2 }}>
         <SeasonRules season={season} />
-        <SeasonAtAGlance file={file} />
+        <SeasonStats file={file} />
       </Stack>
       <ClubDirectory clubs={clubs} autoFocus clubHref={(key) => seasonClubPath(slug, key)} />
       {unplacedTeams.length > 0 && (
