@@ -83,22 +83,66 @@ describe('placing a team in its club and division', () => {
   });
 });
 
-describe('teams that cannot be placed', () => {
+describe('a team with no division', () => {
   it.each(["SWRU Men's D2 & D3", 'Approved 3.4.3 Matches', 'MW Spring 2024 - NCS Pathway Matches'])(
-    'a competition that names no single division: %s',
+    'is a one-side club when alone at its club: %s',
     (competition) => {
       expect(place(game(competition, 'Tempe Old Devils Men'))).toEqual({
-        clubs: [],
-        unplacedTeams: ['Tempe Old Devils Men'],
+        clubs: [{ name: 'Tempe Old Devils', sides: [{ teamName: 'Tempe Old Devils Men', label: 'Senior' }] }],
+        unplacedTeams: [],
       });
     },
   );
 
-  it('an even split between two divisions', () => {
+  it('is a one-side club when its competitions split evenly between divisions', () => {
     const result = place(game('NorCal Mens D2', 'Marin Mens'), game('NorCal Mens D3', 'Marin Mens'));
-    expect(result).toEqual({ clubs: [], unplacedTeams: ['Marin Mens'] });
+    expect(result).toEqual({ clubs: [{ name: 'Marin', sides: [{ teamName: 'Marin Mens', label: 'Senior' }] }], unplacedTeams: [] });
   });
 
+  it('keeps a women\'s team as a women\'s club', () => {
+    expect(place(game('Approved 3.4.3 Matches', 'Phoenix Women\'s Rugby Senior')).clubs[0].name).toBe('Phoenix Women');
+  });
+
+  it.each([
+    ['Old Gaelic B-Side B-League', 'Old Gaelic'],
+    ['Phoenixville Men B-Side B-League', 'Phoenixville'],
+    ['Riverton Men B Side', 'Riverton'],
+  ])('is taken as Division 3 when it is a B side: %s', (team, club) => {
+    expect(place(game('Approved 3.4.3 Matches', team)).clubs).toEqual([{ name: club, sides: [{ teamName: team, label: 'D3' }] }]);
+  });
+
+  it('ranks a B side below its club\'s main side', () => {
+    const { clubs } = place(game('EPRU D2 Men', 'Media MD2'), game('Approved 3.4.3 Matches', 'Media B-Side B-League'));
+    expect(clubs[0].sides).toEqual([
+      { teamName: 'Media MD2', label: 'D2' },
+      { teamName: 'Media B-Side B-League', label: 'D3' },
+    ]);
+  });
+
+  it('leaves out a women\'s B side, since Women\'s Division 3 is outside the NCS', () => {
+    expect(place(game('Approved 3.4.3 Matches', 'Riverton Women B-Side'))).toEqual({ clubs: [], unplacedTeams: [] });
+  });
+
+  it.each([
+    'Atlanta WD2 Championship',
+    'Denver Barbarians RMR Premiership',
+    'Atlanta Bucks 18+',
+    'Brujos Rugby Senior (18-99)',
+    'Charlotte ARP',
+    'Best Bank Bros M7s',
+    'Atown 10s',
+    'Capital Selects Women',
+  ])('stays unmatched when it is a round or one-off entry, not a side: %s', (team) => {
+    expect(place(game('Approved 3.4.3 Matches', team))).toEqual({ clubs: [], unplacedTeams: [team] });
+  });
+
+  it('stays unmatched when its club has another team, since they cannot be ranked', () => {
+    const result = place(game('Approved 3.4.3 Matches', 'Quake 1st XV'), game('Approved 3.4.3 Matches', 'Quake 2nd XV'));
+    expect(result).toEqual({ clubs: [], unplacedTeams: ['Quake 1st XV', 'Quake 2nd XV'] });
+  });
+});
+
+describe('teams that cannot be placed', () => {
   it('warns the club when one of its teams has no division', () => {
     const { clubs, unplacedTeams } = place(
       game('EPRU D3 Men', 'Harrisburg MD3'),

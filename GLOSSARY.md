@@ -42,7 +42,7 @@ A player eligible for a lower side who would lose it for the rest of the season 
 _Avoid_: at risk
 
 **One-Side Club**:
-A club with only one side in the fixture lists, assessed under the two-match minimum.
+A club with only one side in the fixture lists, assessed under the two-match minimum. In a Locked Season its side needs no division.
 
 **Name Withheld**:
 How the CMS shows a player whose profile isn't public. A hidden profile, not a player: it gets no player record or eligibility row.
@@ -56,7 +56,7 @@ A season before the current one. Its archive is read once more as the next seaso
 _Avoid_: archived season, old data
 
 **Unplaced Team**:
-A team in a Locked Season that can't be given a division from its name or its competitions, or that shares a division with another name at its club, which leaves that club out. It isn't assessed.
+A team in a Locked Season that can't be assessed: a round or one-off entry, a team with no division at a club with other teams, or one sharing a division with another name at its club, which leaves that club out. Listed on the season's page.
 
 **National Championship Series (NCS)**:
 USA Rugby's postseason competition for Men's Divisions I, II and III and Women's Divisions I and II.

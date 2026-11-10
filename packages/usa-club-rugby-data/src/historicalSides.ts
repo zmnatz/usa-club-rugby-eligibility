@@ -36,14 +36,24 @@ const DIVISION_TOKEN = /^(M|W\+?)?D([1-4])$/i;
 const ROMAN_DIVISION_TOKEN = /^(M|W\+?)?D(I{1,3}|IV)$/;
 const GENDER_TOKEN = /^(?:(m|men|mens|men's)|(w\+?|women\+?|womens\+?|women's\+?))$/i;
 
+/** Names of championship rounds and one-off entries, which aren't a club's side. */
+const NOT_A_SIDE = /championship|premiership|18\+|18-99|\bARP\b|7s\b|10s\b|festival|social|gameday|select/i;
+
+/** A one-side club's side when the record doesn't say its division. */
+const NO_DIVISION_LABEL = 'Senior';
+
+/** The division a B side is taken to play in when the record doesn't say. */
+const B_SIDE_LEVEL = 3;
+
 const genderOf = (token: string): Gender => (token.toUpperCase().startsWith('W') ? 'W' : 'M');
 
 /** A team name without its trailing gender, division, XV and decoration. */
-function readTeamName(teamName: string): { base: string; gender?: Gender; level?: number; xv: number } {
+function readTeamName(teamName: string): { base: string; gender?: Gender; level?: number; xv: number; bSide: boolean } {
   const tokens = teamName.trim().split(/\s+/);
   let gender: Gender | undefined;
   let level: number | undefined;
   let xv = 1;
+  let bSide = false;
   while (tokens.length > 1) {
     const token = tokens[tokens.length - 1];
     const lettered = tokens[tokens.length - 2].match(/^[ABC]$/);
@@ -51,7 +61,10 @@ function readTeamName(teamName: string): { base: string; gender?: Gender; level?
     const genderWord = token.match(GENDER_TOKEN);
     if (/^side$/i.test(token) && lettered && tokens.length > 2) {
       xv = 'ABC'.indexOf(lettered[0]) + 1;
+      bSide = lettered[0] === 'B';
       tokens.pop();
+    } else if (/^b-(side|league)$/i.test(token)) {
+      bSide = true;
     } else if (ORDINAL.test(token)) {
       xv = Number(token[0]);
     } else if (division) {
@@ -64,7 +77,7 @@ function readTeamName(teamName: string): { base: string; gender?: Gender; level?
     }
     tokens.pop();
   }
-  return { base: tokens.join(' '), gender, level, xv };
+  return { base: tokens.join(' '), gender, level, xv, bSide };
 }
 
 /** The one division a competition's name gives, if it gives exactly one. */
@@ -90,7 +103,8 @@ function mostCommonDivision(divisions: { level: number; gender?: Gender }[]): { 
   return { level, gender: divisions.find((division) => division.level === level && division.gender)?.gender };
 }
 
-/** A Locked Season's clubs and sides, highest division first. A club holding two
+/** A Locked Season's clubs and sides, highest division first. A team with no division
+ *  that is alone at its club is a one-side club. A club holding two
  *  names at one division is left out rather than ranked one above the other, since
  *  that would judge a player against a side that is really their own. */
 export function historicalClubs(fixtures: HistoricalFixture[], rules: EligibilityRules): HistoricalClubs {
@@ -110,11 +124,14 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
   const sidesByClub = new Map<string, { teamName: string; level: number; xv: number }[]>();
   const noDivision = new Map<string, string>();
   for (const [teamName, divisions] of divisionsByTeam) {
-    const { base, gender: nameGender, level: nameLevel, xv } = readTeamName(teamName);
+    const { base, gender: nameGender, level: nameLevel, xv: nameXv, bSide } = readTeamName(teamName);
     const common = nameLevel === undefined ? mostCommonDivision(divisions) : null;
     const compGender = common?.gender ?? divisions.find((division) => division.gender)?.gender;
     const gender = nameGender ?? compGender ?? 'M';
-    const level = nameLevel ?? common?.level;
+    // A B side with no division anywhere is taken as Division 3, a level of its own.
+    const assumedLevel = bSide && nameLevel === undefined && !common;
+    const level = nameLevel ?? common?.level ?? (assumedLevel ? B_SIDE_LEVEL : undefined);
+    const xv = assumedLevel ? 1 : nameXv;
     const club = clubName(base, gender);
     if (level === undefined) {
       noDivision.set(teamName, club);
@@ -123,8 +140,18 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
     }
   }
 
-  const unplaced = [...noDivision.keys()];
+  // Alone at its club, a team needs no division: a one-side club has only the
+  // two-match minimum.
   const clubs: HistoricalClub[] = [];
+  const sharing = new Map<string, number>();
+  for (const club of noDivision.values()) sharing.set(club, (sharing.get(club) ?? 0) + 1);
+  for (const [teamName, club] of noDivision) {
+    if (NOT_A_SIDE.test(teamName) || sidesByClub.has(club) || sharing.get(club) !== 1) continue;
+    clubs.push({ name: club, sides: [{ teamName, label: NO_DIVISION_LABEL }] });
+    noDivision.delete(teamName);
+  }
+
+  const unplaced = [...noDivision.keys()];
   for (const [name, sides] of sidesByClub) {
     const slots = new Set(sides.map(({ level, xv }) => `${level}:${xv}`));
     if (slots.size < sides.length) {
