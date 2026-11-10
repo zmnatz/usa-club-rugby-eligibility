@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   clubSeason,
   mergedClubNotes,
@@ -8,6 +8,7 @@ import {
 } from '@zmnatz/usa-club-rugby-data';
 import { formatDateTime } from './dates';
 import { EligibilityReportView } from './EligibilityReportView';
+import { PlayerDialog } from './PlayerDialog';
 import { ReportProblemNote } from './ReportProblemNote';
 import { SeasonRules } from './SeasonRules';
 import { useEligibilityLinks } from './links';
@@ -28,6 +29,8 @@ export function ClubEligibilityReport({ club, saved, fixtures }: ClubEligibility
   // A Locked Season's notes come with its file; this season's are worked out here.
   const notes = locked ? club.notes : mergedClubNotes(club);
   const { breakdown, gaps } = useMemo(() => clubSeason(saved, fixtures, club), [club, saved, fixtures]);
+  // A Locked Season's players have no page of their own: their detail opens in a dialog.
+  const [selected, setSelected] = useState<{ playerId: string; teamName: string } | null>(null);
 
   return (
     <>
@@ -86,10 +89,21 @@ export function ClubEligibilityReport({ club, saved, fixtures }: ClubEligibility
           season={saved.season}
           recordsUpdated={saved.generatedAt || undefined}
           playerPages={!locked}
+          onPlayerSelect={locked ? (playerId, teamName) => setSelected({ playerId, teamName }) : undefined}
           locked={locked}
           transfers={saved.transfers}
         />
       </div>
+      {selected && (
+        <PlayerDialog
+          club={club}
+          saved={saved}
+          fixtures={fixtures}
+          breakdown={breakdown}
+          selected={selected}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </>
   );
 }

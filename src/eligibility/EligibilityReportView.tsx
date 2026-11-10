@@ -38,6 +38,7 @@ interface SideTableProps {
   source: ReportSource;
   locked: boolean;
   playerPages: boolean;
+  onPlayerSelect?: (playerId: string, teamName: string) => void;
   transfers: TransferRecords;
 }
 
@@ -46,16 +47,22 @@ function PlayerCell({
   source,
   showCmsId,
   playerPages,
+  onPlayerSelect,
 }: {
   player: PlayerEligibility;
   source: ReportSource;
   showCmsId: boolean;
   playerPages: boolean;
+  onPlayerSelect?: (playerId: string, teamName: string) => void;
 }) {
   const { Link, routes } = useEligibilityLinks();
   return (
     <>
-      {playerPages && !isNameWithheld(player.name) ? (
+      {onPlayerSelect && !isNameWithheld(player.name) ? (
+        <button type="button" className="ec-player ec-link-button" onClick={() => onPlayerSelect(player.playerId, player.teamName)}>
+          {player.name}
+        </button>
+      ) : playerPages && !isNameWithheld(player.name) ? (
         <Link className="ec-player" href={routes.player(player.playerId)}>
           {player.name}
         </Link>
@@ -71,7 +78,13 @@ function PlayerCell({
 function cellContent(
   player: PlayerEligibility,
   key: SortKey,
-  context: { source: ReportSource; showCmsId: boolean; playerPages: boolean; moved: boolean },
+  context: {
+    source: ReportSource;
+    showCmsId: boolean;
+    playerPages: boolean;
+    onPlayerSelect?: (playerId: string, teamName: string) => void;
+    moved: boolean;
+  },
 ): ReactNode {
   switch (key) {
     case 'name':
@@ -112,7 +125,7 @@ const columnClass = (column: ReportColumn) =>
 
 /** One side's players: a status filter and column chooser that work with CSS alone, and
  *  a table whose headers sort when the enhancement script is on the page. */
-function SideTable({ index, breakdown, source, locked, playerPages, transfers }: SideTableProps) {
+function SideTable({ index, breakdown, source, locked, playerPages, onPlayerSelect, transfers }: SideTableProps) {
   const side = breakdown.sides[index];
   const { summary, players } = side;
   const otherLabels = breakdown.sides.filter((entry) => entry.teamName !== side.teamName).map((entry) => entry.label);
@@ -191,6 +204,7 @@ function SideTable({ index, breakdown, source, locked, playerPages, transfers }:
                       source,
                       showCmsId: hasSharedName(player, shared),
                       playerPages,
+                      onPlayerSelect,
                       moved: player.playerId in transfers,
                     })}
                   </td>
@@ -227,6 +241,10 @@ export interface EligibilityReportViewProps {
   now?: Date;
   /** Whether the players have pages of their own at the host's player route. */
   playerPages?: boolean;
+  /** Makes each player's name a button that calls this, in place of a link to their
+   *  page: a Locked Season's players have no page of their own, so the host opens the
+   *  detail itself. */
+  onPlayerSelect?: (playerId: string, teamName: string) => void;
   /** A Locked Season: every verdict is final, so there is no Caution to filter by. */
   locked?: boolean;
   /** Players who also played for another club that season, marked Waiver Required. */
@@ -246,6 +264,7 @@ export function EligibilityReportView({
   recordsUpdated,
   now = new Date(),
   playerPages = false,
+  onPlayerSelect,
   locked = false,
   transfers = {},
   actions,
@@ -336,6 +355,7 @@ export function EligibilityReportView({
           source={source}
           locked={locked}
           playerPages={playerPages}
+          onPlayerSelect={onPlayerSelect}
           transfers={transfers}
         />
       ))}
