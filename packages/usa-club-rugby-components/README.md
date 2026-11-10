@@ -1,23 +1,27 @@
 # @zmnatz/usa-club-rugby-components
 
-React and MUI components for USA Club Rugby **NCS eligibility**: the club directory, a club's eligibility report, player detail, and a check of a Rugby Xplorer Match Participation Report. They sit on [`@zmnatz/usa-club-rugby-data`](https://www.npmjs.com/package/@zmnatz/usa-club-rugby-data), and work under any MUI theme and any router.
+React components for USA Club Rugby **NCS eligibility**: the club directory, a club's eligibility report, player detail, and a check of a Rugby Xplorer Match Participation Report. They render plain HTML, styled by one small stylesheet, with no UI framework and no required client-side JavaScript. They sit on [`@zmnatz/usa-club-rugby-data`](https://www.npmjs.com/package/@zmnatz/usa-club-rugby-data), and work with any router.
 
 > A guide, not an official tool. The Rugby Xplorer Match Participation Report is the official count, and registration isn't checked.
 
 ## Install
 
 ```bash
-npm install @zmnatz/usa-club-rugby-components @zmnatz/usa-club-rugby-data \
-  react react-dom @mui/material @emotion/react @emotion/styled
+npm install @zmnatz/usa-club-rugby-components @zmnatz/usa-club-rugby-data react react-dom
 ```
 
-These are peer dependencies, so your app has one copy of each and one MUI theme:
+These are peer dependencies, so your app has one copy of each:
 
 | Peer | Used for |
 | --- | --- |
-| `react`, `react-dom` | Rendering |
-| `@mui/material`, `@emotion/react`, `@emotion/styled` | Components and styling |
+| `react`, `react-dom` | Rendering (on the server, in the browser, or at build time) |
 | `@zmnatz/usa-club-rugby-data` | The rules, data types and CMS client |
+
+Import the stylesheet once, and include the page script once (see below):
+
+```tsx
+import '@zmnatz/usa-club-rugby-components/styles.css';
+```
 
 ## Set up your app once
 
@@ -54,17 +58,38 @@ A route is any function returning a URL, so query strings work: `player: (id) =>
 
 `reportProblem` is optional. Give it and every club report tells people where to report a verdict that looks wrong: Rugby Xplorer first, then your address. Called with no argument, it returns your general address, such as an issue tracker. For a Locked Season it is called with a `ProblemReport` (`kind`, `season` and, on a club report, `club`), so you can open a new report filled in with them. `kind` is `rules-engine` when the record is right but a verdict looks wrong, or `archive-correction` when the season's archived record is wrong. Leave it out and no note shows.
 
-### The theme
+### The stylesheet
 
-Colours, type and shapes come from your MUI `ThemeProvider`, or from MUI's default theme if there isn't one. No extra theme setup is needed: the layout is on the components, so overriding MUI components in your theme restyles the screens without breaking them.
+`styles.css` is plain CSS. Every class starts with `ec-`, and the colours, radius and spacing are variables on `:root`, with a dark scheme under `prefers-color-scheme`. Retheme by overriding them:
 
-The club list and skip link have no MUI equivalent: override them as `EligibilityClubList` and `EligibilitySkipLink`.
+```css
+:root {
+  --ec-primary: #7a1f1f;
+  --ec-radius: 2px;
+}
+```
+
+The variables are `--ec-primary`, `--ec-on-primary`, `--ec-fg`, `--ec-muted`, `--ec-bg`, `--ec-surface`, `--ec-border`, `--ec-hover`, `--ec-error`, `--ec-warning`, `--ec-success`, `--ec-info` (and a `-bg` for each of the last four), `--ec-radius` and `--ec-gap`. The package sets no page background, font or heading styles: those are yours.
+
+### The page script
+
+Three things need a little JavaScript: sorting a table by a column, filtering the club directory as you type, and downloading the exported report. They share one script, a string you put once at the end of `<body>` on any page that shows a report or directory. It listens on `document`, so it also works for markup React adds later, and is safe to include twice.
+
+```tsx
+import { ENHANCEMENT_SCRIPT } from '@zmnatz/usa-club-rugby-components';
+
+<script dangerouslySetInnerHTML={{ __html: ENHANCEMENT_SCRIPT }} />
+```
+
+Without it everything still shows: the tables are complete and in name order, the directory lists every club, and the status filter, optional columns and jump links between sides work with CSS alone. Only the three things above stop.
+
+Everything else is HTML: a report page can be rendered on the server or at build time and shipped with no React in the browser.
 
 ## Components
 
 ### `ClubDirectory`
 
-Every club, filtered as the user types.
+Every club, as links, with a filter that hides the ones that don't match as the user types (run by the page script).
 
 ```tsx
 <ClubDirectory clubs={clubs} autoFocus />
@@ -72,20 +97,17 @@ Every club, filtered as the user types.
 
 Pass `autoFocus` to put the cursor in the filter when the directory appears, on a page that is mainly the directory. Off by default.
 
-Pass `staticFilter` when the host serves the rendered HTML without React. It adds a small script that runs the same filter. Don't pass it on a page that hydrates. Off by default.
-
 ### `ClubEligibilityReport`
 
-One club's report from its Match Record, with when the records were last updated.
+One club's report from its Match Record, with when the records were last updated. Each side has its own table of players, each player linked to the host's player route, with a status filter and optional columns that need no script. The Export Report button downloads a text report that is written into the page.
 
 ```tsx
-<ClubEligibilityReport club={club} saved={snapshot} fixtures={fixtures} clubSlug="your-club" />
+<ClubEligibilityReport club={club} saved={snapshot} fixtures={fixtures} />
 ```
 
 | Prop | Purpose |
 | --- | --- |
 | `club`, `saved`, `fixtures` | From the data package's published client or your own copy of the data |
-| `clubSlug` | The club's Rugby Xplorer slug for match links. Without it, links use the council's path. |
 
 ### `MatchParticipationReport`
 
@@ -99,13 +121,13 @@ Upload or paste a Match Participation Report, for any club.
 
 ### `SkipToFirstPlayer`
 
-A skip link to the first player in the report on the page, for keyboard users. It stays off screen until focused, so render it before anything else on the page that can take focus, such as your site's header.
+A skip link to the first player in the report on the page, for keyboard users. It is a plain link to the first row, so it needs no script, and stays off screen until focused. Render it before anything else on the page that can take focus, such as your site's header.
 
 ```tsx
 <SkipToFirstPlayer />
 ```
 
-A client-side route change can leave focus partway down the new page. Pass a `ref` and focus the link when your router arrives on a report, so the link is the next stop.
+A client-side route change can leave focus partway down the new page. Focus the link when your router arrives on a report, so it is the next stop.
 
 ### `ReportProblemNote`
 
@@ -117,4 +139,8 @@ Where to report a problem, for a page of your own about a season, such as a list
 
 ### Lower-level pieces
 
-`EligibilityReportView` renders a breakdown you've already worked out. `PlayerEligibilityDialog`, `PlayerDetailBody`, `PlayerDetailHeading` and `EligibilityStatusChip` show one player's verdict.
+`EligibilityReportView` renders a breakdown you've already worked out. `PlayerDetailBody`, `PlayerDetailHeading` and `EligibilityStatusChip` show one player's verdict, as on a player's page of your own.
+
+### Changes from 0.8
+
+0.9 drops MUI and Emotion. Remove them as peers if nothing else uses them, import `styles.css` and add the page script. `PlayerEligibilityDialog` is gone, and a report's players link to the host's player route instead of opening a dialog. `ClubEligibilityReport` no longer takes `clubSlug`, and `EligibilityReportView` no longer takes `record`, `clubSlug`, `activeSide` or `onActiveSideChange`. `ClubDirectory` no longer takes `staticFilter`, and the `EligibilityClubList` and `EligibilitySkipLink` theme overrides are replaced by CSS. `SkipToFirstPlayer` takes no `ref`.

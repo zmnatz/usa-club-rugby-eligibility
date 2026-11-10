@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'bun:test';
 import { render, screen, within } from '@testing-library/react';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import type { PlayerEligibility, PlayerRecordInput, PlayerRow } from '@zmnatz/usa-club-rugby-data';
+import { type PlayerEligibility, type PlayerRecordInput, type PlayerRow, playerFixtures } from '@zmnatz/usa-club-rugby-data';
 import { EligibilityLinksProvider, type EligibilityRoutes } from './links.tsx';
-import { PlayerDetailBody, PlayerDetailHeading, PlayerEligibilityDialog } from './PlayerDetail.tsx';
+import { PlayerDetailBody, PlayerDetailHeading } from './PlayerDetail.tsx';
 
 const TEAM = 'Harbor City MD3';
 const COMP = 'Test League Men D3';
@@ -81,63 +80,39 @@ const routes: EligibilityRoutes = {
   methodology: () => '/about',
 };
 
-const renderDialog = (theme = createTheme()) =>
+const renderBody = () =>
   render(
-    <ThemeProvider theme={theme}>
-      <EligibilityLinksProvider Link="a" routes={routes}>
-        <PlayerEligibilityDialog
-          player={player}
-          source="record"
-          ownLabel="D3"
-          record={record}
-          pageHref={routes.player('ona')}
-          onClose={() => {}}
-        />
-      </EligibilityLinksProvider>
-    </ThemeProvider>,
+    <EligibilityLinksProvider Link="a" routes={routes}>
+      <PlayerDetailHeading player={player} source="record" />
+      <PlayerDetailBody player={player} source="record" ownLabel="D3" fixtures={playerFixtures(player, record)} />
+    </EligibilityLinksProvider>,
   );
 
-describe('PlayerEligibilityDialog', () => {
+describe('PlayerDetailBody', () => {
   it('shows the verdict, rounds and possible fixtures', () => {
-    renderDialog();
-    const dialog = within(screen.getByRole('dialog'));
-    expect(dialog.getByText('Ona Track')).toBeTruthy();
-    expect(dialog.getByText('ON TRACK')).toBeTruthy();
-    expect(dialog.getByText('Possible fixtures: 1 left')).toBeTruthy();
-    expect(dialog.getByText('Started')).toBeTruthy();
+    renderBody();
+    expect(screen.getByText('Ona Track')).toBeTruthy();
+    expect(screen.getByText('ON TRACK')).toBeTruthy();
+    expect(screen.getByText('Possible fixtures: 1 left')).toBeTruthy();
+    expect(screen.getByText('Started')).toBeTruthy();
+    expect(within(screen.getByText('Possible fixtures: 1 left').parentElement as HTMLElement).getByText('Bayside MD3')).toBeTruthy();
   });
 
-  it('links to the player page through the host Link and route', () => {
-    renderDialog();
-    expect(screen.getByRole('link', { name: 'Open as a page' }).getAttribute('href')).toBe('/player?id=ona');
-  });
-
-  it('shows nothing while no player is selected', () => {
+  it("uses the club's own Rugby Xplorer slug in match links when given", () => {
     render(
-      <EligibilityLinksProvider Link="a" routes={routes}>
-        <PlayerEligibilityDialog player={null} source="record" ownLabel="D3" record={record} onClose={() => {}} />
-      </EligibilityLinksProvider>,
+      <PlayerDetailBody player={player} source="record" ownLabel="D3" fixtures={playerFixtures(player, record)} clubSlug="harbor-city-rfc" />,
     );
-    expect(screen.queryByRole('dialog')).toBeNull();
-  });
-});
-
-describe('under a host theme', () => {
-  const hostTheme = createTheme({ palette: { text: { secondary: 'rgb(1, 2, 3)' } } });
-
-  it("takes small print's colour from the host's palette", () => {
-    render(
-      <ThemeProvider theme={hostTheme}>
-        <EligibilityLinksProvider Link="a" routes={routes}>
-          <PlayerDetailBody player={player} source="record" ownLabel="D3" fixtures={null} />
-        </EligibilityLinksProvider>
-      </ThemeProvider>,
-    );
-    const note = screen.getByText('Needs 1 more D3 match (1 fixture left)');
-    expect(getComputedStyle(note).color).toBe('rgb(1, 2, 3)');
+    const links = screen.getAllByRole('link', { name: 'Rugby Xplorer' });
+    expect(links.every((link) => link.getAttribute('href')?.includes('/harbor-city-rfc/match-centre/'))).toBe(true);
   });
 
-  it('renders the heading under the default theme with no ThemeProvider', () => {
+  it("falls back to the council's path without a slug", () => {
+    renderBody();
+    const links = screen.getAllByRole('link', { name: 'Rugby Xplorer' });
+    expect(links.some((link) => link.getAttribute('href')?.includes('/harbor-city-rfc/'))).toBe(false);
+  });
+
+  it('renders the heading with no host setup beyond the stylesheet', () => {
     render(<PlayerDetailHeading player={player} source="csv" />);
     expect(screen.getByText('USA ID ona')).toBeTruthy();
   });

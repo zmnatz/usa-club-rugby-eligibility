@@ -1,15 +1,14 @@
 {
   "name": "@zmnatz/usa-club-rugby-components",
-  "version": "0.8.0",
-  "description": "React and MUI components for USA Club Rugby NCS eligibility: the club directory, eligibility report and player detail, for any app using @zmnatz/usa-club-rugby-data.",
+  "version": "0.9.0",
+  "description": "Plain HTML and CSS React components for USA Club Rugby NCS eligibility: the club directory, eligibility report and player detail, for any app using @zmnatz/usa-club-rugby-data.",
   "keywords": [
     "rugby",
     "usa-club-rugby",
     "rugby-xplorer",
     "eligibility",
     "ncs",
-    "react",
-    "mui"
+    "react"
   ],
   "license": "MIT",
   "repository": {
@@ -18,7 +17,9 @@
     "directory": "packages/usa-club-rugby-components"
   },
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "**/*.css"
+  ],
   "files": [
     "dist",
     "!dist/.tsbuildinfo",
@@ -30,28 +31,23 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./styles.css": "./dist/styles.css"
   },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && cp src/styles.css dist/styles.css",
     "typecheck": "tsc --noEmit --incremental --tsBuildInfoFile node_modules/.cache/typecheck.tsbuildinfo",
     "prepublishOnly": "rm -rf dist && bun run build"
   },
   "peerDependencies": {
     "react": "^19.2.8",
-    "@mui/material": "^9.3.1",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
     "@zmnatz/usa-club-rugby-data": "^0.6.0"
   },
   "devDependencies": {
     "react": "^19.2.8",
-    "@mui/material": "^9.3.1",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
     "@zmnatz/usa-club-rugby-data": "workspace:*",
     "@types/bun": "^1.4.4",
     "@types/react": "^19.3.0",

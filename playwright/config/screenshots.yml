@@ -8,10 +8,11 @@
 # `{player}` stands for any player in the build.
 rules:
   - files:
-      - src/theme/**
+      - src/styles/**
+      - packages/usa-club-rugby-components/src/styles.css
       - pages/_app.tsx
       - pages/_document.tsx
-      - packages/usa-club-rugby-components/src/primitives.tsx
+      - packages/usa-club-rugby-components/src/enhance.ts
     routes:
       - path: /club/pittsburgh-forge/
       - path: /player/?id={player}

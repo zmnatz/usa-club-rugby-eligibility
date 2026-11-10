@@ -1,19 +1,9 @@
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
-import NextLink from 'next/link';
 import { useRouter } from 'next/router';
-import {
-  Alert,
-  Breadcrumbs,
-  Card,
-  CardContent,
-  CircularProgress,
-  Link as MuiLink,
-  Stack,
-  Typography,
-} from '@mui/material';
 import { EligibilityStatusChip, PlayerDetailBody } from '@zmnatz/usa-club-rugby-components';
 import type { PlayerClubEntry, PlayerProfile } from '@zmnatz/usa-club-rugby-data';
+import { Crumbs, PageLink } from '@/components/Crumbs';
 import { clubPath } from '@/utils/paths';
 import { type PlayerBucketFile, playerBucket, playerBucketFile } from '@/utils/playerBuckets';
 
@@ -53,44 +43,24 @@ function usePlayer(id: string | null): Loaded | null {
 function PlayerInClub({ entry }: { entry: PlayerClubEntry }) {
   return (
     <section>
-      <Stack direction="row" spacing={2} useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'center', mb: 1 }}>
-        <Typography variant="h5" component="h2">
-          <MuiLink component={NextLink} prefetch={false} href={clubPath(entry.clubKey)} underline="hover">
-            {entry.clubName}
-          </MuiLink>
+      <div className="ec-row" style={{ marginBottom: 8 }}>
+        <h2 style={{ margin: 0 }}>
+          <PageLink href={clubPath(entry.clubKey)}>{entry.clubName}</PageLink>
           {entry.sideLabel && ` · ${entry.sideLabel}`}
-        </Typography>
+        </h2>
         <EligibilityStatusChip player={entry.player} />
-        {entry.showCmsId && (
-          <Typography variant="body2" color="text.secondary">
-            CMS ID {entry.player.playerId}
-          </Typography>
-        )}
-      </Stack>
-      <Card component="section">
-        <CardContent>
-          <PlayerDetailBody
-            player={entry.player}
-            source="record"
-            ownLabel={entry.sideLabel}
-            fixtures={entry.fixtures}
-          />
-        </CardContent>
-      </Card>
+        {entry.showCmsId && <span className="ec-muted ec-small">CMS ID {entry.player.playerId}</span>}
+      </div>
+      <div className="ec-card">
+        <PlayerDetailBody player={entry.player} source="record" ownLabel={entry.sideLabel} fixtures={entry.fixtures} />
+      </div>
     </section>
   );
 }
 
-function PlayerBreadcrumbs({ name }: { name?: string }) {
-  return (
-    <Breadcrumbs aria-label="breadcrumb">
-      <MuiLink component={NextLink} prefetch={false} href="/" underline="hover" color="inherit">
-        All clubs
-      </MuiLink>
-      <Typography color="text.primary">{name ?? 'Player'}</Typography>
-    </Breadcrumbs>
-  );
-}
+const PlayerBreadcrumbs = ({ name }: { name?: string }) => (
+  <Crumbs trail={[{ label: 'All clubs', href: '/' }, { label: name ?? 'Player' }]} />
+);
 
 /** One player's verdict and the matches behind it. A player can have played for several
  *  clubs, so there is a section for each: eligibility is worked out within a club. */
@@ -105,19 +75,17 @@ function PlayerProfileView({ data }: { data: PlayerProfile }) {
         />
       </Head>
       <PlayerBreadcrumbs name={data.name} />
-      <Typography variant="h4" component="h1" gutterBottom>
-        {data.name}
-      </Typography>
+      <h1>{data.name}</h1>
       {data.clubs.length > 1 && (
-        <Typography variant="body2" color="textSecondary" gutterBottom>
+        <p className="small">
           Listed {data.clubs.length} times in the record, for different clubs or sides. Each is assessed on its own.
-        </Typography>
+        </p>
       )}
-      <Stack spacing={4} useFlexGap>
+      <div className="ec-stack" style={{ gap: 32 }}>
         {data.clubs.map((entry) => (
           <PlayerInClub key={`${entry.clubKey}-${entry.player.teamName}`} entry={entry} />
         ))}
-      </Stack>
+      </div>
     </>
   );
 }
@@ -150,7 +118,7 @@ export default function PlayerPage() {
     return (
       <PlayerMessage>
         {head}
-        <CircularProgress aria-label="Loading the player" />
+        <p className="loading" role="status">Loading the player…</p>
       </PlayerMessage>
     );
   }
@@ -158,13 +126,9 @@ export default function PlayerPage() {
     return (
       <PlayerMessage>
         {head}
-        <Alert severity="info">
-          Choose a player from{' '}
-          <MuiLink component={NextLink} prefetch={false} href="/">
-            their club&apos;s page
-          </MuiLink>
-          .
-        </Alert>
+        <div className="ec-alert ec-alert--info">
+          Choose a player from <PageLink href="/">their club&apos;s page</PageLink>.
+        </div>
       </PlayerMessage>
     );
   }
@@ -172,7 +136,7 @@ export default function PlayerPage() {
     return (
       <PlayerMessage>
         {head}
-        <Alert severity="error">The player couldn&apos;t be loaded. Try again.</Alert>
+        <div className="ec-alert ec-alert--error" role="alert">The player couldn&apos;t be loaded. Try again.</div>
       </PlayerMessage>
     );
   }
@@ -180,10 +144,10 @@ export default function PlayerPage() {
     return (
       <PlayerMessage>
         {head}
-        <Alert severity="error">
+        <div className="ec-alert ec-alert--error" role="alert">
           No player with CMS ID &ldquo;{id}&rdquo; is in this season&apos;s record. Players whose name is withheld
           have no page.
-        </Alert>
+        </div>
       </PlayerMessage>
     );
   }

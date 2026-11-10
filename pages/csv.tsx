@@ -1,8 +1,7 @@
 import Head from 'next/head';
-import NextLink from 'next/link';
-import { Breadcrumbs, Link as MuiLink, Typography } from '@mui/material';
 import { MatchParticipationReport } from '@zmnatz/usa-club-rugby-components';
 import { createPublishedClient } from '@zmnatz/usa-club-rugby-data';
+import { Crumbs } from '@/components/Crumbs';
 
 // A report can be for any club, so it needs the national fixture list, which is too
 // big to put in the page for visitors who never run one.
@@ -20,15 +19,8 @@ export default function CsvPage() {
           content="Check a Rugby Xplorer Match Participation Report for any club against the NCS eligibility rules."
         />
       </Head>
-      <Breadcrumbs aria-label="breadcrumb">
-        <MuiLink component={NextLink} prefetch={false} href="/" underline="hover" color="inherit">
-          All clubs
-        </MuiLink>
-        <Typography color="text.primary">CSV report</Typography>
-      </Breadcrumbs>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Match Participation Report
-      </Typography>
+      <Crumbs trail={[{ label: 'All clubs', href: '/' }, { label: 'CSV report' }]} />
+      <h1>Match Participation Report</h1>
       <MatchParticipationReport loadFixtures={loadFixtures} />
     </>
   );

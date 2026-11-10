@@ -3,12 +3,12 @@ import type { EligibilityBreakdown, ParticipationGap, PlayerEligibility } from '
 import {
   buildReport,
   CAUTION_ADVICE,
-  filterPlayers,
   gapText,
   getColumns,
-  sortPlayers,
-  type SortKey,
-} from './reportModel.ts';
+  sortsNumerically,
+  sortValue,
+  statusGroups,
+  } from './reportModel.ts';
 
 const player = (name: string, overrides: Partial<PlayerEligibility> = {}): PlayerEligibility => {
   const [firstName, lastName] = name.split(' ');
@@ -70,8 +70,6 @@ const breakdown = (sidePlayers: PlayerEligibility[]): EligibilityBreakdown => ({
   ],
 });
 
-const names = (list: PlayerEligibility[]) => list.map((p) => p.name);
-
 describe('getColumns', () => {
   it('adds Last Registered only for a CSV report, and one column per other side', () => {
     expect(getColumns([], 'record').map((c) => c.key)).toEqual([
@@ -83,33 +81,37 @@ describe('getColumns', () => {
   });
 });
 
-describe('sortPlayers', () => {
-  it('sorts by name both ways without changing the input', () => {
-    const input = [...players];
-    expect(names(sortPlayers(input, 'name', 'asc'))).toEqual(['Cal Careful', 'Eli Clear', 'Ina Over', 'Ona Track']);
-    expect(names(sortPlayers(input, 'name', 'desc'))).toEqual(['Ona Track', 'Ina Over', 'Eli Clear', 'Cal Careful']);
-    expect(input).toEqual(players);
+describe('sortValue', () => {
+  it('gives the value each column sorts by', () => {
+    expect(sortValue(over, 'name')).toBe('Ina Over');
+    expect(sortValue(over, 'participation')).toBe(5);
+    expect(sortValue(over, 'played')).toBe(3);
+    expect(sortValue(over, 'sub')).toBe(1);
+    expect(sortValue(over, 'other:D3')).toBe(2);
+    expect(sortValue(over, 'other:D9')).toBe(0);
+    expect(sortValue(over, 'reasons')).toBe(1);
   });
 
-  it.each<[SortKey, string[]]>([
-    ['participation', ['Ona Track', 'Cal Careful', 'Eli Clear', 'Ina Over']],
-    ['other:D3', ['Eli Clear', 'Cal Careful', 'Ona Track', 'Ina Over']],
-    ['reasons', ['Eli Clear', 'Cal Careful', 'Ona Track', 'Ina Over']],
-  ])('sorts by %s ascending', (key, expected) => {
-    expect(names(sortPlayers(players, key, 'asc'))).toEqual(expected);
+  it('ranks status Ineligible, Caution, On Track, Eligible', () => {
+    const ranks = [over, careful, onTrack, eligible].map((p) => sortValue(p, 'status') as number);
+    expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
+    expect(new Set(ranks).size).toBe(4);
   });
 
-  it('sorts by status rank, the most urgent verdict first', () => {
-    expect(names(sortPlayers(players, 'status', 'asc'))).toEqual(['Ina Over', 'Cal Careful', 'Ona Track', 'Eli Clear']);
+  it('sorts names as text and everything else as numbers', () => {
+    expect(sortsNumerically('name')).toBe(false);
+    expect(sortsNumerically('lastRegistered')).toBe(false);
+    expect(sortsNumerically('status')).toBe(true);
+    expect(sortsNumerically('other:D3')).toBe(true);
   });
 });
 
-describe('filterPlayers', () => {
-  it('filters by status', () => {
-    expect(names(filterPlayers(players, 'all'))).toHaveLength(4);
-    expect(names(filterPlayers(players, 'eligible'))).toEqual(['Eli Clear', 'Cal Careful', 'Ona Track']);
-    expect(names(filterPlayers(players, 'caution'))).toEqual(['Cal Careful']);
-    expect(names(filterPlayers(players, 'ineligible'))).toEqual(['Ina Over']);
+describe('statusGroups', () => {
+  it('files a player under the status filters that show them', () => {
+    expect(statusGroups(over)).toBe('ineligible');
+    expect(statusGroups(careful)).toBe('eligible caution');
+    expect(statusGroups(onTrack)).toBe('eligible');
+    expect(statusGroups(eligible)).toBe('eligible');
   });
 });
 
@@ -128,7 +130,7 @@ describe('buildReport', () => {
     const text = buildReport(breakdown(players), { ...meta, season: '2026/2027', gaps: [gap] }, now);
     expect(text.split('\n')).toEqual([
       'HARBOR CITY ELIGIBILITY REPORT',
-      `Generated: ${now.toLocaleString()}`,
+      'Generated: Nov 10, 2026, 12:00 PM UTC',
       'Source: match record, 2026/2027 season',
       '',
       'RECORD GAPS (counts may be low; check these matches)',
@@ -152,6 +154,12 @@ describe('buildReport', () => {
       '    • Played 5 matches on D1',
       '',
     ]);
+  });
+
+  it('stamps a saved record with when it was last updated', () => {
+    const text = buildReport(breakdown([eligible]), { ...meta, recordsUpdated: '2026-10-01T06:00:00Z' }, now);
+    expect(text).toContain('Records last updated: Oct 1, 2026, 6:00 AM UTC');
+    expect(text).not.toContain('Generated:');
   });
 
   it('says (none) for an empty group and omits optional sections', () => {

@@ -34,6 +34,11 @@ describe('package boundaries', () => {
     expect(forbidden).toEqual([]);
   });
 
+  it.each(sourceFiles.map(({ file, text }) => [file, text]))('%s imports no UI framework but React', (_, text) => {
+    const forbidden = importsIn(text).filter((name) => /^@(mui|emotion)\//.test(name));
+    expect(forbidden).toEqual([]);
+  });
+
   it.each(sourceFiles.map(({ file, text }) => [file, text]))('%s reads no environment variables', (_, text) => {
     expect(text).not.toContain('process.env');
   });

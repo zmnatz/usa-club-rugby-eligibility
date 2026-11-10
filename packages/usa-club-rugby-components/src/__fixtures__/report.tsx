@@ -124,7 +124,6 @@ export async function renderInHost(ui: ReactElement, hostRoutes: EligibilityRout
 
 export const renderClubReport = ({
   extraFixtures = [] as FeedFixture[],
-  clubSlug = undefined as string | undefined,
   locked = false,
   unplacedTeams = undefined as string[] | undefined,
   notes = undefined as string[] | undefined,
@@ -136,7 +135,6 @@ export const renderClubReport = ({
       club={{ ...club, ...(unplacedTeams ? { unplacedTeams } : {}), ...(notes ? { notes } : {}) }}
       saved={{ ...saved, ...(locked ? { locked } : {}), ...(transfers ? { transfers } : {}) }}
       fixtures={[...fixtures, ...extraFixtures]}
-      clubSlug={clubSlug}
     />,
     reportProblem ? { ...routes, reportProblem } : routes,
   );
