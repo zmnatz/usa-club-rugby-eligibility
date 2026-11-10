@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { NAMES, renderClubReport } from './__fixtures__/report.tsx';
+import { NAMES, renderClubReport, transfers } from './__fixtures__/report.tsx';
 import { SkipToFirstPlayer } from './SkipToFirstPlayer.tsx';
 
 let user: ReturnType<typeof userEvent.setup>;
@@ -325,5 +325,67 @@ describe('skipping to the first player', () => {
     await filterBy('Ineligible');
     await skip();
     expect(document.activeElement?.textContent).toBe('No players match the current filters.');
+  });
+});
+
+describe('a Locked Season', () => {
+  it('gives only eligible or ineligible', async () => {
+    await renderClubReport({ locked: true });
+    await openD3();
+    expect(within(rowOf(NAMES.caution)).getByText('ELIGIBLE')).toBeTruthy();
+    expect(within(rowOf(NAMES.onTrack)).getByText('INELIGIBLE')).toBeTruthy();
+    expect(within(rowOf(NAMES.onTrack)).getByText('Needs 2 D3 matches (has 1)')).toBeTruthy();
+  });
+
+  it('has no Caution filter or talk of fixtures to come', async () => {
+    await renderClubReport({ locked: true });
+    await openD3();
+    const filters = within(screen.getByRole('group', { name: 'Eligibility status' }));
+    expect(filters.queryByRole('button', { name: 'Caution' })).toBeNull();
+    expect(screen.queryByText(/on track/i)).toBeNull();
+    expect(screen.queryByText(/caution/i)).toBeNull();
+    expect(screen.getByText(/final/i)).toBeTruthy();
+  });
+
+  it('warns when a team that looks like the club\'s has no division', async () => {
+    await renderClubReport({ locked: true, unplacedTeams: ['Harbor City Men Senior'] });
+    expect(screen.getByText(/Harbor City Men Senior/)).toBeTruthy();
+  });
+
+  it('explains the rules of its season', async () => {
+    await renderClubReport({ locked: true });
+    expect(screen.getByRole('heading', { name: 'The 2026/2027 rules' })).toBeTruthy();
+    expect(screen.getByText('A 4th match for any one upper side loses the sides below it.')).toBeTruthy();
+  });
+
+  it('says what was assumed about a team where the record doesn\'t say', async () => {
+    const note = 'Harbor City 2nd XV: the record doesn\'t name its division, so as a second side it is taken as D3.';
+    await renderClubReport({ locked: true, notes: [note] });
+    expect(screen.getByText(note)).toBeTruthy();
+  });
+
+  it('keeps the current season\'s report as it was', async () => {
+    await renderClubReport();
+    expect(screen.queryByRole('heading', { name: /rules/ })).toBeNull();
+    expect(screen.getByRole('group', { name: 'Eligibility status' })).toBeTruthy();
+    expect(screen.queryByText(/final/i)).toBeNull();
+  });
+});
+
+describe('a player who played for another club', () => {
+  it('is marked as needing a waiver, and no one else is', async () => {
+    await renderClubReport({ transfers });
+    await openD3();
+    expect(within(rowOf(NAMES.eligible)).getByText('Waiver Required')).toBeTruthy();
+    expect(within(rowOf(NAMES.caution)).queryByText('Waiver Required')).toBeNull();
+  });
+
+  it('shows their games for the other club in their detail', async () => {
+    await renderClubReport({ transfers });
+    await openD3();
+    await user.click(screen.getByText(NAMES.eligible));
+    const dialog = within(await screen.findByRole('dialog'));
+    expect(dialog.getByText('Waiver Required')).toBeTruthy();
+    expect(dialog.getByText('Bayside · Bayside MD3: 1 counted match')).toBeTruthy();
   });
 });

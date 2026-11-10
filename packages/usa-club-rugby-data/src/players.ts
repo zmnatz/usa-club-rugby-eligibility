@@ -1,19 +1,18 @@
-import { computeBreakdown } from './eligibility.ts';
 import type { PublishedPlayersFile } from './data.ts';
 import type { FeedFixture } from './feeds.ts';
 import {
+  clubBreakdown,
   clubFixtures,
+  isQualifying,
   type ParticipationSnapshot,
-  participationRows,
   type PlayerRound,
   playerRounds,
   type PossibleFixture,
   possibleFixtures,
-  remainingMatches,
 } from './participation.ts';
 import { isNameWithheld } from './playerHistory.ts';
 import type { PublishedClub } from './published.ts';
-import { DEFAULT_RULES } from './rules.ts';
+import { DEFAULT_RULES, rulesForSeason } from './rules.ts';
 import type { Club, EligibilityBreakdown, EligibilityRules, PlayerEligibility } from './types.ts';
 import { hasSharedName, sharedNames } from './eligibility.ts';
 
@@ -50,16 +49,10 @@ export function clubContext(
   club: PublishedClub,
   snapshot: ParticipationSnapshot,
   allFixtures: FeedFixture[],
-  { rules = DEFAULT_RULES, now = new Date() }: PlayerOptions = {},
+  options: PlayerOptions = {},
 ): ClubContext {
   const fixtures = clubFixtures(allFixtures, club);
-  const remaining = remainingMatches(fixtures, club, rules, now);
-  return {
-    club,
-    snapshot,
-    fixtures,
-    breakdown: computeBreakdown(participationRows(snapshot, club, rules), club.sides, rules, remaining),
-  };
+  return { club, snapshot, fixtures, breakdown: clubBreakdown(snapshot, fixtures, club, options) };
 }
 
 /** One side's fixtures for one player. */
@@ -192,4 +185,114 @@ export function buildPlayerIndex(
   }
   const players = Object.fromEntries([...found].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
   return { season, players };
+}
+
+/** A club's published file and the fixtures its players' games are read from. */
+export interface SeasonClubRecord {
+  club: PublishedClub;
+  snapshot: ParticipationSnapshot;
+  fixtures: FeedFixture[];
+}
+
+/** A player's games for a club other than the one being shown. */
+export interface OtherClubGames {
+  clubKey: string;
+  clubName: string;
+  /** Only the sides they have a counted match for. */
+  sides: SideRounds[];
+}
+
+/** Players who played for more than one club in the season, by CMS id, with their
+ *  games for each other club. The report marks them "Waiver Required"; the rules on
+ *  playing for another club aren't checked here. */
+export type TransferRecords = Record<string, OtherClubGames[]>;
+
+/** The clubs each player has a counted match for, by CMS id. Unused reserves don't count. */
+export function clubsPlayedFor(clubs: SeasonClubRecord[], rules?: EligibilityRules): Map<string, string[]> {
+  const played = new Map<string, string[]>();
+  for (const { club, snapshot } of clubs) {
+    const applied = rules ?? rulesForSeason(snapshot.season);
+    const teams = new Set(club.sides.map((side) => side.teamName));
+    for (const row of snapshot.rows) {
+      if (!teams.has(row.teamName) || row.played + row.substitute === 0 || !isQualifying(row.competition, applied)) continue;
+      const keys = played.get(row.playerId) ?? [];
+      if (!keys.includes(club.key)) played.set(row.playerId, [...keys, club.key]);
+    }
+  }
+  return played;
+}
+
+/** Every player of a club who also played for another club that season, with those
+ *  games. Pass `played` from `clubsPlayedFor` when asking for many clubs. */
+export function transferRecords(
+  clubKey: string,
+  clubs: SeasonClubRecord[],
+  { rules, played = clubsPlayedFor(clubs, rules) }: { rules?: EligibilityRules; played?: Map<string, string[]> } = {},
+): TransferRecords {
+  const byKey = new Map(clubs.map((record) => [record.club.key, record]));
+  const records: TransferRecords = {};
+  for (const [playerId, keys] of played) {
+    if (keys.length < 2 || !keys.includes(clubKey)) continue;
+    records[playerId] = keys
+      .filter((key) => key !== clubKey)
+      .flatMap((key) => {
+        const other = byKey.get(key);
+        if (!other) return [];
+        const { club, snapshot, fixtures } = other;
+        const rows = snapshot.rows.filter((row) => row.playerId === playerId);
+        const sides = club.sides
+          .map(({ teamName }) => ({
+            teamName,
+            rounds: playerRounds({
+              fixtures,
+              teamName,
+              season: snapshot.season,
+              rows,
+              gaps: snapshot.gaps,
+              resultIds: snapshot.resultIds ?? [],
+              rules: rules ?? rulesForSeason(snapshot.season),
+            }),
+          }))
+          .filter(({ rounds }) => rounds.some((round) => round.counted));
+        return [{ clubKey: club.key, clubName: club.name, sides }];
+      })
+      .sort((a, b) => a.clubName.localeCompare(b.clubName));
+  }
+  return records;
+}
+
+/** A Locked Season's club files with each player who played for more than one club
+ *  shown only at the club of their last counted match, with their games for the
+ *  others recorded there (`transfers`). Each club's verdicts still count only its own
+ *  matches. By club key. */
+export function assignTransfers(
+  clubs: SeasonClubRecord[],
+  rules?: EligibilityRules,
+): Record<string, ParticipationSnapshot> {
+  const played = clubsPlayedFor(clubs, rules);
+  const dates = new Map(clubs.flatMap(({ fixtures }) => fixtures.map((fixture) => [fixture.id, fixture.dateTime] as const)));
+  const lastMatch = (key: string, playerId: string) => {
+    const record = clubs.find(({ club }) => club.key === key);
+    const counted = (record?.snapshot.rows ?? [])
+      .filter((row) => row.playerId === playerId)
+      .flatMap((row) => Object.entries(row.rounds).filter(([, code]) => code === 'Start' || code === 'Sub'))
+      .map(([fixtureId]) => dates.get(fixtureId) ?? '');
+    return counted.sort().at(-1) ?? '';
+  };
+  /** Each moved player's last club, by CMS id. */
+  const lastClub = new Map<string, string>();
+  for (const [playerId, keys] of played) {
+    if (keys.length < 2) continue;
+    const ranked = keys.map((key) => ({ key, date: lastMatch(key, playerId) }));
+    ranked.sort((a, b) => (a.date === b.date ? a.key.localeCompare(b.key) : a.date.localeCompare(b.date)));
+    lastClub.set(playerId, ranked[ranked.length - 1].key);
+  }
+  return Object.fromEntries(
+    clubs.map(({ club, snapshot }) => {
+      const moved = transferRecords(club.key, clubs, { rules, played });
+      const transfers = Object.fromEntries(Object.entries(moved).filter(([playerId]) => lastClub.get(playerId) === club.key));
+      const rows = snapshot.rows.filter((row) => (lastClub.get(row.playerId) ?? club.key) === club.key);
+      return [club.key, { ...snapshot, rows, ...(Object.keys(transfers).length > 0 ? { transfers } : {}) }];
+    }),
+  );
 }

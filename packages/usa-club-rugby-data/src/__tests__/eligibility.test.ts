@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parsePlayerRows, computeBreakdown } from '../eligibility.ts';
+import { mergedClubNotes } from '../clubAliases.ts';
+import { clubsFromTeamNames, computeBreakdown, parsePlayerRows } from '../eligibility.ts';
 import type { PlayerRow } from '../types.ts';
 
 const HEADER_CSV = `"USA ID","First Name","Last Name","Player Last Registered","Player Rego Active","Club Name","Team Name","Competition","Appearances","Played","Reserve","Substitute","Round 1","Round 2","Round 3","Round 4","Round 5","Round 6","Round 7","Round 8","Round 9","Round 10","Round 11","Round 12","Round 13"`;
@@ -369,3 +370,43 @@ describe('Caution: one more upper-side match ends lower-side eligibility', () =>
     expect(lowerSummary).toMatchObject({ total: 1, eligible: 1, caution: 1 });
   });
 });
+
+describe('a club entered under several names this season', () => {
+  it('is one club, named after its top side', () => {
+    expect(clubsFromTeamNames(['HURT MD3', 'Houston United MD2', 'Schuylkill River MD3', 'Schuylkill River Exiles MD1'])).toEqual([
+      {
+        name: 'Houston United',
+        sides: [
+          { teamName: 'Houston United MD2', label: 'D2' },
+          { teamName: 'HURT MD3', label: 'D3' },
+        ],
+      },
+      {
+        name: 'Schuylkill River Exiles',
+        sides: [
+          { teamName: 'Schuylkill River Exiles MD1', label: 'D1' },
+          { teamName: 'Schuylkill River MD3', label: 'D3' },
+        ],
+      },
+    ]);
+  });
+
+  it('includes New York and NYRC, and Riverlands and its Golden Boars', () => {
+    expect(clubsFromTeamNames(['New York MD2', 'NYRC MD3', 'Riverlands MD3', 'Riverlands Golden Boars MD2']).map((club) => club.name)).toEqual([
+      'New York',
+      'Riverlands Golden Boars',
+    ]);
+  });
+});
+
+describe('a note on each side entered under another name', () => {
+  it('names the club it belongs to', () => {
+    const [club] = clubsFromTeamNames(['HURT MD3', 'Houston United MD2']);
+    expect(mergedClubNotes(club)).toEqual(['HURT MD3: entered as HURT, which is the same club as Houston United.']);
+  });
+
+  it('says nothing for a club under one name', () => {
+    expect(mergedClubNotes(clubsFromTeamNames(['NOVA MD1', 'NOVA MD3'])[0])).toEqual([]);
+  });
+});
+

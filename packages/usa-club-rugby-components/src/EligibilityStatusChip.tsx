@@ -21,3 +21,8 @@ export function EligibilityStatusChip({ player, sideLabel, onClick }: Eligibilit
   const { color, text } = CHIPS[verdictStatus(player)];
   return <Chip size="small" color={color} label={sideLabel ? `${sideLabel} ${text}` : text} onClick={onClick} />;
 }
+
+/** Marks a player who also played for another club that season. */
+export function WaiverChip() {
+  return <Chip size="small" color="warning" variant="outlined" label="Waiver Required" />;
+}

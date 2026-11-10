@@ -39,9 +39,10 @@ import {
   sameNamePlayers,
   sharedNames,
   verdictRank,
+  type TransferRecords,
 } from '@zmnatz/usa-club-rugby-data';
 import { formatDate } from './dates.ts';
-import { EligibilityStatusChip } from './EligibilityStatusChip.tsx';
+import { EligibilityStatusChip, WaiverChip } from './EligibilityStatusChip.tsx';
 import { spreadRow, wrapRow } from './layout.ts';
 import { useEligibilityLinks } from './links.tsx';
 import { CAUTION_ADVICE, PlayerEligibilityDialog, type ReportSource } from './PlayerDetail.tsx';
@@ -116,6 +117,8 @@ interface DivisionTableProps {
   record: PlayerRecordInput | null;
   /** Whether the players have pages of their own; a CSV report's don't. */
   playerPages: boolean;
+  locked: boolean;
+  transfers: TransferRecords;
   /** Rugby Xplorer's own club slug, for match-report links. */
   clubSlug: string | null;
   summary: { total: number; eligible: number; onTrack: number; caution: number };
@@ -136,6 +139,7 @@ function renderCell(
   source: ReportSource,
   showCmsId: boolean,
   buttonId: string | undefined,
+  moved: boolean,
 ) {
   switch (key) {
     case 'name':
@@ -178,7 +182,12 @@ function renderCell(
     case 'participation':
       return player.participation;
     case 'status':
-      return <EligibilityStatusChip player={player} />;
+      return (
+        <Stack direction="row" spacing={0.5} useFlexGap sx={{ flexWrap: 'wrap' }}>
+          <EligibilityStatusChip player={player} />
+          {moved && <WaiverChip />}
+        </Stack>
+      );
     case 'reasons':
       return player.reasons.length === 0 ? (
         <Typography variant="body2" color="text.secondary">
@@ -201,6 +210,8 @@ function DivisionTable({
   otherLabels,
   record,
   playerPages,
+  locked,
+  transfers,
   clubSlug,
   summary,
   visibleCount,
@@ -266,7 +277,7 @@ function DivisionTable({
             >
               <ToggleButton value="all">All</ToggleButton>
               <ToggleButton value="eligible">Eligible</ToggleButton>
-              <ToggleButton value="caution">Caution</ToggleButton>
+              {!locked && <ToggleButton value="caution">Caution</ToggleButton>}
               <ToggleButton value="ineligible">Ineligible</ToggleButton>
             </ToggleButtonGroup>
             <Chip
@@ -328,6 +339,7 @@ function DivisionTable({
                       source,
                       hasSharedName(player, shared),
                       index === 0 ? FIRST_PLAYER_ID : undefined,
+                      player.playerId in transfers,
                     );
                     return (
                       <TableCell key={col.key} align={col.numeric ? 'right' : 'left'}>
@@ -356,6 +368,7 @@ function DivisionTable({
           source={source}
           ownLabel={ownLabel}
           record={record}
+          otherClubs={detail ? transfers[detail.playerId] : undefined}
           clubSlug={clubSlug}
           pageHref={detail && playerPages && !isNameWithheld(detail.name) ? routes.player(detail.playerId) : undefined}
           showCmsId={detail !== null && hasSharedName(detail, shared)}
@@ -476,6 +489,10 @@ export interface EligibilityReportViewProps {
   season?: string;
   /** Whether the players have pages of their own at the host's player route. */
   playerPages?: boolean;
+  /** A Locked Season: every verdict is final, so there is no Caution to filter by. */
+  locked?: boolean;
+  /** Players who also played for another club that season, with those games. */
+  transfers?: TransferRecords;
   /** Rugby Xplorer's own club slug. Match links use the council's path without one. */
   clubSlug?: string | null;
   /** The side on show, by its place in the breakdown. */
@@ -495,6 +512,8 @@ export function EligibilityReportView({
   record = null,
   season,
   playerPages = false,
+  locked = false,
+  transfers = {},
   clubSlug = null,
   activeSide,
   onActiveSideChange,
@@ -610,6 +629,8 @@ export function EligibilityReportView({
           otherLabels={breakdown.sides.filter((entry) => entry.teamName !== side.teamName).map((entry) => entry.label)}
           record={record}
           playerPages={playerPages}
+          locked={locked}
+          transfers={transfers}
           clubSlug={clubSlug}
           summary={side.summary}
           visibleCount={visiblePlayers.length}

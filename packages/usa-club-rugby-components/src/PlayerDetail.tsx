@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import {
   matchUrl,
+  type OtherClubGames,
   playerFixtures,
   type PlayerFixtures,
   type PlayerRecordInput,
@@ -28,7 +29,7 @@ import {
 } from '@zmnatz/usa-club-rugby-data';
 
 import { formatDate } from './dates.ts';
-import { EligibilityStatusChip } from './EligibilityStatusChip.tsx';
+import { EligibilityStatusChip, WaiverChip } from './EligibilityStatusChip.tsx';
 import { wrapRow } from './layout.ts';
 import { useEligibilityLinks } from './links.tsx';
 
@@ -276,7 +277,26 @@ export interface PlayerDetailProps {
   showCmsId?: boolean;
   /** Rugby Xplorer's own club slug. Match links use the council's path without one. */
   clubSlug?: string | null;
+  /** The player's games for other clubs that season, which aren't counted here. */
+  otherClubs?: OtherClubGames[];
   footer?: ReactNode;
+}
+
+/** A moved player's games for their other clubs. */
+function OtherClubRounds({ otherClubs, clubSlug }: { otherClubs: OtherClubGames[]; clubSlug: string | null }) {
+  return (
+    <>
+      <Typography variant="body2" color="textSecondary">
+        Also played for {otherClubs.map((other) => other.clubName).join(', ')} this season. Those games are
+        listed below and aren&apos;t counted for this club.
+      </Typography>
+      {otherClubs.flatMap((other) =>
+        other.sides.map(({ teamName, rounds }) => (
+          <TeamRounds key={`${other.clubKey}-${teamName}`} teamName={`${other.clubName} · ${teamName}`} rounds={rounds} clubSlug={clubSlug} />
+        )),
+      )}
+    </>
+  );
 }
 
 /** A player's name, ids and verdict chip: the dialog's title and the page's heading. */
@@ -284,8 +304,9 @@ export function PlayerDetailHeading({
   player,
   source,
   showCmsId = false,
+  otherClubs,
   component = 'span',
-}: Pick<PlayerDetailProps, 'player' | 'source' | 'showCmsId'> & { component?: 'span' | 'h1' }) {
+}: Pick<PlayerDetailProps, 'player' | 'source' | 'showCmsId' | 'otherClubs'> & { component?: 'span' | 'h1' }) {
   return (
     <Stack direction="row" spacing={1} useFlexGap sx={wrapRow}>
       <Typography variant={component === 'h1' ? 'h4' : 'h6'} component={component}>
@@ -302,6 +323,7 @@ export function PlayerDetailHeading({
         </Typography>
       )}
       <EligibilityStatusChip player={player} />
+      {otherClubs && otherClubs.length > 0 && <WaiverChip />}
     </Stack>
   );
 }
@@ -311,7 +333,7 @@ export const CAUTION_ADVICE =
   'Experimental: check the official Rugby Xplorer record for matches not counted here, as one could change this.';
 
 /** Everything about one player's verdict, shared by the dialog and the player page. */
-export function PlayerDetailBody({ player, source, ownLabel, fixtures, clubSlug = null, footer }: PlayerDetailProps) {
+export function PlayerDetailBody({ player, source, ownLabel, fixtures, clubSlug = null, otherClubs, footer }: PlayerDetailProps) {
   return (
     <Stack spacing={2} useFlexGap>
       {player.reasons.length > 0 && (
@@ -343,6 +365,7 @@ export function PlayerDetailBody({ player, source, ownLabel, fixtures, clubSlug 
       {fixtures ? (
         <>
           <PlayedRounds sides={fixtures.sides} clubSlug={clubSlug} />
+          {otherClubs && otherClubs.length > 0 && <OtherClubRounds otherClubs={otherClubs} clubSlug={clubSlug} />}
           <Typography variant="body2" color="textSecondary">
             Open a report to check a line against Rugby Xplorer.
           </Typography>
@@ -392,7 +415,7 @@ export function PlayerEligibilityDialog({
       {player !== null && (
         <>
           <DialogTitle>
-            <PlayerDetailHeading player={player} source={detail.source} showCmsId={detail.showCmsId} />
+            <PlayerDetailHeading player={player} source={detail.source} showCmsId={detail.showCmsId} otherClubs={detail.otherClubs} />
             {pageHref && (
               <Typography variant="body2">
                 <MuiLink component={Link} href={pageHref}>

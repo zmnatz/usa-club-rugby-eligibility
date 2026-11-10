@@ -1,11 +1,18 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import type { FeedFixture, ParticipationSnapshot, PublishedIndex } from '@zmnatz/usa-club-rugby-data';
+import type {
+  FeedFixture,
+  ParticipationSnapshot,
+  PublishedIndex,
+  PublishedSeason,
+  PublishedSeasonFile,
+  PublishedSeasonsFile,
+} from '@zmnatz/usa-club-rugby-data';
 
 // Reads the nightly data at build time, for getStaticPaths and getStaticProps.
 // Never import this from code that runs in the browser.
 
-export type { PublishedClub, PublishedIndex } from '@zmnatz/usa-club-rugby-data';
+export type { PublishedClub, PublishedIndex, PublishedSeason } from '@zmnatz/usa-club-rugby-data';
 
 const PUBLISHED = path.join(process.cwd(), 'public', 'data');
 
@@ -21,4 +28,15 @@ export function readFixtures(): FeedFixture[] {
 
 export function readClubSnapshot(key: string): ParticipationSnapshot {
   return readJson<ParticipationSnapshot>(path.join('clubs', `${key}.json`));
+}
+
+/** The Locked Seasons published, newest first. None until the archive holds one. */
+export function readSeasons(): PublishedSeason[] {
+  if (!existsSync(path.join(PUBLISHED, 'seasons.json'))) return [];
+  return readJson<PublishedSeasonsFile>('seasons.json').seasons;
+}
+
+/** One Locked Season's file, for building its stats page. */
+export function readSeasonFile(slug: string): PublishedSeasonFile {
+  return readJson<PublishedSeasonFile>(path.join('seasons', `${slug}.json`));
 }

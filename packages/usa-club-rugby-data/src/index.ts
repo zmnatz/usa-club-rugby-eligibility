@@ -2,6 +2,7 @@
 // "@zmnatz/usa-club-rugby-data/node".
 export * from './api.ts';
 export * from './archive.ts';
+export * from './clubAliases.ts';
 export * from './csv.ts';
 export type {
   ArchiveFixturesFile,
@@ -10,9 +11,12 @@ export type {
   PublishedFixturesFile,
   PublishedIndexFile,
   PublishedPlayersFile,
+  PublishedSeasonFile,
+  PublishedSeasonsFile,
 } from './data.ts';
 export * from './eligibility.ts';
 export * from './feeds.ts';
+export * from './historicalSides.ts';
 export * from './live.ts';
 export type * from './match.ts';
 export * from './participation.ts';
@@ -22,6 +26,7 @@ export * from './published.ts';
 export * from './rugbyXplorer.ts';
 export * from './rules.ts';
 export * from './scoring.ts';
+export * from './seasonSummary.ts';
 export * from './sources.ts';
 export * from './teamSide.ts';
 export type * from './types.ts';

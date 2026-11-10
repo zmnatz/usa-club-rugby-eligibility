@@ -31,7 +31,7 @@ The number of NCS Qualifying Matches a player entered as a starter or substitute
 _Avoid_: appearances, games played
 
 **NCS Qualifying Match**:
-A league or local-playoff match that counts toward a player's Match Participation. Super Regionals, National Championships, 7s, friendlies, crossovers, socials, festivals, and Men's D4 and Women's D3 matches don't count.
+A league or local-playoff match that counts toward a player's Match Participation. Super Regionals, National Championships, 7s, friendlies, crossovers, socials, festivals, matches in June or July (the 7s season), and Men's D4 and Women's D3 matches don't count.
 
 **On Track**:
 A player who hasn't yet met a two-match minimum but can still reach it, because enough of the side's possible matches remain before Super Regionals. Counted as eligible and shown separately.
@@ -42,7 +42,7 @@ A player eligible for a lower side who would lose it for the rest of the season 
 _Avoid_: at risk
 
 **One-Side Club**:
-A club with only one side in the fixture lists, assessed under the two-match minimum.
+A club with only one side in the fixture lists, assessed under the two-match minimum. In a Locked Season its side needs no division.
 
 **Name Withheld**:
 How the CMS shows a player whose profile isn't public. A hidden profile, not a player: it gets no player record or eligibility row.
@@ -52,8 +52,14 @@ The raw match records and fixture lists the nightly job saves in `archive/`, com
 _Avoid_: cache, snapshot (the snapshot is the published data)
 
 **Locked Season**:
-A season before the current one. Its archive is read once more as the next season begins and never again, unless the fields requested change or a `--full-history` run asks.
+A season before the current one. Its archive is read once more as the next season begins and never again, unless the fields requested change or a `--full-history` run asks. Its verdicts are final, under the regulations of that year: a player is eligible or not, with no On Track or Caution.
 _Avoid_: archived season, old data
+
+**Unplaced Team**:
+A team in a Locked Season that can't be assessed: a round or one-off entry, a team with no division at a club with other teams, or one sharing a division with another name at its club, which leaves that club out. Listed on the season's page.
+
+**Waiver Required**:
+A player in a Locked Season who played for more than one club that season. Shown only at the last club they played for, with their other clubs' games listed but not counted.
 
 **National Championship Series (NCS)**:
 USA Rugby's postseason competition for Men's Divisions I, II and III and Women's Divisions I and II.

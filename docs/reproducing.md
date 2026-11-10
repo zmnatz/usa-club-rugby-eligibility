@@ -44,7 +44,7 @@ Rules are data: the thresholds and excluded competitions are `DEFAULT_RULES` in 
 
 ## Locked Seasons
 
-Only the current season is published, because only its rules are encoded; see "Locked Seasons" in [snapshots.md](snapshots.md). To recount a Locked Season once its rules are known, read it with `readSeason(archiveDir, season)` (from `/node`) and pass it with that season's `EligibilityRules` to `buildPublished`, which builds the latest season in the fixtures it is given.
+Each Locked Season from 2022-23 is published under its own regulations; see "Locked Seasons" in [snapshots.md](snapshots.md) and ADR 006. To recount one, read it with `readSeason(archiveDir, season)` (from `/node`) and pass it to `buildLockedSeason`, which uses `rulesForSeason(season)` unless given other rules.
 
 ## Rebuild from scratch
 

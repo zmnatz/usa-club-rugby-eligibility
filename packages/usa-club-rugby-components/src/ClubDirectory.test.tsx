@@ -18,7 +18,7 @@ const routes: EligibilityRoutes = {
   methodology: () => '/about',
 };
 
-const renderDirectory = (props: { autoFocus?: boolean } = {}) =>
+const renderDirectory = (props: { autoFocus?: boolean; clubHref?: (key: string) => string } = {}) =>
   render(
     <ThemeProvider theme={createTheme()}>
       <EligibilityLinksProvider Link="a" routes={routes}>
@@ -33,6 +33,11 @@ function PlayerLink({ id }: { id: string }) {
 }
 
 describe('ClubDirectory', () => {
+  it('links each club to the given address instead of the club route, for a past season', () => {
+    renderDirectory({ clubHref: (key) => `/season/2024-25/club/${key}` });
+    expect(screen.getByRole('link', { name: /Bayside/ }).getAttribute('href')).toBe('/season/2024-25/club/bayside');
+  });
+
   it('links each club through the plain anchor and custom route', () => {
     renderDirectory();
     const link = screen.getByRole('link', { name: /Harbor City/ });

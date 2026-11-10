@@ -16,7 +16,8 @@ const PAGE_SIZE = 100;
  *  every season, so its current season usually fits a short page: about 450 a page
  *  instead of 1,800. See docs/adr/001-national-coverage.md. */
 export const CLUB_PAGE_SIZE = 25;
-const MAX_FIXTURES = 5000;
+/** Longer than any entity's whole history: the council's reaches about 13,000 results. */
+const MAX_FIXTURES = 20000;
 
 /** A fixture as a feed lists it, with what a match-centre request needs. */
 export interface FeedFixture {

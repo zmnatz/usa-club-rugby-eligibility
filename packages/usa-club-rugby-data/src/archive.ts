@@ -1,7 +1,9 @@
 import type { ArchiveFixturesFile, ArchiveMatchesFile } from './data.ts';
 import type { Club, EligibilityRules } from './types.ts';
 import { currentSeason, type FeedFixture, isResult, sortFixtures } from './feeds.ts';
-import { buildParticipationSnapshot, clubSnapshot, listClubs, type ParticipationSnapshot } from './participation.ts';
+import { historicalClubs, type HistoricalClub } from './historicalSides.ts';
+import { buildParticipationSnapshot, clubSnapshot, inExcludedMonth, listClubs, type ParticipationSnapshot } from './participation.ts';
+import { assignTransfers } from './players.ts';
 import {
   aggregatePlayerHistory,
   fetchMatchCentre,
@@ -11,6 +13,7 @@ import {
   type MatchCentreData,
 } from './playerHistory.ts';
 import { mapConcurrent } from './api.ts';
+import { rulesForSeason } from './rules.ts';
 import { clubKey } from './teamSide.ts';
 
 // The raw match archive (archive/, committed but not published). The nightly job
@@ -33,6 +36,23 @@ export interface ArchiveManifest {
 /** A season's match records by fixture id. null records a match the CMS has no
  *  details for, so a locked season doesn't ask for it again. */
 export type SeasonMatches = Record<string, MatchCentreData | null>;
+
+/** The first season with regulations encoded and match records in Rugby Xplorer. */
+export const FIRST_PUBLISHED_SEASON = '2022/2023';
+
+/** The Locked Seasons to publish, newest first. */
+export function lockedSeasons(manifest: Pick<ArchiveManifest, 'seasons' | 'currentSeason'>): string[] {
+  return manifest.seasons
+    .filter((season) => season >= FIRST_PUBLISHED_SEASON && season < manifest.currentSeason)
+    .sort()
+    .reverse();
+}
+
+/** A season's page path and directory, e.g. "2025/2026" -> "2025-26". */
+export function seasonSlug(season: string): string {
+  const [from, to] = season.split('/');
+  return to ? `${from}-${to.slice(2)}` : season.replace(/[^0-9A-Za-z]+/g, '-');
+}
 
 export function seasonFile(season: string): string {
   return `${season.replace(/[^0-9A-Za-z]+/g, '-')}.json`;
@@ -142,6 +162,31 @@ export interface PublishedData {
   fixtures: FeedFixture[];
   clubs: (Club & { key: string })[];
   clubFiles: Record<string, ParticipationSnapshot>;
+  /** The Locked Seasons published beside it, newest first. */
+  history?: LockedSeasonData[];
+}
+
+/** What the site publishes for one Locked Season. */
+export interface LockedSeasonData {
+  season: string;
+  slug: string;
+  fixtures: FeedFixture[];
+  clubs: (HistoricalClub & { key: string })[];
+  clubFiles: Record<string, ParticipationSnapshot>;
+  unplacedTeams: string[];
+}
+
+/** Gives each club its page path and file name. Two names can make one file name
+ *  ("St. Louis", "St Louis"), so a repeat is numbered. */
+function withClubKeys<C extends Club>(clubs: C[]): (C & { key: string })[] {
+  const used = new Map<string, number>();
+  return clubs.map((club) => {
+    const key = clubKey(club.name);
+    const base = RESERVED_PATHS.has(key) ? `${key}-club` : key;
+    const count = (used.get(base) ?? 0) + 1;
+    used.set(base, count);
+    return { ...club, key: count === 1 ? base : `${base}-${count}` };
+  });
 }
 
 /** Calculates the published data from archived fixtures and matches, with no
@@ -155,19 +200,38 @@ export function buildPublished(
   const season = currentSeason(fixtures, now);
   const seasonFixtures = sortFixtures(fixtures.filter((fixture) => fixture.season === season));
   const seasonMatches = matches.filter((match) => match.fixture.season === season);
-  const results = seasonFixtures.filter((fixture) => isResult(fixture, now));
+  // A summer 7s match counts for no one, so it gives no rows or gaps.
+  const results = seasonFixtures.filter((fixture) => isResult(fixture, now) && !inExcludedMonth(fixture, rules));
   const participation = buildParticipationSnapshot(aggregatePlayerHistory(seasonMatches).values(), results, now);
-  // Two names can make one file name ("St. Louis", "St Louis"), so a repeat is numbered.
-  const used = new Map<string, number>();
-  const clubs = listClubs(seasonFixtures, rules).map((club) => {
-    const key = clubKey(club.name);
-    const base = RESERVED_PATHS.has(key) ? `${key}-club` : key;
-    const count = (used.get(base) ?? 0) + 1;
-    used.set(base, count);
-    return { ...club, key: count === 1 ? base : `${base}-${count}` };
-  });
+  const clubs = withClubKeys(listClubs(seasonFixtures, rules));
   const clubFiles = Object.fromEntries(
     clubs.map((club) => [club.key, clubSnapshot(participation, club, results)]),
   );
   return { season, fixtures: seasonFixtures, clubs, clubFiles };
+}
+
+/** Calculates one Locked Season's published data from its archive. Its clubs come
+ *  from the team and competition names of that season, and its files are final. */
+export function buildLockedSeason(
+  fixtures: FeedFixture[],
+  matches: MatchCentreData[],
+  season: string,
+  now: Date,
+  rules: EligibilityRules = rulesForSeason(season),
+): LockedSeasonData {
+  const seasonFixtures = sortFixtures(fixtures.filter((fixture) => fixture.season === season));
+  const seasonMatches = matches.filter((match) => match.fixture.season === season);
+  const results = seasonFixtures.filter((fixture) => isResult(fixture, now) && !inExcludedMonth(fixture, rules));
+  const participation = buildParticipationSnapshot(aggregatePlayerHistory(seasonMatches).values(), results, now);
+  const { clubs: found, unplacedTeams } = historicalClubs(seasonFixtures, rules);
+  const clubs = withClubKeys(found);
+  const clubFiles = assignTransfers(
+    clubs.map((club) => ({
+      club,
+      fixtures: seasonFixtures,
+      snapshot: { ...clubSnapshot(participation, club, results), season, locked: true },
+    })),
+    rules,
+  );
+  return { season, slug: seasonSlug(season), fixtures: seasonFixtures, clubs, clubFiles, unplacedTeams };
 }
