@@ -42,8 +42,9 @@ const NOT_A_SIDE = /championship|premiership|18\+|18-99|\bARP\b|7s\b|10s\b|festi
 /** A one-side club's side when the record doesn't say its division. */
 const NO_DIVISION_LABEL = 'Senior';
 
-/** The division a B side is taken to play in when the record doesn't say. */
-const B_SIDE_LEVEL = 3;
+/** The division a club's second side is taken to play in when nothing of its club,
+ *  nor the record, says. */
+const LOWER_SIDE_LEVEL = 3;
 
 const genderOf = (token: string): Gender => (token.toUpperCase().startsWith('W') ? 'W' : 'M');
 
@@ -121,22 +122,46 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
   }
 
   const clubName = (base: string, gender: Gender) => (gender === 'W' ? `${base} Women` : base);
-  const sidesByClub = new Map<string, { teamName: string; level: number; xv: number }[]>();
+  const sidesByClub = new Map<string, { teamName: string; level: number; xv: number; label?: string }[]>();
   const noDivision = new Map<string, string>();
+  const lowerSides: { teamName: string; club: string; gender: Gender; below: number }[] = [];
   for (const [teamName, divisions] of divisionsByTeam) {
     const { base, gender: nameGender, level: nameLevel, xv: nameXv, bSide } = readTeamName(teamName);
     const common = nameLevel === undefined ? mostCommonDivision(divisions) : null;
     const compGender = common?.gender ?? divisions.find((division) => division.gender)?.gender;
     const gender = nameGender ?? compGender ?? 'M';
-    // A B side with no division anywhere is taken as Division 3, a level of its own.
-    const assumedLevel = bSide && nameLevel === undefined && !common;
-    const level = nameLevel ?? common?.level ?? (assumedLevel ? B_SIDE_LEVEL : undefined);
-    const xv = assumedLevel ? 1 : nameXv;
+    const level = nameLevel ?? common?.level;
     const club = clubName(base, gender);
-    if (level === undefined) {
+    // A 2nd XV or B side the record gives no division is placed once its club's other
+    // sides are: so many divisions below the lowest of them.
+    const below = nameXv > 1 ? nameXv - 1 : bSide ? 1 : 0;
+    if (level === undefined && below > 0) {
+      lowerSides.push({ teamName, club, gender, below });
+    } else if (level === undefined) {
       noDivision.set(teamName, club);
     } else if (isNcsSide({ gender, level })) {
-      sidesByClub.set(club, [...(sidesByClub.get(club) ?? []), { teamName, level, xv }]);
+      sidesByClub.set(club, [...(sidesByClub.get(club) ?? []), { teamName, level, xv: nameXv }]);
+    }
+  }
+  for (const { teamName, club, gender, below } of lowerSides) {
+    const levels = (sidesByClub.get(club) ?? []).map((side) => side.level);
+    const firsts = [...noDivision].filter(([team, of]) => of === club && !NOT_A_SIDE.test(team));
+    if (levels.length === 0 && firsts.length === 1) {
+      // Neither side's division is known, only their order: rank them under their own
+      // names, at the lowest levels the NCS has for them.
+      const lowest = gender === 'W' ? 2 : 3;
+      const [first] = firsts[0];
+      noDivision.delete(first);
+      sidesByClub.set(club, [
+        { teamName: first, level: lowest - below, xv: 1, label: '1st XV' },
+        { teamName, level: lowest, xv: 1, label: below === 1 ? '2nd XV' : '3rd XV' },
+      ]);
+      continue;
+    }
+    // With no side of its club placed, a second side is taken as Division 3.
+    const level = levels.length > 0 ? Math.max(...levels) + below : LOWER_SIDE_LEVEL + below - 1;
+    if (isNcsSide({ gender, level })) {
+      sidesByClub.set(club, [...(sidesByClub.get(club) ?? []), { teamName, level, xv: 1 }]);
     }
   }
 
@@ -163,7 +188,7 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
       name,
       sides: [...sides]
         .sort((a, b) => a.level - b.level || a.xv - b.xv)
-        .map(({ teamName, level, xv }) => ({ teamName, label: sideLabel({ level, xv }) })),
+        .map(({ teamName, level, xv, label }) => ({ teamName, label: label ?? sideLabel({ level, xv }) })),
       ...(unplacedTeams.length > 0 ? { unplacedTeams } : {}),
     });
   }

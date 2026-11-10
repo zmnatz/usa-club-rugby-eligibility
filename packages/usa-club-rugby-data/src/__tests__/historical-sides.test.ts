@@ -123,6 +123,54 @@ describe('a team with no division', () => {
     expect(place(game('Approved 3.4.3 Matches', 'Riverton Women B-Side'))).toEqual({ clubs: [], unplacedTeams: [] });
   });
 
+  it('ranks a 2nd XV one division below its club\'s other side', () => {
+    const { clubs } = place(game('PNRFU Men D2', "Pigs Men's D2 Senior"), game('PNRFU Championship', 'Pigs 2nd XV'));
+    expect(clubs).toEqual([
+      {
+        name: 'Pigs',
+        sides: [
+          { teamName: "Pigs Men's D2 Senior", label: 'D2' },
+          { teamName: 'Pigs 2nd XV', label: 'D3' },
+        ],
+      },
+    ]);
+  });
+
+  it('ranks a 2nd XV below the lowest of its club\'s sides', () => {
+    const { clubs } = place(
+      game('Capital Men D1', 'Austin MD1'),
+      game('Capital Men D2', 'Austin MD2'),
+      game('Approved 3.4.3 Matches', 'Austin 2nd XV'),
+    );
+    expect(clubs[0].sides.map((side) => side.label)).toEqual(['D1', 'D2', 'D3']);
+  });
+
+  it('ranks a 2nd XV below its 1st XV when neither has a division', () => {
+    const result = place(game('PNRFU Championship', 'Quake 1st XV'), game('PNRFU Championship', 'Quake 2nd XV'));
+    expect(result).toEqual({
+      clubs: [
+        {
+          name: 'Quake',
+          sides: [
+            { teamName: 'Quake 1st XV', label: '1st XV' },
+            { teamName: 'Quake 2nd XV', label: '2nd XV' },
+          ],
+        },
+      ],
+      unplacedTeams: [],
+    });
+  });
+
+  it('ranks a 3rd XV two divisions below', () => {
+    const { clubs } = place(game('Capital Men D1', 'Austin MD1'), game('Approved 3.4.3 Matches', 'Austin 3rd XV'));
+    expect(clubs[0].sides.map((side) => side.label)).toEqual(['D1', 'D3']);
+  });
+
+  it('leaves out a 2nd XV that would fall below the NCS', () => {
+    const result = place(game('NERFU Women D2', 'Riverton WD2'), game('Approved 3.4.3 Matches', 'Riverton Women 2nd XV'));
+    expect(result).toEqual({ clubs: [{ name: 'Riverton Women', sides: [{ teamName: 'Riverton WD2', label: 'D2' }] }], unplacedTeams: [] });
+  });
+
   it.each([
     'Atlanta WD2 Championship',
     'Denver Barbarians RMR Premiership',
@@ -136,9 +184,9 @@ describe('a team with no division', () => {
     expect(place(game('Approved 3.4.3 Matches', team))).toEqual({ clubs: [], unplacedTeams: [team] });
   });
 
-  it('stays unmatched when its club has another team, since they cannot be ranked', () => {
-    const result = place(game('Approved 3.4.3 Matches', 'Quake 1st XV'), game('Approved 3.4.3 Matches', 'Quake 2nd XV'));
-    expect(result).toEqual({ clubs: [], unplacedTeams: ['Quake 1st XV', 'Quake 2nd XV'] });
+  it('stays unmatched when its club has another team with no division, since they cannot be ranked', () => {
+    const result = place(game('Approved 3.4.3 Matches', 'Quake Men'), game('Approved 3.4.3 Matches', 'Quake Senior'));
+    expect(result).toEqual({ clubs: [], unplacedTeams: ['Quake Men', 'Quake Senior'] });
   });
 });
 
