@@ -6,7 +6,7 @@ import { EligibilityStatusChip, PlayerDetailBody } from '@zmnatz/usa-club-rugby-
 import type { PlayerClubEntry, PlayerProfile } from '@zmnatz/usa-club-rugby-data';
 import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';
 import { clubPath } from '@/utils/paths';
-import { listPlayerIds, readPlayerPage } from '@/utils/playerPages';
+import { listPlayerIds, published } from '@/utils/published';
 
 // The page is only text and links, so it ships no Next runtime and links out of it
 // are full page loads. The inline script only reloads it on history navigation.
@@ -15,12 +15,12 @@ export const config = { unstable_runtimeJS: false };
 /** Every player in the nightly data. Players can change clubs, so a player's page
  *  is under no club. Name Withheld players have no page. */
 export const getStaticPaths: GetStaticPaths = async () => ({
-  paths: listPlayerIds().map((player) => ({ params: { player } })),
+  paths: (await listPlayerIds()).map((player) => ({ params: { player } })),
   fallback: false,
 });
 
 export const getStaticProps: GetStaticProps<{ data: PlayerProfile }> = async ({ params }) => {
-  const data = typeof params?.player === 'string' ? readPlayerPage(params.player) : null;
+  const data = typeof params?.player === 'string' ? await published.player(params.player) : null;
   return data ? { props: { data } } : { notFound: true };
 };
 

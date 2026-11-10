@@ -13,7 +13,7 @@ The page is static. Its data is calculated each night by `usa-club-rugby-data sn
 | `public/data/seasons.json` | The Locked Seasons published, newest first. Absent until the Archive holds one | Yes |
 | `public/data/seasons/<slug>.json` | One Locked Season in a single file: its clubs, Unplaced Teams, fixtures and each club's Match Participation | Yes |
 
-Each club's file becomes that club's page at `/club/<club-key>/` at build time, and each player in any of them a page at `/player/<cms-id>/` (except players whose name is withheld; under no club, since players change clubs; the page has a section for each club they appear in), so a report can be linked to and shared. Player pages are built from `public/data` at build time (`src/utils/playerPages.ts` works out each player's verdict on every side they're listed for and the fixtures behind it, once per build process), so each page's HTML carries its own verdict and match table.
+Each club's file becomes that club's page at `/club/<club-key>/` at build time, and each player in any of them a page at `/player/<cms-id>/` (except players whose name is withheld; under no club, since players change clubs; the page has a section for each club they appear in), so a report can be linked to and shared. Player pages are built from `public/data` at build time (the package's published client, reading `public/data` through `fsReader` in `src/utils/published.ts`, works out each player's verdict on every side they're listed for and the fixtures behind it, once per build process), so each page's HTML carries its own verdict and match table.
 
 ## What a night does
 
