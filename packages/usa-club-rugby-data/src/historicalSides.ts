@@ -29,15 +29,20 @@ export interface HistoricalClubs {
 
 const ROMAN: Record<string, number> = { I: 1, II: 2, III: 3, IV: 4 };
 
-/** Trailing words that say nothing about a club's identity. */
-const DECORATION = /^(senior|sr|club|rugby|football|rfc|xvs?|15s|[a-z]+rfu)$/i;
+/** Trailing words that say nothing about a club's identity, including the age tags
+ *  that mark a senior team ("18+", "(18-99)"). */
+const DECORATION = /^(senior|sr|club|rugby|football|rfc|team|gameday|xvs?|15s|[a-z]+rfu|18\+|\(?18-99\)?)$/i;
+/** The Rocky Mountain union's league tiers, which its team names end in. Later seasons
+ *  place the same clubs at these divisions. */
+const RMR_TIERS: Record<string, number> = { premiership: 2, championship: 3 };
 const ORDINAL = /^(1st|2nd|3rd)$/i;
 const DIVISION_TOKEN = /^(M|W\+?)?D([1-4])$/i;
 const ROMAN_DIVISION_TOKEN = /^(M|W\+?)?D(I{1,3}|IV)$/;
 const GENDER_TOKEN = /^(?:(m|men|mens|men's)|(w\+?|women\+?|womens\+?|women's\+?))$/i;
 
-/** Names of championship rounds and one-off entries, which aren't a club's side. */
-const NOT_A_SIDE = /championship|premiership|18\+|18-99|\bARP\b|7s\b|10s\b|festival|social|gameday|select/i;
+/** Names of championship rounds and one-off entries, which aren't a club's side, and
+ *  of American Rugby Premiership sides, which this report doesn't cover. */
+const NOT_A_SIDE = /(?<!rmr )championship|(?<!rmr )premiership|\bARP\b|7s\b|10s\b|festival|social|select|all stars/i;
 
 /** A one-side club's side when the record doesn't say its division. */
 const NO_DIVISION_LABEL = 'Senior';
@@ -60,7 +65,13 @@ function readTeamName(teamName: string): { base: string; gender?: Gender; level?
     const lettered = tokens[tokens.length - 2].match(/^[ABC]$/);
     const division = token.match(DIVISION_TOKEN) ?? token.match(ROMAN_DIVISION_TOKEN);
     const genderWord = token.match(GENDER_TOKEN);
-    if (/^side$/i.test(token) && lettered && tokens.length > 2) {
+    const tier = RMR_TIERS[token.toLowerCase()];
+    if (tier && /^rmr$/i.test(tokens[tokens.length - 2]) && tokens.length > 2) {
+      level = tier;
+      tokens.pop();
+    } else if (token === 'B') {
+      bSide = true;
+    } else if (/^side$/i.test(token) && lettered && tokens.length > 2) {
       xv = 'ABC'.indexOf(lettered[0]) + 1;
       bSide = lettered[0] === 'B';
       tokens.pop();
@@ -110,11 +121,21 @@ function mostCommonDivision(divisions: { level: number; gender?: Gender }[]): { 
  *  that would judge a player against a side that is really their own. */
 export function historicalClubs(fixtures: HistoricalFixture[], rules: EligibilityRules): HistoricalClubs {
   const divisionsByTeam = new Map<string, { level: number; gender?: Gender }[]>();
+  /** Teams in a women's competition that names no division, for their gender. */
+  const inWomensCompetition = new Set<string>();
+  const opponents = new Map<string, Set<string>>();
   for (const fixture of fixtures) {
     if (!isQualifying(fixture.compName, rules)) continue;
+    for (const [team, other] of [
+      [fixture.homeTeam.name, fixture.awayTeam.name],
+      [fixture.awayTeam.name, fixture.homeTeam.name],
+    ]) {
+      if (team && other) opponents.set(team, (opponents.get(team) ?? new Set()).add(other));
+    }
     const division = competitionDivision(fixture.compName);
     for (const team of [fixture.homeTeam.name, fixture.awayTeam.name]) {
       if (!team) continue;
+      if (/\bwom[ae]n|\bladies/i.test(fixture.compName)) inWomensCompetition.add(team);
       const known = divisionsByTeam.get(team) ?? [];
       if (division) known.push(division);
       divisionsByTeam.set(team, known);
@@ -122,16 +143,21 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
   }
 
   const clubName = (base: string, gender: Gender) => (gender === 'W' ? `${base} Women` : base);
+  const clubOf = new Map<string, string>();
   const sidesByClub = new Map<string, { teamName: string; level: number; xv: number; label?: string }[]>();
   const noDivision = new Map<string, string>();
   const lowerSides: { teamName: string; club: string; gender: Gender; below: number }[] = [];
   for (const [teamName, divisions] of divisionsByTeam) {
     const { base, gender: nameGender, level: nameLevel, xv: nameXv, bSide } = readTeamName(teamName);
     const common = nameLevel === undefined ? mostCommonDivision(divisions) : null;
-    const compGender = common?.gender ?? divisions.find((division) => division.gender)?.gender;
+    const compGender =
+      common?.gender ??
+      divisions.find((division) => division.gender)?.gender ??
+      (inWomensCompetition.has(teamName) ? 'W' : undefined);
     const gender = nameGender ?? compGender ?? 'M';
     const level = nameLevel ?? common?.level;
     const club = clubName(base, gender);
+    clubOf.set(teamName, club);
     // A 2nd XV or B side the record gives no division is placed once its club's other
     // sides are: so many divisions below the lowest of them.
     const below = nameXv > 1 ? nameXv - 1 : bSide ? 1 : 0;
@@ -170,8 +196,18 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
   const clubs: HistoricalClub[] = [];
   const sharing = new Map<string, number>();
   for (const club of noDivision.values()) sharing.set(club, (sharing.get(club) ?? 0) + 1);
+  /** The clubs a set of teams played against. */
+  const opponentClubs = (teams: string[]) =>
+    new Set(teams.flatMap((team) => [...(opponents.get(team) ?? [])].map((other) => clubOf.get(other) ?? other)));
+  /** Whether a team plays any club its namesake's sides play, as one club's sides do.
+   *  Two clubs that only share a name ("Columbus" in Ohio and in Georgia) don't. */
+  const sameClub = (teamName: string, club: string) => {
+    const theirs = opponentClubs((sidesByClub.get(club) ?? []).map((side) => side.teamName));
+    return [...opponentClubs([teamName])].some((other) => theirs.has(other));
+  };
   for (const [teamName, club] of noDivision) {
-    if (NOT_A_SIDE.test(teamName) || sidesByClub.has(club) || sharing.get(club) !== 1) continue;
+    if (NOT_A_SIDE.test(teamName) || sharing.get(club) !== 1) continue;
+    if (sidesByClub.has(club) && sameClub(teamName, club)) continue;
     clubs.push({ name: club, sides: [{ teamName, label: NO_DIVISION_LABEL }] });
     noDivision.delete(teamName);
   }
@@ -193,7 +229,8 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
     });
   }
   return {
-    clubs: clubs.sort((a, b) => a.name.localeCompare(b.name)),
+    // Clubs sharing a name keep one order, so each keeps its page key.
+    clubs: clubs.sort((a, b) => a.name.localeCompare(b.name) || a.sides[0].teamName.localeCompare(b.sides[0].teamName)),
     unplacedTeams: unplaced.sort(),
   };
 }

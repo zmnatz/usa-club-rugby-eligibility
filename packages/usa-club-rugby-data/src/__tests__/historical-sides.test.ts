@@ -173,15 +173,47 @@ describe('a team with no division', () => {
 
   it.each([
     'Atlanta WD2 Championship',
-    'Denver Barbarians RMR Premiership',
-    'Atlanta Bucks 18+',
-    'Brujos Rugby Senior (18-99)',
     'Charlotte ARP',
+    'Life University Eagles ARP',
+    'South Selects Women',
+    'Mid-America All Stars Women',
     'Best Bank Bros M7s',
     'Atown 10s',
     'Capital Selects Women',
   ])('stays unmatched when it is a round or one-off entry, not a side: %s', (team) => {
     expect(place(game('Approved 3.4.3 Matches', team))).toEqual({ clubs: [], unplacedTeams: [team] });
+  });
+
+  it.each([
+    ['Atlanta Bucks 18+', '2024 GRU Matrix', 'Atlanta Bucks', 'Senior'],
+    ['Brujos Rugby Senior (18-99)', 'Rio Grande', 'Brujos', 'Senior'],
+    ['AK Manu Bears Rugby Team 18+', 'Alaska Rugby', 'AK Manu Bears', 'Senior'],
+    ['907 Brothers gameday 1st XVs', 'Alaska Rugby', '907 Brothers', 'Senior'],
+    ['Gladiators MD3 18+', 'Utah Spring Season - Mens', 'Gladiators', 'D3'],
+    ['OP Lightning 18-99', 'SWRU Women', 'OP Lightning Women', 'Senior'],
+  ])('reads an age tag as a senior team: %s', (team, competition, club, label) => {
+    expect(place(game(competition, team)).clubs).toEqual([{ name: club, sides: [{ teamName: team, label }] }]);
+  });
+
+  it.each([
+    ['Boulder Men RMR Premiership', 'Boulder', 'D2'],
+    ['Queen City RMR Championship', 'Queen City', 'D3'],
+  ])('reads a Rocky Mountain league tier as a division: %s', (team, club, label) => {
+    expect(place(game('RMR Premiership', team)).clubs).toEqual([{ name: club, sides: [{ teamName: team, label }] }]);
+  });
+
+  it('ranks a club\'s Rocky Mountain tiers, including a B side', () => {
+    const { clubs } = place(
+      game('RMR Premiership', 'Denver Barbarians RMR Premiership'),
+      game('RMR Championship', 'Denver Barbarians B RMR Championship'),
+    );
+    expect(clubs[0]).toEqual({
+      name: 'Denver Barbarians',
+      sides: [
+        { teamName: 'Denver Barbarians RMR Premiership', label: 'D2' },
+        { teamName: 'Denver Barbarians B RMR Championship', label: 'D3' },
+      ],
+    });
   });
 
   it('stays unmatched when its club has another team with no division, since they cannot be ranked', () => {
@@ -193,17 +225,27 @@ describe('a team with no division', () => {
 describe('teams that cannot be placed', () => {
   it('warns the club when one of its teams has no division', () => {
     const { clubs, unplacedTeams } = place(
-      game('EPRU D3 Men', 'Harrisburg MD3'),
-      game('Approved 3.4.3 Matches', 'Harrisburg Men Senior Club'),
+      game('EPRU D3 Men', 'Harrisburg MD3', 'York MD3'),
+      game('Approved 3.4.3 Matches', 'Harrisburg Men Senior Club', 'York MD3'),
     );
-    expect(clubs).toEqual([
-      {
-        name: 'Harrisburg',
-        sides: [{ teamName: 'Harrisburg MD3', label: 'D3' }],
-        unplacedTeams: ['Harrisburg Men Senior Club'],
-      },
-    ]);
+    expect(clubs[0]).toEqual({
+      name: 'Harrisburg',
+      sides: [{ teamName: 'Harrisburg MD3', label: 'D3' }],
+      unplacedTeams: ['Harrisburg Men Senior Club'],
+    });
     expect(unplacedTeams).toEqual(['Harrisburg Men Senior Club']);
+  });
+
+  it('keeps apart two clubs that share a name but play nobody in common', () => {
+    const { clubs, unplacedTeams } = place(
+      game('Ohio Men D2', 'Columbus MD2', 'Cincinnati MD2'),
+      game('Georgia Rugby Union Matrix 2025', "Columbus Men's 18+", 'Atlanta Bucks 18+'),
+    );
+    expect(clubs.filter((club) => club.name === 'Columbus')).toEqual([
+      { name: 'Columbus', sides: [{ teamName: 'Columbus MD2', label: 'D2' }] },
+      { name: 'Columbus', sides: [{ teamName: "Columbus Men's 18+", label: 'Senior' }] },
+    ]);
+    expect(unplacedTeams).toEqual([]);
   });
 
   it('leaves out a club with two names at one division, which cannot be ranked', () => {
