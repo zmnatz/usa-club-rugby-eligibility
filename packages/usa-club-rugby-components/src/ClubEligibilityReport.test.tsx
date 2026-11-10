@@ -352,6 +352,12 @@ describe('a Locked Season', () => {
     expect(screen.getByText(/Harbor City Men Senior/)).toBeTruthy();
   });
 
+  it('explains the rules of its season', async () => {
+    await renderClubReport({ locked: true });
+    expect(screen.getByRole('heading', { name: 'The 2026/2027 rules' })).toBeTruthy();
+    expect(screen.getByText('A 4th match for any one upper side loses the sides below it.')).toBeTruthy();
+  });
+
   it('says what was assumed about a team where the record doesn\'t say', async () => {
     const note = 'Harbor City 2nd XV: the record doesn\'t name its division, so as a second side it is taken as D3.';
     await renderClubReport({ locked: true, notes: [note] });
@@ -360,6 +366,7 @@ describe('a Locked Season', () => {
 
   it('keeps the current season\'s report as it was', async () => {
     await renderClubReport();
+    expect(screen.queryByRole('heading', { name: /rules/ })).toBeNull();
     expect(screen.getByRole('group', { name: 'Eligibility status' })).toBeTruthy();
     expect(screen.queryByText(/final/i)).toBeNull();
   });

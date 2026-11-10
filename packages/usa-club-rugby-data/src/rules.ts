@@ -68,3 +68,46 @@ const SEASON_RULES: Record<string, EligibilityRules> = {
 export function rulesForSeason(season: string): EligibilityRules {
   return SEASON_RULES[season] ?? DEFAULT_RULES;
 }
+
+/** The matches a 66% limit is reached at, for a schedule of so many matches. */
+export function scheduleShareTrigger(schedule: number, share: ScheduleShareLimit): number {
+  return share.exceptions?.[schedule] ?? Math.round(schedule * 0.66);
+}
+
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/** A season's rules as sentences, for the page that shows its verdicts. Written from
+ *  the same rules the verdicts apply, so the two can't disagree. */
+export function describeRules(rules: EligibilityRules): string[] {
+  const lines = [
+    `Every player needs at least ${rules.minimumMatches} NCS Qualifying Matches with the club; for a lower side, at its division or below.`,
+  ];
+  if (rules.upperMatchLimit !== null) {
+    lines.push(`A ${ordinal(rules.upperMatchLimit)} match for any one upper side loses the sides below it.`);
+  }
+  if (rules.scheduleShare) {
+    const how = rules.scheduleShare.combineUpperSides
+      ? "counting the upper sides' matches together"
+      : 'for any one upper side';
+    const examples = [12, ...Object.keys(rules.scheduleShare.exceptions ?? {}).map(Number)]
+      .map((schedule) => `${scheduleShareTrigger(schedule, rules.scheduleShare as ScheduleShareLimit)} of ${schedule}`)
+      .join('; ');
+    lines.push(
+      `Playing 66% of an upper side's schedule loses the sides below it, ${how} and measuring on the upper side with the shorter schedule (${examples}).`,
+    );
+  }
+  lines.push(
+    rules.upperSideWinsTie
+      ? "Half or more of a player's matches being for the sides above loses a lower side."
+      : 'A lower side needs at least as many matches at its division or below as for all the sides above it.',
+  );
+  const months = (rules.excludedMonths ?? []).map((month) => MONTHS[month - 1]);
+  lines.push(
+    `Super Regionals, Nationals, 7s, friendlies, crossovers, socials and festivals don't count${
+      months.length > 0 ? `, and nor does any match in ${months.join(' or ')}` : ''
+    }.`,
+  );
+  return lines;
+}
+
+const ordinal = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? 'st' : n % 10 === 2 && n !== 12 ? 'nd' : n % 10 === 3 && n !== 13 ? 'rd' : 'th'}`;

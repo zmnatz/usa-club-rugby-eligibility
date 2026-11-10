@@ -11,6 +11,7 @@ import {
 } from '@zmnatz/usa-club-rugby-data';
 import { formatDateTime } from './dates.ts';
 import { EligibilityReportView } from './EligibilityReportView.tsx';
+import { SeasonRules } from './SeasonRules.tsx';
 import { useEligibilityLinks } from './links.tsx';
 
 export interface ClubEligibilityReportProps {
@@ -65,6 +66,8 @@ export function ClubEligibilityReport({ club, saved, fixtures, clubSlug = null }
             {saved.season} season · {locked ? 'Locked Season' : 'Nightly data'}
           </Typography>
         </div>
+
+        {locked && <SeasonRules season={saved.season} />}
 
         {club.notes && (
           <Alert severity="info">

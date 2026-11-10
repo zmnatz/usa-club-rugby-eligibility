@@ -4,7 +4,7 @@ import Head from 'next/head';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { Alert, Breadcrumbs, CircularProgress, Link as MuiLink, Stack, Typography } from '@mui/material';
-import { ClubDirectory, ClubEligibilityReport } from '@zmnatz/usa-club-rugby-components';
+import { ClubDirectory, ClubEligibilityReport, SeasonRules } from '@zmnatz/usa-club-rugby-components';
 import { clubFixtures, createPublishedClient, type PublishedSeasonFile } from '@zmnatz/usa-club-rugby-data';
 import { seasonClubPath, seasonPath } from '@/utils/paths';
 import { readSeasons, type PublishedSeason } from '@/utils/published';
@@ -95,6 +95,9 @@ function SeasonClubs({ file }: { file: PublishedSeasonFile }) {
         </MuiLink>
         .
       </Typography>
+      <Stack spacing={2} useFlexGap sx={{ mb: 2 }}>
+        <SeasonRules season={season} />
+      </Stack>
       <ClubDirectory clubs={clubs} autoFocus clubHref={(key) => seasonClubPath(slug, key)} />
       {unplacedTeams.length > 0 && (
         <section>

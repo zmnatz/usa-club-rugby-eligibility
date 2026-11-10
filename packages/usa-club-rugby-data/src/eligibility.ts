@@ -1,4 +1,5 @@
 import { parseCsv } from './csv.ts';
+import { scheduleShareTrigger } from './rules.ts';
 import { isNcsSide, parseTeamSide, sideLabel, type TeamSide } from './teamSide.ts';
 import type {
   BreakdownOptions,
@@ -183,7 +184,7 @@ function evaluate(
       const schedules = rosters.slice(0, index).map((roster) => scheduled[roster.side.teamName] ?? 0).filter((n) => n > 0);
       if (schedules.length > 0) {
         const schedule = Math.min(...schedules);
-        const limit = scheduleShare.exceptions?.[schedule] ?? Math.round(schedule * 0.66);
+        const limit = scheduleShareTrigger(schedule, scheduleShare);
         const loses = `reaching ${limit} (66% of a ${schedule}-match schedule) loses ${own.label} eligibility`;
         if (scheduleShare.combineUpperSides) {
           if (sum(above) >= limit) reasons.push(`Played ${sum(above)} upper-side matches — ${loses}`);
