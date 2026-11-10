@@ -23,12 +23,12 @@ describe('placing a team in its club and division', () => {
     ['Harrisburg Men Senior Club', 'EPRU D3 Men', 'Harrisburg', 'D3'],
     ['Boise Men 1st XV Senior', 'PNW Rugby Premiership (Men\'s D2)', 'Boise', 'D2'],
     ['Portland Pigs W+ Senior', 'NERFU Womens+ D2', 'Portland Pigs Women', 'D2'],
-    ['Las Vegas Women B Side', "SWRU Women's D2", 'Las Vegas Women', 'D2 2nd XV'],
+    ['Las Vegas Women B Side', "SWRU Women's D2", 'Las Vegas Women', 'D2'],
     ["Portland Women's Rugby Football Club Senior Club NERFU DII", 'Approved 3.4.3 Matches', 'Portland Women', 'D2'],
     ['Seattle Men D1 Sr', 'Approved 3.4.3 Matches', 'Seattle', 'D1'],
     ['Knoxville Minx WD2', 'Approved 3.4.3 Matches', 'Knoxville Minx Women', 'D2'],
     ['Black Sheep D2 1st XV', 'Approved 3.4.3 Matches', 'Black Sheep', 'D2'],
-    ['Buffalo MD3 2nd', 'Approved 3.4.3 Matches', 'Buffalo', 'D3 2nd XV'],
+    ['Buffalo MD3 2nd', 'Approved 3.4.3 Matches', 'Buffalo', 'D3'],
   ])('%s in %s is %s %s', (team, competition, club, label) => {
     expect(place(game(competition, team)).clubs).toMatchObject([{ name: club, sides: [{ teamName: team, label }] }]);
   });
@@ -47,6 +47,11 @@ describe('placing a team in its club and division', () => {
     expect(place(game(competition, 'Riverton XV')).clubs[0].sides[0].label).toBe(label);
   });
 
+  it('names the XV only to tell apart two sides at one division', () => {
+    const { clubs } = place(game('NorCal Mens D3', 'Reno MD3'), game('NorCal Mens D3', 'Reno MD3 2nd'));
+    expect(clubs[0].sides.map((side) => side.label)).toEqual(['D3', 'D3 2nd XV']);
+  });
+
   it('ranks a club\'s sides by division, however differently they are named', () => {
     const { clubs } = place(game('NorCal Mens D2', 'Reno Mens 2nd XV'), game('NorCal Mens D1', 'Reno MD1'));
     expect(clubs).toMatchObject([
@@ -54,7 +59,7 @@ describe('placing a team in its club and division', () => {
         name: 'Reno',
         sides: [
           { teamName: 'Reno MD1', label: 'D1' },
-          { teamName: 'Reno Mens 2nd XV', label: 'D2 2nd XV' },
+          { teamName: 'Reno Mens 2nd XV', label: 'D2' },
         ],
       },
     ]);
@@ -318,3 +323,67 @@ describe('a note on each guess', () => {
     ]);
   });
 });
+
+describe('one club under two spellings', () => {
+  const sidesOf = (...fixtures: ReturnType<typeof game>[]) =>
+    place(...fixtures).clubs.map((club) => [club.name, club.sides.map((side) => side.label)]);
+
+  it('a number for the XV', () => {
+    expect(sidesOf(game("TRU Men's Division 2", 'San Antonio M'), game("TRU Men's Division 3 Central", 'San Antonio 2 M'))).toEqual([
+      ['San Antonio', ['D2', 'D3']],
+    ]);
+    expect(sidesOf(game("TRU Women's Division 1", 'sHARCs W'), game("TRU Women's Division 1", 'sHARCs 2 W'))).toEqual([
+      ['sHARCs Women', ['D1', 'D1 2nd XV']],
+    ]);
+  });
+
+  it('a B side after a dash', () => {
+    expect(sidesOf(game('SCRFU Men D1', 'Eagle Rock MD1'), game('SCRFU Men D1', 'Eagle Rock MD1 - B Side'))).toEqual([
+      ['Eagle Rock', ['D1', 'D1 2nd XV']],
+    ]);
+  });
+
+  it('the division before the gender', () => {
+    expect(sidesOf(game('Approved 3.4.3 Matches', 'New Orleans D2M'), game('Approved 3.4.3 Matches', 'New Orleans D3M'))).toEqual([
+      ['New Orleans', ['D2', 'D3']],
+    ]);
+  });
+
+  it('a hyphen for a space', () => {
+    expect(
+      sidesOf(game('Approved 3.4.3 Matches', 'Philadelphia-Whitemarsh RFC D2M'), game('Approved 3.4.3 Matches', 'Philadelphia Whitemarsh B-Side B-League')),
+    ).toEqual([['Philadelphia-Whitemarsh', ['D2', 'D3']]]);
+  });
+
+  it('a lettered main side', () => {
+    expect(sidesOf(game("Empire Men's D3 Metro West", 'NYAC D3 M'), game("Empire Men's D1", 'NYAC Mens A'))).toEqual([['NYAC', ['D1', 'D3']]]);
+  });
+
+  it('a B side in brackets, and a side named for two divisions', () => {
+    const { clubs } = place(
+      game("RMRU Men's Fall 2023 - D1/D2 Hybrid", 'Denver Barbarians RFC D1/D2'),
+      game("RMRU Men's Fall 2023 - D3", 'Denver Barbarians RFC (B) D3'),
+    );
+    expect(clubs.map((club) => [club.name, club.sides.map((side) => side.label)])).toEqual([['Denver Barbarians', ['D2', 'D3']]]);
+    expect(clubs[0].notes).toEqual(['Denver Barbarians RFC D1/D2: its name gives two divisions, D1/D2, so it is taken as D2.']);
+  });
+});
+
+describe('a 7s or 10s side', () => {
+  it('is never assessed, even in a competition that names a division', () => {
+    expect(place(game("Empire Men's D3", 'White Plains M 7s'), game("Empire Men's D3", 'White Plains D3 M'))).toMatchObject({
+      clubs: [{ name: 'White Plains', sides: [{ teamName: 'White Plains D3 M' }] }],
+      unplacedTeams: ['White Plains M 7s'],
+    });
+  });
+});
+
+describe('American Rugby Premiership sides', () => {
+  it('are never assessed, even in a competition that names a division', () => {
+    expect(place(game("Empire Men's D1 Spring", 'NYAC ARP'), game('Empire Men D2', 'NYAC MD2'))).toMatchObject({
+      clubs: [{ name: 'NYAC', sides: [{ teamName: 'NYAC MD2' }] }],
+      unplacedTeams: ['NYAC ARP'],
+    });
+  });
+});
+
