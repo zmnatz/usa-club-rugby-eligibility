@@ -38,74 +38,26 @@ import {
   type PlayerRecordInput,
   sameNamePlayers,
   sharedNames,
-  verdictRank,
   type TransferRecords,
 } from '@zmnatz/usa-club-rugby-data';
-import { formatDate } from './dates.ts';
 import { EligibilityStatusChip, WaiverChip } from './EligibilityStatusChip.tsx';
 import { spreadRow, wrapRow } from './layout.ts';
 import { useEligibilityLinks } from './links.tsx';
-import { CAUTION_ADVICE, PlayerEligibilityDialog, type ReportSource } from './PlayerDetail.tsx';
+import { PlayerEligibilityDialog } from './PlayerDetail.tsx';
+import { CAUTION_ADVICE, type ReportSource } from './reportModel.ts';
 import { FIRST_PLAYER_ID } from './SkipToFirstPlayer.tsx';
-import { compareValues, type SortDirection } from './sort.ts';
-
-type StatusFilter = 'all' | 'eligible' | 'caution' | 'ineligible';
-
-/** A fixed column, or `other:<label>` for another side's participation. */
-type SortKey =
-  | 'name'
-  | 'lastRegistered'
-  | 'played'
-  | 'sub'
-  | 'participation'
-  | 'status'
-  | 'reasons'
-  | `other:${string}`;
-
-const getColumns = (
-  otherLabels: string[],
-  source: ReportSource,
-): { key: SortKey; title: string; numeric?: boolean }[] => [
-  { key: 'name', title: 'Player' },
-  ...(source === 'csv' ? [{ key: 'lastRegistered' as const, title: 'Last Registered' }] : []),
-  { key: 'played', title: 'Played', numeric: true },
-  { key: 'sub', title: 'Sub', numeric: true },
-  { key: 'participation', title: 'Participation', numeric: true },
-  ...otherLabels.map((label) => ({
-    key: `other:${label}` as const,
-    title: `${label} Participation`,
-    numeric: true,
-  })),
-  { key: 'status', title: 'Status' },
-  { key: 'reasons', title: 'Reason' },
-];
-
-/** A player's participation for an `other:<label>` column. */
-function otherSideCount(player: PlayerEligibility, key: `other:${string}`): number {
-  const label = key.slice('other:'.length);
-  return player.otherSides.find((side) => side.label === label)?.participation ?? 0;
-}
-
-function sortValue(player: PlayerEligibility, key: SortKey): string | number {
-  switch (key) {
-    case 'name':
-      return player.name;
-    case 'lastRegistered':
-      return player.lastRegistered;
-    case 'played':
-      return player.played;
-    case 'sub':
-      return player.substitute;
-    case 'participation':
-      return player.participation;
-    case 'status':
-      return verdictRank(player);
-    case 'reasons':
-      return player.reasons.length + player.cautions.length + player.pending.length;
-    default:
-      return otherSideCount(player, key);
-  }
-}
+import {
+  buildReport,
+  filterPlayers,
+  gapText,
+  getColumns,
+  otherSideCount,
+  type ReportMeta,
+  type SortKey,
+  sortPlayers,
+  type StatusFilter,
+} from './reportModel.ts';
+import type { SortDirection } from './sort.ts';
 
 interface DivisionTableProps {
   title: string;
@@ -245,9 +197,7 @@ function DivisionTable({
 
   const rows = useMemo(
     () =>
-      [...players].sort((a, b) =>
-        compareValues(sortValue(a, sort.key), sortValue(b, sort.key), sort.direction),
-      ),
+      sortPlayers(players, sort.key, sort.direction),
     [players, sort],
   );
 
@@ -379,103 +329,6 @@ function DivisionTable({
   );
 }
 
-function reportPlayerLine(player: PlayerEligibility, source: ReportSource, shared: Set<string>): string {
-  const shownName =
-    source === 'csv'
-      ? `${player.name} (#${player.playerId})`
-      : hasSharedName(player, shared)
-        ? `${player.name} (CMS ID ${player.playerId})`
-        : player.name;
-  return (
-    `${shownName}: ` +
-    `played ${player.played} / sub ${player.substitute} ` +
-    `(participation ${player.participation})` +
-    player.otherSides.map((side) => `, ${side.label} participation ${side.participation}`).join('')
-  );
-}
-
-/** A gap in the match record, in the words shown on the page and in the export. */
-function gapText(gap: ParticipationGap): string {
-  const problem = gap.kind === 'no-lineup' ? 'no lineup recorded' : 'no substitutions recorded';
-  return `${gap.teamName} v ${gap.opponent} (${formatDate(gap.dateTime)}): ${problem}`;
-}
-
-interface ReportMeta {
-  /** Who the report is for, e.g. "Rocky Gorge". */
-  title: string;
-  source: ReportSource;
-  season?: string;
-  gaps: ParticipationGap[];
-}
-
-function buildReport(breakdown: EligibilityBreakdown, { title, source, season, gaps }: ReportMeta): string {
-  const lines: string[] = [];
-  lines.push(`${title.toUpperCase()} ELIGIBILITY REPORT`);
-  lines.push(`Generated: ${new Date().toLocaleString()}`);
-  if (season) lines.push(`Source: match record, ${season} season`);
-  lines.push('');
-  if (gaps.length > 0) {
-    lines.push('RECORD GAPS (counts may be low; check these matches)');
-    for (const gap of gaps) {
-      lines.push(`  ${gapText(gap)}`);
-    }
-    lines.push('');
-  }
-
-  if (breakdown.sides.some((side) => side.summary.caution > 0)) {
-    lines.push(`CAUTION: ${CAUTION_ADVICE}`, '');
-  }
-
-  const sameNames = source === 'record' ? sameNamePlayers(breakdown.sides) : [];
-  if (sameNames.length > 0) {
-    lines.push('PLAYERS WITH THE SAME NAME (kept separate; counts may be low if one person has two profiles)');
-    for (const { name, ids } of sameNames) {
-      lines.push(`  ${name}: CMS IDs ${ids.join(', ')}`);
-    }
-    lines.push('');
-  }
-
-  for (const side of breakdown.sides) {
-    const shared = sharedNames(side.players);
-    const eligible = side.players.filter((p) => p.eligible);
-    const ineligible = side.players.filter((p) => !p.eligible);
-
-    lines.push('='.repeat(46));
-    lines.push(divisionLabel(side.label, side.teamName, side.summary));
-    lines.push('='.repeat(46));
-    lines.push('');
-    lines.push(`ELIGIBLE (${eligible.length})`);
-    if (eligible.length === 0) {
-      lines.push('  (none)');
-    } else {
-      for (const player of eligible) {
-        lines.push(`  ${reportPlayerLine(player, source, shared)}`);
-        for (const note of player.cautions) {
-          lines.push(`    • Caution: ${note}`);
-        }
-        for (const note of player.pending) {
-          lines.push(`    • On track: ${note}`);
-        }
-      }
-    }
-    lines.push('');
-    lines.push(`INELIGIBLE (${ineligible.length})`);
-    if (ineligible.length === 0) {
-      lines.push('  (none)');
-    } else {
-      for (const player of ineligible) {
-        lines.push(`  ${reportPlayerLine(player, source, shared)}`);
-        for (const reason of player.reasons) {
-          lines.push(`    • ${reason}`);
-        }
-      }
-    }
-    lines.push('');
-  }
-
-  return lines.join('\n');
-}
-
 export interface EligibilityReportViewProps {
   source: ReportSource;
   /** Who the report is for, with the sides it covers. */
@@ -527,17 +380,11 @@ export function EligibilityReportView({
   const shownSide = Math.min(activeSide, breakdown.sides.length - 1);
   const side = breakdown.sides[shownSide] ?? null;
 
-  const matchesFilters = (player: PlayerEligibility) => {
-    if (statusFilter === 'eligible' && !player.eligible) return false;
-    if (statusFilter === 'caution' && player.cautions.length === 0) return false;
-    if (statusFilter === 'ineligible' && player.eligible) return false;
-    return true;
-  };
-  const visiblePlayers = side ? side.players.filter(matchesFilters) : [];
+  const visiblePlayers = side ? filterPlayers(side.players, statusFilter) : [];
 
   const handleExport = () => {
     const meta: ReportMeta = { title: club.name, source, season, gaps };
-    const blob = new Blob([buildReport(breakdown, meta)], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([buildReport(breakdown, meta, new Date())], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
