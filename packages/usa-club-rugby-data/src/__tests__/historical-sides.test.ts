@@ -408,3 +408,37 @@ describe('summer 7s', () => {
   });
 });
 
+describe('clubs confirmed as one under different names', () => {
+  it('merges them, ranked by division, under the club\'s own name', () => {
+    const { clubs } = place(game('TRU Men D2', 'Houston United MD2'), game('TRU Men D3', 'HURT MD3'));
+    expect(clubs).toMatchObject([
+      { name: 'Houston United', sides: [{ teamName: 'Houston United MD2', label: 'D2' }, { teamName: 'HURT MD3', label: 'D3' }] },
+    ]);
+    expect(clubs[0].notes).toEqual(['HURT MD3: entered as HURT, which is the same club as Houston United.']);
+  });
+
+  it('matches a name whatever its case', () => {
+    const { clubs } = place(game('Frontier Women D1', 'Utah Vipers WD1'), game('Frontier Women D2', 'SLUGs WD2'));
+    expect(clubs.map((club) => [club.name, club.sides.map((side) => side.label)])).toEqual([['Utah Vipers Women', ['D1', 'D2']]]);
+  });
+
+  it('goes by the name of its top side', () => {
+    const { clubs } = place(game('Penn Men D3', 'Schuylkill River MD3'), game('Penn Men D1', 'Schuylkill River Exiles MD1'));
+    expect(clubs.map((club) => [club.name, club.sides.map((side) => side.teamName)])).toEqual([
+      ['Schuylkill River Exiles', ['Schuylkill River Exiles MD1', 'Schuylkill River MD3']],
+    ]);
+    expect(clubs[0].notes).toEqual([
+      'Schuylkill River MD3: entered as Schuylkill River, which is the same club as Schuylkill River Exiles.',
+    ]);
+  });
+
+  it('merges all three Chicago clubs', () => {
+    const { clubs } = place(
+      game('MW Men D1', 'Chicago Griffins MD1'),
+      game('MW Men D2', 'Westside Condors MD2'),
+      game('MW Men D3', 'Chicago Silverbacks MD3'),
+    );
+    expect(clubs.map((club) => [club.name, club.sides.map((side) => side.label)])).toEqual([['Chicago Griffins', ['D1', 'D2', 'D3']]]);
+  });
+});
+

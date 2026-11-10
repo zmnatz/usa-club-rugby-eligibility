@@ -50,6 +50,23 @@ const NOT_A_SIDE = /(?<!rmr )championship|(?<!rmr )premiership|\bARP\b|7s\b|10s\
 /** A one-side club's side when the record doesn't say its division. */
 const NO_DIVISION_LABEL = 'Senior';
 
+/** Clubs that enter their sides under different names, a group of names each. A
+ *  merged club goes by the name of its top side that season. Confirmed by the project
+ *  owner from the players these names share (PR 47); names alone can't show it.
+ *  Women's clubs carry " Women". */
+export const CLUB_ALIASES: string[][] = [
+  ['Chicago Griffins', 'Chicago West Side Condors', 'Chicago Westside Condors', 'Chicago Condors', 'Westside Condors', 'Chicago Silverbacks'],
+  ['Eastside Banshees', 'Wailers'],
+  ['Fort Lauderdale Knights', 'FTL Knights'],
+  ['Houston United', 'HURT'],
+  ['Las Vegas Irish', 'Las Vegas Wolfhounds'],
+  ['New York Old Blue', 'Old Blue'],
+  ['NOVA Women', 'Northern Virginia Women'],
+  ['Schuylkill River', 'Schuylkill River Exiles'],
+  ['Utah Vipers Women', 'Utah Slugs Women', 'SLUGs Women', 'Salt City Slugs Women'],
+  ['Wisconsin', 'Wisconsin Sharks'],
+];
+
 /** The division a club's second side is taken to play in when nothing of its club,
  *  nor the record, says. */
 const LOWER_SIDE_LEVEL = 3;
@@ -147,7 +164,11 @@ function mostCommonDivision(divisions: { level: number; gender?: Gender }[]): { 
  *  that is alone at its club is a one-side club. A club holding two
  *  names at one division is left out rather than ranked one above the other, since
  *  that would judge a player against a side that is really their own. */
-export function historicalClubs(fixtures: HistoricalFixture[], rules: EligibilityRules): HistoricalClubs {
+export function historicalClubs(
+  fixtures: HistoricalFixture[],
+  rules: EligibilityRules,
+  { aliases = CLUB_ALIASES }: { aliases?: string[][] } = {},
+): HistoricalClubs {
   const divisionsByTeam = new Map<string, { level: number; gender?: Gender }[]>();
   /** Teams in a women's competition that names no division, for their gender. */
   const inWomensCompetition = new Set<string>();
@@ -173,10 +194,15 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
   /** A club by its name with case, punctuation and spacing ignored, so "Philadelphia-
    *  Whitemarsh" and "Philadelphia Whitemarsh" are one club, shown as first spelled. */
   const shownName = new Map<string, string>();
+  const idOf = (name: string) => name.toLowerCase().replace(/[^a-z0-9+]+/g, ' ').trim();
+  /** Each alias's group, by the id of its first name. */
+  const group = new Map(aliases.flatMap((names) => names.map((name) => [idOf(name), idOf(names[0])] as const)));
+  /** The club name each team was entered under. */
+  const writtenName = new Map<string, string>();
   const clubName = (base: string, gender: Gender) => {
-    const name = gender === 'W' ? `${base} Women` : base;
-    const id = name.toLowerCase().replace(/[^a-z0-9+]+/g, ' ').trim();
-    if (!shownName.has(id)) shownName.set(id, name);
+    const written = gender === 'W' ? `${base} Women` : base;
+    const id = group.get(idOf(written)) ?? idOf(written);
+    if (!shownName.has(id)) shownName.set(id, written);
     return id;
   };
   const shown = (id: string) => shownName.get(id) ?? id;
@@ -186,7 +212,10 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
   const noDivision = new Map<string, string>();
   const lowerSides: { teamName: string; club: string; gender: Gender; below: number }[] = [];
   /** What was assumed about a team, by team name. */
-  const notes = new Map<string, string>();
+  const notes = new Map<string, string[]>();
+  const addNote = (teamName: string, note: string) => {
+    notes.set(teamName, [...(notes.get(teamName) ?? []), note]);
+  };
   const unnamed = "the record doesn't name its division";
   for (const [teamName, divisions] of divisionsByTeam) {
     // American Rugby Premiership, 7s and 10s sides aren't assessed, whatever
@@ -198,13 +227,13 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
     const { base, gender: nameGender, level: nameLevel, xv: nameXv, bSide, tier, paired } = readTeamName(teamName);
     const common = nameLevel === undefined ? mostCommonDivision(divisions) : null;
     if (common && new Set(divisions.map((division) => division.level)).size > 1) {
-      notes.set(
+      addNote(
         teamName,
         `${teamName}: its competitions name more than one division, so it is taken as D${common.level}, where most of its matches were.`,
       );
     }
-    if (tier) notes.set(teamName, `${teamName}: its Rocky Mountain tier, ${tier}, is taken as D${nameLevel}.`);
-    if (paired) notes.set(teamName, `${teamName}: its name gives two divisions, ${paired}, so it is taken as D${nameLevel}.`);
+    if (tier) addNote(teamName, `${teamName}: its Rocky Mountain tier, ${tier}, is taken as D${nameLevel}.`);
+    if (paired) addNote(teamName, `${teamName}: its name gives two divisions, ${paired}, so it is taken as D${nameLevel}.`);
     const compGender =
       common?.gender ??
       divisions.find((division) => division.gender)?.gender ??
@@ -212,6 +241,7 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
     const gender = nameGender ?? compGender ?? 'M';
     const level = nameLevel ?? common?.level;
     const club = clubName(base, gender);
+    writtenName.set(teamName, gender === 'W' ? `${base} Women` : base);
     clubOf.set(teamName, club);
     // A 2nd XV or B side the record gives no division is placed once its club's other
     // sides are: so many divisions below the lowest of them.
@@ -233,7 +263,7 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
       const lowest = gender === 'W' ? 2 : 3;
       const [first] = firsts[0];
       noDivision.delete(first);
-      notes.set(
+      addNote(
         first,
         `${first} and ${teamName}: the record doesn't name their divisions, so they are ranked by name, 1st XV above ${below === 1 ? '2nd XV' : '3rd XV'}.`,
       );
@@ -247,7 +277,7 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
     const level = levels.length > 0 ? Math.max(...levels) + below : LOWER_SIDE_LEVEL + below - 1;
     if (isNcsSide({ gender, level })) {
       const above = (sidesByClub.get(club) ?? []).find((side) => side.level === Math.max(...levels));
-      notes.set(
+      addNote(
         teamName,
         `${teamName}: ${unnamed}, so as a ${below === 1 ? 'second' : 'third'} side it is taken as D${level}${above ? `, below ${above.teamName}` : ''}.`,
       );
@@ -288,9 +318,17 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
     }
     const unplacedTeams = [...noDivision].filter(([, club]) => club === name).map(([team]) => team).sort();
     const ranked = [...sides].sort((a, b) => a.level - b.level || a.xv - b.xv);
+    // A club entered under several names goes by its top side's.
+    const top = writtenName.get(ranked[0].teamName) ?? shown(name);
+    for (const { teamName } of ranked) {
+      const written = writtenName.get(teamName);
+      if (written && idOf(written) !== idOf(top)) {
+        addNote(teamName, `${teamName}: entered as ${written}, which is the same club as ${top}.`);
+      }
+    }
     const clubNotes = ranked.flatMap(({ teamName }) => notes.get(teamName) ?? []);
     clubs.push({
-      name: shown(name),
+      name: top,
       // "2nd XV" only tells apart two sides at one division.
       sides: ranked.map(({ teamName, level, xv, label }) => ({
         teamName,
