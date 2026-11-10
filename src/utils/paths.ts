@@ -1,6 +1,6 @@
 // Routes, relative to the site's base path (Next adds that).
 
-import type { EligibilityRoutes } from '@zmnatz/usa-club-rugby-components';
+import type { EligibilityRoutes, ProblemReport } from '@zmnatz/usa-club-rugby-components';
 
 export const clubPath = (clubKey: string): string => `/club/${clubKey}`;
 
@@ -19,8 +19,30 @@ export const statsPath = (slug: string): string => (slug ? `/stats/${slug}` : '/
 export const REPO_URL = 'https://github.com/zmnatz/usa-club-rugby-eligibility';
 export const ISSUES_URL = `${REPO_URL}/issues`;
 
-/** Where to report a problem with a report. */
-export const reportProblemUrl = (): string => ISSUES_URL;
+const REPORT_PROMPT: Record<ProblemReport['kind'], string> = {
+  'rules-engine': 'The record is right, but this verdict looks wrong under the season’s rules or team matching:',
+  'archive-correction': 'The season’s archived record is wrong, or was corrected in Rugby Xplorer after it locked:',
+};
+
+/** Where to report a problem with a report. A Locked Season's report opens a new
+ *  issue with its kind's label, and the season and club to reproduce it from the archive. */
+export const reportProblemUrl = (report?: ProblemReport): string => {
+  if (!report) return ISSUES_URL;
+  const { kind, season, club } = report;
+  const body = [
+    `Season: ${season}`,
+    ...(club ? [`Club: ${club.name} (\`${club.key}\`)`] : []),
+    '',
+    REPORT_PROMPT[kind],
+    '',
+  ].join('\n');
+  const params = new URLSearchParams({
+    labels: kind,
+    title: `${club ? `${club.name} ` : ''}${season}: `,
+    body,
+  });
+  return `${ISSUES_URL}/new?${params}`;
+};
 
 /** This site's pages, for the component package. */
 export const routes: EligibilityRoutes = {

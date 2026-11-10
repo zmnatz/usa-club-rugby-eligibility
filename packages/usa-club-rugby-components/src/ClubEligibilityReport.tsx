@@ -58,7 +58,7 @@ export function ClubEligibilityReport({ club, saved, fixtures, clubSlug = null }
           How this report is worked out
         </MuiLink>
       </Typography>
-      <ReportProblemNote season={saved.season} club={club} locked={locked} />
+      <ReportProblemNote season={saved.season} club={{ key: club.key, name: club.name }} locked={locked} />
 
       <Stack spacing={2} useFlexGap>
         <div>

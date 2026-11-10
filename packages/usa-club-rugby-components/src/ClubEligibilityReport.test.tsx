@@ -404,4 +404,16 @@ describe('reporting a problem', () => {
     await renderClubReport();
     expect(screen.queryByText(/check and correct it in Rugby Xplorer first/)).toBeNull();
   });
+
+  it('asks about a Locked Season’s rules and record, since Rugby Xplorer no longer changes it', async () => {
+    await renderClubReport({ reportProblem, locked: true });
+    expect(screen.queryByText(/check and correct it in Rugby Xplorer first/)).toBeNull();
+    expect(screen.getByText(/correcting Rugby Xplorer won’t change them/)).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Report a verdict' }).getAttribute('href')).toBe(
+      '/report/rules-engine/2026/2027/harbor-city',
+    );
+    expect(screen.getByRole('link', { name: 'Report a record correction' }).getAttribute('href')).toBe(
+      '/report/archive-correction/2026/2027/harbor-city',
+    );
+  });
 });

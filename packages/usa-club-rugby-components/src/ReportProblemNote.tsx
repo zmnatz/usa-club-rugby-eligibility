@@ -23,6 +23,21 @@ export function ReportProblemNote({ season, club, locked = false }: ReportProble
     </MuiLink>
   );
 
+  if (locked) {
+    return (
+      <Typography variant="body2" color="textSecondary" gutterBottom>
+        The {season} season is locked. Its verdicts come from that season’s rules and the team matching this page
+        describes, so correcting Rugby Xplorer won’t change them. If the record is right but a verdict looks wrong
+        under those rules (a team in the wrong division or club, two names that should be one club, or a player marked
+        Waiver Required who didn’t move):{' '}
+        {link(reportProblem({ kind: 'rules-engine', season, club }), 'Report a verdict')}. If the season’s archived
+        record is wrong, or was corrected in Rugby Xplorer after the season locked (a missing match, lineup or
+        substitution):{' '}
+        {link(reportProblem({ kind: 'archive-correction', season, club }), 'Report a record correction')}.
+      </Typography>
+    );
+  }
+
   return (
     <Typography variant="body2" color="textSecondary" gutterBottom>
       The data comes from Rugby Xplorer. If something looks wrong (missing matches, lineups or substitutions, or
