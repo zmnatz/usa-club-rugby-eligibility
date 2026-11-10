@@ -45,7 +45,7 @@ const FEED_FIELDS = `{
     awayTeam { name score }
   }`;
 
-export const FEED_QUERY = `query EligibilityFeed($entityId: Int, $entityType: String, $type: String, $skip: Int, $limit: Int) {
+const FEED_QUERY = `query EligibilityFeed($entityId: Int, $entityType: String, $type: String, $skip: Int, $limit: Int) {
   getEntityFixturesAndResults(type: $type, entityId: $entityId, entityType: $entityType, limit: $limit, skip: $skip) ${FEED_FIELDS}
 }`;
 
@@ -95,6 +95,12 @@ export function normalizeFixture(raw: RawFixture): FeedFixture {
  *  season's spring and stop short of this season's later fixtures), so it isn't
  *  used. See docs/adr/001-national-coverage.md. */
 export type FeedList = 'results' | 'fixtures';
+
+/** Feeds the text of every query this module sends to `update`, so the archive
+ *  manifest can tell when the fields read have changed. */
+export function hashFeedQueries(update: (text: string) => void): void {
+  update(FEED_QUERY);
+}
 
 export async function fetchFeedPage(
   source: FeedSource,

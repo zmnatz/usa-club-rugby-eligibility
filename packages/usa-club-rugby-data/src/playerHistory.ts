@@ -1,4 +1,4 @@
-import { mapConcurrent, postWithRetry, sleep } from './api.ts';
+import { mapConcurrent, postWithRetry, sleep, type Transport } from './api.ts';
 import { scoringKind } from './scoring.ts';
 import type { FixtureItem, MatchPlayer } from './match.ts';
 
@@ -257,7 +257,7 @@ const MATCH_STATS_FIELDS = `{
     __typename
   }`;
 
-export const MATCH_CENTRE_QUERY = `query PlayerHistoryMatchCentreQuery($comp: CompInput) {
+const MATCH_CENTRE_QUERY = `query PlayerHistoryMatchCentreQuery($comp: CompInput) {
   getFixtureItem(comp: $comp) ${MATCH_FIXTURE_FIELDS}
   allMatchCommentary(comp: $comp) ${MATCH_COMMENTARY_FIELDS}
   allMatchStatsSummary(comp: $comp) ${MATCH_STATS_FIELDS}
@@ -297,6 +297,8 @@ export interface FetchMatchesOptions {
   // Give up at the first failure, with no retry passes, for callers with
   // someone waiting and a fallback to use.
   stopOnFailure?: boolean;
+  /** The network, waiting and rate-limit gate; the real ones by default. */
+  transport?: Transport;
 }
 
 // Fetches each fixture's match, then retries failures one at a time after a
@@ -312,8 +314,10 @@ export async function fetchMatches<Fixture, Match>(
     retryPasses = 2,
     retryDelayMs = RETRY_PASS_DELAY_MS,
     stopOnFailure = false,
+    transport,
   }: FetchMatchesOptions = {}
 ): Promise<{ matches: Match[]; failed: Fixture[] }> {
+  const wait = transport?.sleep ?? sleep;
   const matches: Match[] = [];
   const runPass = async (pending: Fixture[], workers: number) => {
     const queue = [...pending];
@@ -332,7 +336,7 @@ export async function fetchMatches<Fixture, Match>(
               queue.length = 0;
             }
           }
-          await sleep(gapMs);
+          await wait(gapMs);
         }
       })
     );
@@ -341,7 +345,7 @@ export async function fetchMatches<Fixture, Match>(
 
   let failed = await runPass(fixtures, concurrency);
   for (let pass = 0; !stopOnFailure && pass < retryPasses && failed.length > 0; pass++) {
-    await sleep(retryDelayMs);
+    await wait(retryDelayMs);
     failed = await runPass(failed, 1);
   }
   return { matches, failed };
@@ -381,7 +385,8 @@ export const MATCH_BATCH_SIZE = 100;
  *  no details for is null. Throws if the CMS reports any error, so a caller can
  *  fall back to asking one at a time. */
 export async function fetchMatchCentres(
-  fixtures: MatchCentreFixture[]
+  fixtures: MatchCentreFixture[],
+  transport?: Transport
 ): Promise<Map<string, MatchCentreData | null>> {
   const declarations = fixtures.map((_, index) => `$c${index}: CompInput`).join(', ');
   const selections = fixtures
@@ -398,7 +403,7 @@ export async function fetchMatchCentres(
   }>(SCORES_URL, {
     query: `query MatchCentreBatch(${declarations}) {\n  ${selections}\n}`,
     variables: Object.fromEntries(fixtures.map((fixture, index) => [`c${index}`, compInput(fixture)])),
-  });
+  }, null, transport);
   if (response.errors?.length || !response.data) {
     throw new Error(`Match centre batch failed: ${response.errors?.[0]?.message ?? 'no data'}`);
   }
@@ -429,19 +434,26 @@ export async function fetchMatchesInBatches<Fixture extends MatchCentreFixture>(
   const rejected: Fixture[] = [];
   await mapConcurrent(batches, concurrency, async (batch) => {
     try {
-      for (const match of (await fetchMatchCentres(batch)).values()) {
+      for (const match of (await fetchMatchCentres(batch, options.transport)).values()) {
         if (match) matches.push(match);
       }
     } catch {
       rejected.push(...batch);
     }
   });
-  const retried = await fetchMatches<Fixture, MatchCentreData>(rejected, (fixture) => fetchMatchCentre(fixture), options);
+  const retried = await fetchMatches<Fixture, MatchCentreData>(rejected, (fixture) => fetchMatchCentre(fixture, options.transport), options);
   return { matches: [...matches, ...retried.matches], failed: retried.failed };
 }
 
+/** Feeds the text of every query this module sends to `update`, so the archive
+ *  manifest can tell when the fields read have changed. */
+export function hashMatchCentreQueries(update: (text: string) => void): void {
+  update(MATCH_CENTRE_QUERY);
+}
+
 export async function fetchMatchCentre(
-  fixture: MatchCentreFixture
+  fixture: MatchCentreFixture,
+  transport?: Transport
 ): Promise<MatchCentreData | null> {
   const response = await postWithRetry<{
     data: MatchCentreResponse;
@@ -450,7 +462,7 @@ export async function fetchMatchCentre(
     operationName: 'PlayerHistoryMatchCentreQuery',
     variables: { comp: compInput(fixture) },
     query: MATCH_CENTRE_QUERY,
-  });
+  }, null, transport);
 
   // A throttled or failed query can still answer 200, so it mustn't read as a
   // fixture with no data.
