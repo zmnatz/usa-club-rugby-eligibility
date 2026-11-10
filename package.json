@@ -6,13 +6,12 @@
   "packageManager": "bun@1.4.4",
   "scripts": {
     "lib": "bun run --cwd packages/usa-club-rugby-data build && bun run --cwd packages/usa-club-rugby-components build",
-    "dev": "bun run lib && bun run theme:css && bun run players && next dev",
-    "build": "bun run lib && bun run theme:css && bun run players && next build",
+    "dev": "bun run lib && bun run theme:css && next dev",
+    "build": "bun run lib && bun run theme:css && next build",
     "build:quick": "BUILD_CLUBS=5 bun run build",
     "snapshot": "bun run lib && node packages/usa-club-rugby-data/dist/cli.js snapshot",
     "verify": "bun run lib && node packages/usa-club-rugby-data/dist/cli.js verify",
     "theme:css": "bun src/theme/stylesheet.ts",
-    "players": "bun src/utils/playerData.ts",
     "lint": "biome check .",
     "typecheck": "bun run lib && tsc --noEmit && bun run --cwd packages/usa-club-rugby-data typecheck && bun run --cwd packages/usa-club-rugby-components typecheck",
     "test": "bun run lib && bun run --cwd packages/usa-club-rugby-data test && bun test ./src ./packages/usa-club-rugby-components/src ./playwright"

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { legacyPlayerId, playerPath, reportProblemUrl } from './paths';
+import { playerPath, queryPlayerId, reportProblemUrl } from './paths';
 
 describe('reportProblemUrl', () => {
   it('opens the issues with nothing to fill in', () => {
@@ -28,15 +28,15 @@ describe('reportProblemUrl', () => {
 });
 
 describe('player paths', () => {
-  it('names the player in the query of the one player page', () => {
-    expect(playerPath('27ZCFXTnfWs8iEaz9')).toBe('/player?id=27ZCFXTnfWs8iEaz9');
+  it('gives each player a page of their own', () => {
+    expect(playerPath('27ZCFXTnfWs8iEaz9')).toBe('/player/27ZCFXTnfWs8iEaz9');
   });
 
-  it('reads the player from an old /player/<cms-id>/ URL, and nothing else', () => {
-    expect(legacyPlayerId('/player/27ZCFXTnfWs8iEaz9/')).toBe('27ZCFXTnfWs8iEaz9');
-    expect(legacyPlayerId('/player/27ZCFXTnfWs8iEaz9')).toBe('27ZCFXTnfWs8iEaz9');
-    expect(legacyPlayerId('/player/')).toBeNull();
-    expect(legacyPlayerId('/club/nova/')).toBeNull();
-    expect(legacyPlayerId('/player/a/b/')).toBeNull();
+  it('reads the player from a /player/?id=<cms-id> URL, and nothing else', () => {
+    expect(queryPlayerId('/player/', '?id=27ZCFXTnfWs8iEaz9')).toBe('27ZCFXTnfWs8iEaz9');
+    expect(queryPlayerId('/player', '?id=27ZCFXTnfWs8iEaz9')).toBe('27ZCFXTnfWs8iEaz9');
+    expect(queryPlayerId('/player/', '')).toBeNull();
+    expect(queryPlayerId('/player/', '?id=')).toBeNull();
+    expect(queryPlayerId('/club/nova/', '?id=x')).toBeNull();
   });
 });

@@ -5,7 +5,7 @@ import { selectClubs } from '@/utils/buildScope';
 
 // The nightly data at build time, for getStaticPaths and getStaticProps: the package's
 // own client, reading public/data from disk. It caches every file and every club's
-// verdicts per build process, so the player data is worked out once (src/utils/playerData.ts).
+// verdicts per build process, so every player page shares one count of the players.
 // Never import this from code that runs in the browser.
 
 export type { PublishedClub, PublishedIndex, PublishedSeason } from '@zmnatz/usa-club-rugby-data';

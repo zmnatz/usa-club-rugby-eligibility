@@ -9,7 +9,6 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 - `bun run build`: static build to `dist/`. `GITHUB_ACTIONS` or `BASE_PATH` sets the Pages base path.
 - `bun run build:quick`: the same build for the first 5 clubs and their players, for checking a change locally. `BUILD_CLUBS` sets the scope to a number of clubs or a comma-separated list of club keys. Its `dist/` is incomplete, so don't deploy it; CI ignores the setting.
 - `bun run test`, `bun run lint`, `bun run typecheck`
-- `bun run players`: writes the gitignored `public/player-data/` from `public/data`, the grouped files the player page loads (ADR 007). `dev` and `build` do it first.
 - `bun run theme:css`: writes the gitignored `src/theme/theme.css` from the theme. `dev` and `build` do it first, so restart `dev` after changing `src/theme/index.ts`.
 - `bun run snapshot [--offline] [--full-history]`: see `docs/snapshots.md`.
 - `bun run verify`: recalculates `public/data` from `archive` and fails on any difference. Run it after any change to the rules or the calculation.
@@ -29,7 +28,7 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
   - `src/node/`: the only filesystem code: `runSnapshot`, `verifyPublished`. `src/cli.ts` is the `usa-club-rugby-data` command.
 - `packages/usa-club-rugby-components/`: the eligibility UI, published to npm as `@zmnatz/usa-club-rugby-components`. React and MUI, with its peers supplied by the host. No Next.js imports or `@/` aliases (`src/boundaries.test.ts` fails on them), and no colours, defaults or copy for one club or union. Relative imports end in `.ts` or `.tsx`. Use standard MUI components with layout on their props, so every screen renders properly under MUI's default theme; a theme only changes the look. See ADR 005.
 - `src/utils/published.ts`: the package's published client over `public/data` (`fsReader`), for `getStaticPaths` and `getStaticProps` at build time.
-- `pages/`: the report. `index.tsx` lists the clubs, `club/[club]/index.tsx` is one club's page at `/club/<club-key>`, `player/index.tsx` one player's at `/player?id=<cms-id>`, loaded in the browser from the grouped files `bun run players` writes to the gitignored `public/player-data/` (ADR 007), `season.tsx` shows a Locked Season, loaded in the browser from its one file and chosen by query params, `stats/[season]/index.tsx` its stats, built statically, `csv.tsx` reads a Match Participation Report, and `methodology.mdx` explains the rules. Routes are ordinary paths, so they work on the static host.
+- `pages/`: the report. `index.tsx` lists the clubs, `club/[club]/index.tsx` is one club's page at `/club/<club-key>`, `player/[player]/index.tsx` one player's at `/player/<cms-id>`, built statically (ADR 008), `season.tsx` shows a Locked Season, loaded in the browser from its one file and chosen by query params, `stats/[season]/index.tsx` its stats, built statically, `csv.tsx` reads a Match Participation Report, and `methodology.mdx` explains the rules. Routes are ordinary paths, so they work on the static host.
 - `archive/`, `public/data/`: generated nightly. Never hand-edit; regenerate.
 - `notebooks/reproduce-eligibility.ipynb`: an independent Python recount of a club from `archive/`.
 
@@ -44,7 +43,7 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 
 ## Pull Requests
 
-- CI screenshots each PR at desktop and mobile sizes and keeps one comment on it up to date, from a partial build made inside the job. For a PR that changes UI, add a `## Screenshots` section to the description listing the pages to capture, one path per line (e.g. `/csv/`). Any `/club/<club-key>/` or `/player/?id=<cms-id>` listed there adds that club, or the player's clubs, to the build.
+- CI screenshots each PR at desktop and mobile sizes and keeps one comment on it up to date, from a partial build made inside the job. For a PR that changes UI, add a `## Screenshots` section to the description listing the pages to capture, one path per line (e.g. `/csv/`). Any `/club/<club-key>/` or `/player/<cms-id>/` listed there adds that club, or the player's clubs, to the build.
 - Add `wait: <selector>` or `delay: <ms>` after a path for pages that fill in after load.
 - Without the section the run captures `/` plus any routes mapped from changed files in `playwright/config/screenshots.yml`.
 

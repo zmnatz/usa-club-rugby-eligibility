@@ -115,7 +115,7 @@ export function filterFindings(findings: Finding[], noise: NoiseRule[]): Finding
   );
 }
 
-// The player a requested path names: `/player/?id=<cms-id>`, or the old `/player/<cms-id>/`.
+// The player a requested path names: `/player/<cms-id>/`, or the `/player/?id=<cms-id>` of ADR 007.
 function requestedPlayer(path: string): string | undefined {
   const [pathname, query = ''] = path.split('?');
   if (/^\/player\/?$/.test(pathname)) return new URLSearchParams(query).get('id') ?? undefined;
