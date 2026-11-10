@@ -19,15 +19,37 @@ const RATE_LIMIT_RESERVES: Record<string, number> = {
   QueryComplexity: 100_000,
 };
 
-let pausedUntil = 0;
 /** What the last response reported, and how often each limit paused the gate,
  *  for progress logs. */
-export const rateLimitState = {
-  remaining: null as number | null,
-  complexityRemaining: null as number | null,
-  pauses: 0,
-  pausesBy: {} as Record<string, number>,
-};
+export interface RateLimitState {
+  remaining: number | null;
+  complexityRemaining: number | null;
+  pauses: number;
+  pausesBy: Record<string, number>;
+}
+
+/** The rate-limit gate every request waits at. The process shares one by default;
+ *  a test makes its own so nothing carries over. */
+export interface RateLimitGate {
+  pausedUntil: number;
+  state: RateLimitState;
+}
+
+export function createRateLimitGate(): RateLimitGate {
+  return { pausedUntil: 0, state: { remaining: null, complexityRemaining: null, pauses: 0, pausesBy: {} } };
+}
+
+const defaultGate = createRateLimitGate();
+/** The shared gate's state, for progress logs. */
+export const rateLimitState = defaultGate.state;
+
+/** What a request needs from outside: the network, the clock's waiting and the
+ *  gate. Each defaults to the real one. */
+export interface Transport {
+  fetch?: typeof fetch;
+  sleep?: (ms: number) => Promise<void>;
+  gate?: RateLimitGate;
+}
 
 export interface RateLimitRule {
   /** `RequestCount` or `QueryComplexity`. */
@@ -64,14 +86,14 @@ export function rateLimitBudget(header: string | null): { remaining: number; ref
   return rule ? { remaining: rule.remaining, refillSeconds: rule.refillSeconds } : null;
 }
 
-function pauseFor(ms: number, reason: string): void {
+function pauseFor(gate: RateLimitGate, ms: number, reason: string): void {
   const until = Date.now() + ms;
-  if (until <= pausedUntil) return;
-  rateLimitState.pauses += 1;
-  rateLimitState.pausesBy[reason] = (rateLimitState.pausesBy[reason] ?? 0) + 1;
+  if (until <= gate.pausedUntil) return;
+  gate.state.pauses += 1;
+  gate.state.pausesBy[reason] = (gate.state.pausesBy[reason] ?? 0) + 1;
   // The time the gate is closed, once, however many requests wait on it.
-  requestStats.waitMs += until - Math.max(pausedUntil, Date.now());
-  pausedUntil = until;
+  requestStats.waitMs += until - Math.max(gate.pausedUntil, Date.now());
+  gate.pausedUntil = until;
 }
 
 /** How long to hold off after a response, and which budget is why: none while
@@ -89,9 +111,9 @@ export function pauseAfter(rules: RateLimitRule[]): { ms: number; reason: string
   return longest;
 }
 
-async function waitForBudget(): Promise<void> {
-  while (Date.now() < pausedUntil) {
-    await sleep(pausedUntil - Date.now());
+async function waitForBudget(gate: RateLimitGate, wait: (ms: number) => Promise<void>): Promise<void> {
+  while (Date.now() < gate.pausedUntil) {
+    await wait(gate.pausedUntil - Date.now());
   }
 }
 
@@ -102,9 +124,10 @@ export class RateLimitedError extends Error {
   }
 }
 
-async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
-  await waitForBudget();
-  const response = await fetch(url, {
+async function request<T>(url: string, options: RequestInit = {}, transport: Transport = {}): Promise<T> {
+  const gate = transport.gate ?? defaultGate;
+  await waitForBudget(gate, transport.sleep ?? sleep);
+  const response = await (transport.fetch ?? fetch)(url, {
     ...options,
     headers: {
       ...DEFAULT_HEADERS,
@@ -114,17 +137,17 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
 
   const rules = rateLimitRules(response.headers?.get('stellate-rate-limit-rules') ?? null);
   for (const rule of rules) {
-    if (rule.type === 'RequestCount') rateLimitState.remaining = rule.remaining;
-    if (rule.type === 'QueryComplexity') rateLimitState.complexityRemaining = rule.remaining;
+    if (rule.type === 'RequestCount') gate.state.remaining = rule.remaining;
+    if (rule.type === 'QueryComplexity') gate.state.complexityRemaining = rule.remaining;
   }
   if (response.status === 429) {
     const blocked = rules.find((rule) => rule.limited);
     const retryAfterMs = (Number(response.headers?.get('retry-after')) || blocked?.refillSeconds || 5) * 1000;
-    pauseFor(retryAfterMs, `429 ${blocked?.type ?? 'unknown'}`);
+    pauseFor(gate, retryAfterMs, `429 ${blocked?.type ?? 'unknown'}`);
     throw new RateLimitedError(retryAfterMs);
   }
   const pause = pauseAfter(rules);
-  if (pause) pauseFor(pause.ms, pause.reason);
+  if (pause) pauseFor(gate, pause.ms, pause.reason);
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
@@ -135,15 +158,15 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
   return text ? JSON.parse(text) : (undefined as T);
 }
 
-export function get<T>(url: string, accessToken?: string | null): Promise<T> {
+export function get<T>(url: string, accessToken?: string | null, transport?: Transport): Promise<T> {
   const headers: Record<string, string> = {};
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
   }
-  return request<T>(url, { headers });
+  return request<T>(url, { headers }, transport);
 }
 
-export function post<T>(url: string, body: unknown, accessToken?: string | null): Promise<T> {
+export function post<T>(url: string, body: unknown, accessToken?: string | null, transport?: Transport): Promise<T> {
   const headers: Record<string, string> = {};
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
@@ -152,10 +175,10 @@ export function post<T>(url: string, body: unknown, accessToken?: string | null)
     method: 'POST',
     body: JSON.stringify(body),
     headers,
-  });
+  }, transport);
 }
 
-interface RetryOptions {
+export interface RetryOptions extends Transport {
   retries?: number;
   baseDelayMs?: number;
 }
@@ -217,7 +240,7 @@ export async function postWithRetry<T>(
     const startedAt = Date.now();
     requestStats.requests += 1;
     try {
-      return await post<T>(url, body, accessToken);
+      return await post<T>(url, body, accessToken, options);
     } catch (error) {
       if (error instanceof RateLimitedError && rateLimitWaits < RATE_LIMIT_WAITS) {
         rateLimitWaits += 1;
@@ -234,7 +257,7 @@ export async function postWithRetry<T>(
       const delay = baseDelayMs * 2 ** attempt + Math.random() * 250;
       requestStats.retries += 1;
       requestStats.waitMs += delay;
-      await sleep(delay);
+      await (options?.sleep ?? sleep)(delay);
     } finally {
       requestStats.requestMs += Date.now() - startedAt;
     }

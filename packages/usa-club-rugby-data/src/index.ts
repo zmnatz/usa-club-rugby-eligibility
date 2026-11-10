@@ -5,6 +5,7 @@ export * from './archive.ts';
 export * from './clubAliases.ts';
 export { clubFixtures, clubSnapshot, listClubs } from './clubFixtures.ts';
 export * from './clubReport.ts';
+export * from './clubSeason.ts';
 export * from './csv.ts';
 export type {
   ArchiveFixturesFile,

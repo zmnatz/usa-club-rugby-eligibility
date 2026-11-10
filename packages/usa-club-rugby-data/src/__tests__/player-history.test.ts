@@ -8,6 +8,7 @@ import {
   isScoreEventType,
   playerKey,
 } from '../playerHistory.ts';
+import { createRateLimitGate, type Transport } from '../api.ts';
 
 describe('playerKey', () => {
   it('strips the shirt-number suffix', () => {
@@ -483,13 +484,11 @@ describe('fetching match centres in batches', () => {
     ),
   });
 
-  afterEach(() => vi.unstubAllGlobals());
+  const transportFor = (fetch: unknown): Transport => ({ fetch: fetch as typeof globalThis.fetch, gate: createRateLimitGate(), sleep: async () => {} });
 
   it('asks for several matches in one request, and records a match with no details as null', async () => {
     const fetchMock = cms((ids) => aliased(ids, ['b']));
-    vi.stubGlobal('fetch', fetchMock);
-
-    const result = await fetchMatchCentres([fixtureFor('a'), fixtureFor('b')]);
+    const result = await fetchMatchCentres([fixtureFor('a'), fixtureFor('b')], transportFor(fetchMock));
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(result.get('a')?.players.map((player) => player.name)).toEqual(['Sam Hooker']);
@@ -499,10 +498,9 @@ describe('fetching match centres in batches', () => {
 
   it('splits a long list into batches of the given size', async () => {
     const fetchMock = cms((ids) => aliased(ids));
-    vi.stubGlobal('fetch', fetchMock);
     const fixtures = Array.from({ length: 25 }, (_, index) => fixtureFor(`f${index}`));
 
-    const { matches, failed } = await fetchMatchesInBatches(fixtures, { batchSize: 10, gapMs: 0, retryDelayMs: 0 });
+    const { matches, failed } = await fetchMatchesInBatches(fixtures, { batchSize: 10, gapMs: 0, retryDelayMs: 0, transport: transportFor(fetchMock) });
 
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(matches).toHaveLength(25);
@@ -510,14 +508,12 @@ describe('fetching match centres in batches', () => {
   });
 
   it('falls back to one request per match when a batch is rejected, so only the bad match fails', async () => {
-    vi.stubGlobal(
-      'fetch',
-      cms((ids) => (ids.includes('bad') ? { data: null, errors: [{ message: 'Unknown fixture' }] } : aliased(ids))),
-    );
+    const fetchMock = cms((ids) => (ids.includes('bad') ? { data: null, errors: [{ message: 'Unknown fixture' }] } : aliased(ids)));
 
     const { matches, failed } = await fetchMatchesInBatches([fixtureFor('a'), fixtureFor('bad'), fixtureFor('c')], {
       gapMs: 0,
       retryDelayMs: 0,
+      transport: transportFor(fetchMock),
     });
 
     expect(matches.map((match) => match.fixture.id).sort()).toEqual(['a', 'c']);

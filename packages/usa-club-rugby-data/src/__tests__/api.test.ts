@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { pauseAfter, postWithRetry, rateLimitBudget, rateLimitRules } from '../api.ts';
+import { createRateLimitGate, pauseAfter, postWithRetry, rateLimitBudget, rateLimitRules } from '../api.ts';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -51,9 +51,9 @@ describe('postWithRetry and the rate limit', () => {
       .mockResolvedValueOnce(limited())
       .mockResolvedValueOnce(limited())
       .mockResolvedValueOnce(mockFetch(200, { data: 1 })());
-    vi.stubGlobal('fetch', fetchMock);
+    const gate = createRateLimitGate();
 
-    await expect(postWithRetry('/api/test', {}, null, { retries: 0 })).resolves.toEqual({ data: 1 });
+    await expect(postWithRetry('/api/test', {}, null, { retries: 0, fetch: fetchMock, gate, sleep: async () => {} })).resolves.toEqual({ data: 1 });
     expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 });
