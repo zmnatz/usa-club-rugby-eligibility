@@ -1,6 +1,6 @@
 import type { GetStaticProps } from 'next';
 import Head from 'next/head';
-import { ClubDirectory } from '@zmnatz/usa-club-rugby-components';
+import { ClubDirectory } from '@/eligibility';
 import { PageLink } from '@/components/Crumbs';
 import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';
 import { seasonPath, statsPath } from '@/utils/paths';

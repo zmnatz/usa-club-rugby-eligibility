@@ -1,6 +1,5 @@
 export { EligibilityStatusChip, type EligibilityStatusChipProps, WaiverChip } from './EligibilityStatusChip.tsx';
 export { ClubDirectory, type ClubDirectoryProps } from './ClubDirectory.tsx';
-export { ENHANCEMENT_SCRIPT } from './enhance.ts';
 export {
   type EligibilityLinks,
   EligibilityLinksProvider,
@@ -14,6 +13,7 @@ export {
   PlayerDetailBody,
   PlayerDetailHeading,
   type PlayerDetailProps,
+  PlayerEligibilityDialog,
   type ReportSource,
 } from './PlayerDetail.tsx';
 export { ClubEligibilityReport, type ClubEligibilityReportProps } from './ClubEligibilityReport.tsx';
@@ -22,3 +22,4 @@ export { MatchParticipationReport, type MatchParticipationReportProps } from './
 export { ReportProblemNote, type ReportProblemNoteProps } from './ReportProblemNote.tsx';
 export { SeasonRules, type SeasonRulesProps } from './SeasonRules.tsx';
 export { SkipToFirstPlayer } from './SkipToFirstPlayer.tsx';
+import './primitives.tsx';

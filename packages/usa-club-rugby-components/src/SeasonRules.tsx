@@ -1,3 +1,4 @@
+import { Stack, Typography } from '@mui/material';
 import { describeRules, rulesForSeason } from '@zmnatz/usa-club-rugby-data';
 
 export interface SeasonRulesProps {
@@ -9,14 +10,16 @@ export interface SeasonRulesProps {
 export function SeasonRules({ season }: SeasonRulesProps) {
   return (
     <section>
-      <h2 className="ec-small" style={{ margin: '0 0 8px', fontSize: '1rem' }}>
+      <Typography variant="subtitle1" component="h2" gutterBottom>
         The {season} rules
-      </h2>
-      <ul className="ec-list ec-small">
+      </Typography>
+      <Stack component="ul" spacing={0.5} useFlexGap sx={{ m: 0, pl: 3 }}>
         {describeRules(rulesForSeason(season)).map((line) => (
-          <li key={line}>{line}</li>
+          <Typography key={line} component="li" variant="body2">
+            {line}
+          </Typography>
         ))}
-      </ul>
+      </Stack>
     </section>
   );
 }

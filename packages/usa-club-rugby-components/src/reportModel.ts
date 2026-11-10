@@ -10,7 +10,8 @@ import {
   sharedNames,
   verdictRank,
 } from '@zmnatz/usa-club-rugby-data';
-import { formatDate, formatDateTime } from './dates.ts';
+import { formatDate } from './dates.ts';
+import { compareValues, type SortDirection } from './sort.ts';
 
 /** Where a report's rows came from. Only a CSV report carries USA IDs and
  *  registration dates. */
@@ -81,16 +82,24 @@ export function sortValue(player: PlayerEligibility, key: SortKey): string | num
   }
 }
 
-/** Whether a column sorts by number (the rest sort as text). */
-export const sortsNumerically = (key: SortKey): boolean => key !== 'name' && key !== 'lastRegistered';
-
-/** Which status filters a player shows under, as space-separated words for a row's
- *  `data-groups`. A cautioned or on-track player is eligible, so shows under both. */
-export function statusGroups(player: PlayerEligibility): string {
-  const groups: string[] = [player.eligible ? 'eligible' : 'ineligible'];
-  if (player.cautions.length > 0) groups.push('caution');
-  return groups.join(' ');
+/** The players ordered by a column, without changing the input. */
+export function sortPlayers(
+  players: PlayerEligibility[],
+  key: SortKey,
+  direction: SortDirection,
+): PlayerEligibility[] {
+  return [...players].sort((a, b) => compareValues(sortValue(a, key), sortValue(b, key), direction));
 }
+
+export function matchesFilters(player: PlayerEligibility, status: StatusFilter): boolean {
+  if (status === 'eligible') return player.eligible;
+  if (status === 'caution') return player.cautions.length > 0;
+  if (status === 'ineligible') return !player.eligible;
+  return true;
+}
+
+export const filterPlayers = (players: PlayerEligibility[], status: StatusFilter): PlayerEligibility[] =>
+  players.filter((player) => matchesFilters(player, status));
 
 /** A gap in the match record, in the words shown on the page and in the export. */
 export function gapText(gap: ParticipationGap): string {
@@ -119,22 +128,17 @@ export interface ReportMeta {
   source: ReportSource;
   season?: string;
   gaps: ParticipationGap[];
-  /** When the record was last updated, UTC, if the report is of a saved record. Otherwise
-   *  the report is stamped with `now`. */
-  recordsUpdated?: string;
 }
 
 /** The exported report as text. `now` is when it was generated. */
 export function buildReport(
   breakdown: EligibilityBreakdown,
-  { title, source, season, gaps, recordsUpdated }: ReportMeta,
+  { title, source, season, gaps }: ReportMeta,
   now: Date,
 ): string {
   const lines: string[] = [];
   lines.push(`${title.toUpperCase()} ELIGIBILITY REPORT`);
-  lines.push(
-    recordsUpdated ? `Records last updated: ${formatDateTime(recordsUpdated)}` : `Generated: ${formatDateTime(now.toISOString())}`,
-  );
+  lines.push(`Generated: ${now.toLocaleString()}`);
   if (season) lines.push(`Source: match record, ${season} season`);
   lines.push('');
   if (gaps.length > 0) {

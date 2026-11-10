@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { GetStaticProps } from 'next';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { ClubDirectory, ClubEligibilityReport, ReportProblemNote, SeasonRules } from '@zmnatz/usa-club-rugby-components';
+import { ClubDirectory, ClubEligibilityReport, ReportProblemNote, SeasonRules } from '@/eligibility';
 import { clubFixtures, createPublishedClient, type PublishedSeasonFile } from '@zmnatz/usa-club-rugby-data';
 import { Crumbs, PageLink } from '@/components/Crumbs';
 import { seasonClubPath, seasonPath, statsPath } from '@/utils/paths';

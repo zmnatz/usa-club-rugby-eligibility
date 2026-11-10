@@ -9,33 +9,31 @@
 rules:
   - files:
       - src/styles/**
-      - packages/usa-club-rugby-components/src/styles.css
+      - src/eligibility/styles.css
       - pages/_app.tsx
       - pages/_document.tsx
-      - packages/usa-club-rugby-components/src/enhance.ts
+      - src/eligibility/enhance.ts
     routes:
       - path: /club/pittsburgh-forge/
-      - path: /player/?id={player}
-        waitFor: h2
+      - path: /player/{player}/
       - path: /csv/
       - path: /methodology/
   - files:
       - pages/club/**
-      - packages/usa-club-rugby-components/src/ClubEligibilityReport.tsx
-      - packages/usa-club-rugby-components/src/EligibilityReportView.tsx
-      - packages/usa-club-rugby-components/src/EligibilityStatusChip.tsx
+      - src/eligibility/ClubEligibilityReport.tsx
+      - src/eligibility/EligibilityReportView.tsx
+      - src/eligibility/EligibilityStatusChip.tsx
     routes:
       - path: /club/pittsburgh-forge/
   - files:
       - pages/player/**
-      - packages/usa-club-rugby-components/src/PlayerDetail.tsx
-      - packages/usa-club-rugby-components/src/EligibilityStatusChip.tsx
+      - src/eligibility/PlayerDetail.tsx
+      - src/eligibility/EligibilityStatusChip.tsx
     routes:
-      - path: /player/?id={player}
-        waitFor: h2
+      - path: /player/{player}/
   - files:
       - pages/csv.tsx
-      - packages/usa-club-rugby-components/src/MatchParticipationReport.tsx
+      - src/eligibility/MatchParticipationReport.tsx
     routes:
       - path: /csv/
   - files:

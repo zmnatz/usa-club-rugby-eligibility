@@ -1,6 +1,6 @@
 import type { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
-import { ReportProblemNote, SeasonRules } from '@zmnatz/usa-club-rugby-components';
+import { ReportProblemNote, SeasonRules } from '@/eligibility';
 import { type SeasonSummary, seasonSummary } from '@zmnatz/usa-club-rugby-data';
 import { Crumbs, PageLink } from '@/components/Crumbs';
 import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';

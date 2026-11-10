@@ -7,4 +7,3 @@ next-env.d.ts
 .DS_Store
 /screenshots
 *.log
-/public/player-data

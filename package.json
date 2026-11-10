@@ -6,12 +6,11 @@
   "packageManager": "bun@1.4.4",
   "scripts": {
     "lib": "bun run --cwd packages/usa-club-rugby-data build && bun run --cwd packages/usa-club-rugby-components build",
-    "dev": "bun run lib && bun run players && next dev",
-    "build": "bun run lib && bun run players && next build",
+    "dev": "bun run lib && next dev",
+    "build": "bun run lib && next build",
     "build:quick": "BUILD_CLUBS=5 bun run build",
     "snapshot": "bun run lib && node packages/usa-club-rugby-data/dist/cli.js snapshot",
     "verify": "bun run lib && node packages/usa-club-rugby-data/dist/cli.js verify",
-    "players": "bun src/utils/playerData.ts",
     "lint": "biome check .",
     "typecheck": "bun run lib && tsc --noEmit && bun run --cwd packages/usa-club-rugby-data typecheck && bun run --cwd packages/usa-club-rugby-components typecheck",
     "test": "bun run lib && bun run --cwd packages/usa-club-rugby-data test && bun test ./src ./packages/usa-club-rugby-components/src ./playwright"
@@ -23,7 +22,6 @@
     "next": "^16.3.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "@zmnatz/usa-club-rugby-components": "workspace:*",
     "@zmnatz/usa-club-rugby-data": "workspace:*"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
 import { Head, Html, Main, NextScript } from 'next/document';
-import { ENHANCEMENT_SCRIPT } from '@zmnatz/usa-club-rugby-components';
+import { ENHANCEMENT_SCRIPT } from '@/eligibility';
 
 export default function SiteDocument() {
   return (

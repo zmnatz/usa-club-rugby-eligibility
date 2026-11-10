@@ -10,7 +10,7 @@ describe('EligibilityStatusChip', () => {
     const html = chip(true, [], ['One more D1 match (3 played) loses D3 eligibility for the rest of the season']);
 
     expect(html).toContain('CAUTION');
-    expect(html).toContain('ec-chip--warning');
+    expect(html).toContain('MuiChip-colorWarning');
   });
 
   it('ranks Caution above On Track, which a player can still recover from', () => {

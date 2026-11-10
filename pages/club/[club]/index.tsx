@@ -1,6 +1,6 @@
 import type { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
-import { ClubEligibilityReport } from '@zmnatz/usa-club-rugby-components';
+import { ClubEligibilityReport } from '@/eligibility';
 import {
   clubFixtures,
   type FeedFixture,

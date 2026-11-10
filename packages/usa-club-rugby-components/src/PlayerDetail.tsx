@@ -1,28 +1,115 @@
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Link as MuiLink,
+  Paper,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
 import {
   matchUrl,
   type OtherClubGames,
+  playerFixtures,
   type PlayerFixtures,
+  type PlayerRecordInput,
+  type SideRounds,
   type PlayerEligibility,
   type PlayerRound,
   type PlayerRoundStatus,
+  type PlayerRow,
   type PossibleFixture,
-  type SideRounds,
 } from '@zmnatz/usa-club-rugby-data';
 
 import { formatDate } from './dates.ts';
 import { EligibilityStatusChip, WaiverChip } from './EligibilityStatusChip.tsx';
+import { wrapRow } from './layout.ts';
+import { useEligibilityLinks } from './links.tsx';
+
 import { CAUTION_ADVICE, type ReportSource } from './reportModel.ts';
 
 export { CAUTION_ADVICE, type ReportSource };
 
-/** One labeled fact in a player's facts list. */
+/** One labeled fact row in the player detail dialog. */
 function Fact({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <>
-      <dt>{label}</dt>
-      <dd>{value ?? '—'}</dd>
-    </>
+    <Stack direction="row" spacing={2} sx={{ justifyContent: 'space-between', py: 0.5 }}>
+      <Typography variant="body2" color="text.secondary">
+        {label}
+      </Typography>
+      <Typography variant="body2" component="strong" align="right">
+        {value ?? '—'}
+      </Typography>
+    </Stack>
+  );
+}
+
+/** The per-round attendance codes across a player's competitions, as a matrix
+ *  with one row per competition and one Round column per reported round. */
+function RoundsMatrix({ rows }: { rows: PlayerRow[] }) {
+  const roundNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const source of rows) {
+      for (const name of Object.keys(source.rounds)) names.add(name);
+    }
+    return [...names].sort((a, b) => {
+      const numOf = (name: string) => Number(name.match(/\d+/)?.[0]);
+      const na = numOf(a);
+      const nb = numOf(b);
+      if (Number.isNaN(na) && Number.isNaN(nb)) return a.localeCompare(b);
+      if (Number.isNaN(na)) return 1;
+      if (Number.isNaN(nb)) return -1;
+      return na - nb;
+    });
+  }, [rows]);
+
+  if (roundNames.length === 0) {
+    return (
+      <Typography variant="body2" color="text.secondary">
+        No round data.
+      </Typography>
+    );
+  }
+  return (
+    <TableContainer component={Paper} variant="outlined">
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell>Competition</TableCell>
+            {roundNames.map((round) => (
+              <TableCell key={round} align="center">
+                {round}
+              </TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {rows.map((source) => (
+            <TableRow key={source.competition || 'report row'}>
+              <TableCell>{source.competition || 'Report row'}</TableCell>
+              {roundNames.map((round) => {
+                const code = source.rounds[round];
+                const shown = code && code !== 'R' ? code : null;
+                return (
+                  <TableCell key={round} align="center">
+                    {shown ?? (
+                      <Typography variant="inherit" component="span" color="text.disabled">—</Typography>
+                    )}
+                  </TableCell>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }
 
@@ -40,11 +127,9 @@ const ROUND_STATUS: Record<PlayerRoundStatus, string> = {
   upcoming: 'Still to play',
 };
 
-const reportLink = (fixtureId: string, clubSlug: string | null) => (
-  <a href={matchUrl(fixtureId, clubSlug)} target="_blank" rel="noopener noreferrer" style={{ whiteSpace: 'nowrap' }}>
-    Rugby Xplorer
-  </a>
-);
+function roundDate(dateTime: string): string {
+  return formatDate(dateTime);
+}
 
 /** One team's fixtures for one player, each linked to its Rugby Xplorer report. */
 function TeamRounds({
@@ -58,55 +143,63 @@ function TeamRounds({
 }) {
   const counted = rounds.filter((round) => round.counted).length;
   return (
-    <div className="ec-stack-sm">
-      <h3 style={{ margin: 0, fontSize: '1rem' }}>
+    <Stack spacing={1} useFlexGap>
+      <Typography variant="subtitle2" component="h3">
         {teamName}: {counted} counted {counted === 1 ? 'match' : 'matches'}
-      </h3>
-      <div className="ec-table-wrap ec-table-outlined">
-        <table className="ec-table">
-          <thead>
-            <tr>
-              <th>Round</th>
-              <th>Date</th>
-              <th>Opponent</th>
-              <th>Score</th>
-              <th>This player</th>
-              <th className="ec-center">Counted</th>
-              <th>Report</th>
-            </tr>
-          </thead>
-          <tbody>
+      </Typography>
+      <TableContainer component={Paper} variant="outlined">
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>Round</TableCell>
+              <TableCell>Date</TableCell>
+              <TableCell>Opponent</TableCell>
+              <TableCell>Score</TableCell>
+              <TableCell>This player</TableCell>
+              <TableCell align="center">Counted</TableCell>
+              <TableCell>Report</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
             {rounds.map((round) => (
-              <tr key={round.fixtureId}>
-                <td>{round.round}</td>
-                <td>{formatDate(round.dateTime)}</td>
-                <td>{round.opponent || 'To be decided'}</td>
-                <td style={{ whiteSpace: 'nowrap' }}>
-                  {round.scoreFor || round.scoreAgainst ? `${round.scoreFor} - ${round.scoreAgainst}` : '—'}
-                </td>
-                <td>
+              <TableRow key={round.fixtureId}>
+                <TableCell>{round.round}</TableCell>
+                <TableCell>{roundDate(round.dateTime)}</TableCell>
+                <TableCell>{round.opponent || 'To be decided'}</TableCell>
+                <TableCell>
+                  <Typography variant="inherit" component="span" noWrap>
+                    {round.scoreFor || round.scoreAgainst ? `${round.scoreFor} - ${round.scoreAgainst}` : '—'}
+                  </Typography>
+                </TableCell>
+                <TableCell>
                   {ROUND_STATUS[round.status]}
                   {round.substitutionsMissing && (
-                    <div className="ec-caption" style={{ color: 'var(--ec-warning)' }}>
+                    <Typography variant="caption" color="warning.main" component="div">
                       No substitutions recorded for this match
-                    </div>
+                    </Typography>
                   )}
-                </td>
-                <td className="ec-center">{round.counted ? 'Yes' : 'No'}</td>
-                <td>{reportLink(round.fixtureId, clubSlug)}</td>
-              </tr>
+                </TableCell>
+                <TableCell align="center">{round.counted ? 'Yes' : 'No'}</TableCell>
+                <TableCell>
+                  <MuiLink noWrap href={matchUrl(round.fixtureId, clubSlug)} target="_blank" rel="noopener noreferrer">
+                    Rugby Xplorer
+                  </MuiLink>
+                </TableCell>
+              </TableRow>
             ))}
             {rounds.length === 0 && (
-              <tr>
-                <td colSpan={7} className="ec-center ec-muted">
-                  No fixtures this season.
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  <Typography variant="body2" component="span" color="text.secondary">
+                    No fixtures this season.
+                  </Typography>
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Stack>
   );
 }
 
@@ -122,9 +215,9 @@ function PlayedRounds({ sides, clubSlug }: { sides: SideRounds[]; clubSlug: stri
           <TeamRounds key={teamName} teamName={teamName} rounds={rounds} clubSlug={clubSlug} />
         ))}
       {notPlayed.length > 0 && (
-        <p className="ec-muted ec-small" style={{ margin: 0 }}>
+        <Typography variant="body2" color="textSecondary">
           No matches played this season for {notPlayed.map(({ teamName }) => teamName).join(', ')}.
-        </p>
+        </Typography>
       )}
     </>
   );
@@ -133,38 +226,44 @@ function PlayedRounds({ sides, clubSlug }: { sides: SideRounds[]; clubSlug: stri
 /** The fixtures behind an on-track verdict. */
 function PossibleFixtures({ possible, clubSlug }: { possible: PossibleFixture[]; clubSlug: string | null }) {
   return (
-    <div className="ec-stack-sm">
-      <h3 style={{ margin: 0, fontSize: '1rem' }}>Possible fixtures: {possible.length} left</h3>
-      <span className="ec-caption ec-muted">
+    <Stack spacing={1} useFlexGap>
+      <Typography variant="subtitle2" component="h3">Possible fixtures: {possible.length} left</Typography>
+      <Typography variant="caption" color="text.secondary">
         Why this player is on track. They could still reach the minimum in these fixtures, though
         availability isn&apos;t checked and a side may not reach a playoff. On track is experimental:
         future playoff matches aren&apos;t always entered in Rugby Xplorer, so this list may be incomplete.
-      </span>
-      <div className="ec-table-wrap ec-table-outlined">
-        <table className="ec-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Side</th>
-              <th>Opponent</th>
-              <th>Competition</th>
-              <th>Report</th>
-            </tr>
-          </thead>
-          <tbody>
+      </Typography>
+      <TableContainer component={Paper} variant="outlined">
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>Date</TableCell>
+              <TableCell>Side</TableCell>
+              <TableCell>Opponent</TableCell>
+              <TableCell>Competition</TableCell>
+              <TableCell>Report</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
             {possible.map((fixture) => (
-              <tr key={`${fixture.teamName}-${fixture.fixtureId ?? fixture.dateTime}`}>
-                <td>{formatDate(fixture.dateTime)}</td>
-                <td>{fixture.teamName}</td>
-                <td>{fixture.open ? 'Playoff, teams not decided' : fixture.opponent || 'To be decided'}</td>
-                <td>{fixture.competition}</td>
-                <td>{fixture.fixtureId && reportLink(fixture.fixtureId, clubSlug)}</td>
-              </tr>
+              <TableRow key={`${fixture.teamName}-${fixture.fixtureId ?? fixture.dateTime}`}>
+                <TableCell>{roundDate(fixture.dateTime)}</TableCell>
+                <TableCell>{fixture.teamName}</TableCell>
+                <TableCell>{fixture.open ? 'Playoff, teams not decided' : fixture.opponent || 'To be decided'}</TableCell>
+                <TableCell>{fixture.competition}</TableCell>
+                <TableCell>
+                  {fixture.fixtureId && (
+                    <MuiLink noWrap href={matchUrl(fixture.fixtureId, clubSlug)} target="_blank" rel="noopener noreferrer">
+                      Rugby Xplorer
+                    </MuiLink>
+                  )}
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Stack>
   );
 }
 
@@ -187,10 +286,10 @@ export interface PlayerDetailProps {
 function OtherClubRounds({ otherClubs, clubSlug }: { otherClubs: OtherClubGames[]; clubSlug: string | null }) {
   return (
     <>
-      <p className="ec-muted ec-small" style={{ margin: 0 }}>
+      <Typography variant="body2" color="textSecondary">
         Also played for {otherClubs.map((other) => other.clubName).join(', ')} this season. Those games are
         listed below and aren&apos;t counted for this club.
-      </p>
+      </Typography>
       {otherClubs.flatMap((other) =>
         other.sides.map(({ teamName, rounds }) => (
           <TeamRounds key={`${other.clubKey}-${teamName}`} teamName={`${other.clubName} · ${teamName}`} rounds={rounds} clubSlug={clubSlug} />
@@ -200,7 +299,7 @@ function OtherClubRounds({ otherClubs, clubSlug }: { otherClubs: OtherClubGames[
   );
 }
 
-/** A player's name, ids and verdict chip: the page's heading. */
+/** A player's name, ids and verdict chip: the dialog's title and the page's heading. */
 export function PlayerDetailHeading({
   player,
   source,
@@ -208,30 +307,47 @@ export function PlayerDetailHeading({
   otherClubs,
   component = 'span',
 }: Pick<PlayerDetailProps, 'player' | 'source' | 'showCmsId' | 'otherClubs'> & { component?: 'span' | 'h1' }) {
-  const Name = component;
   return (
-    <div className="ec-row">
-      <Name style={{ fontSize: component === 'h1' ? '2rem' : '1.25rem', fontWeight: 600, margin: 0 }}>{player.name}</Name>
-      {source === 'csv' && <span className="ec-muted ec-small">USA ID {player.playerId}</span>}
-      {source === 'record' && showCmsId && <span className="ec-muted ec-small">CMS ID {player.playerId}</span>}
+    <Stack direction="row" spacing={1} useFlexGap sx={wrapRow}>
+      <Typography variant={component === 'h1' ? 'h4' : 'h6'} component={component}>
+        {player.name}
+      </Typography>
+      {source === 'csv' && (
+        <Typography variant="body2" color="text.secondary" component="span">
+          USA ID {player.playerId}
+        </Typography>
+      )}
+      {source === 'record' && showCmsId && (
+        <Typography variant="body2" color="text.secondary" component="span">
+          CMS ID {player.playerId}
+        </Typography>
+      )}
       <EligibilityStatusChip player={player} />
       {otherClubs && otherClubs.length > 0 && <WaiverChip />}
-    </div>
+    </Stack>
   );
 }
 
-/** Everything about one player's verdict, as shown on the player page. */
+/** Everything about one player's verdict, shared by the dialog and the player page. */
 export function PlayerDetailBody({ player, source, ownLabel, fixtures, clubSlug = null, otherClubs, footer }: PlayerDetailProps) {
   return (
-    <div className="ec-stack">
-      {player.reasons.length > 0 && <p className="ec-muted ec-small" style={{ margin: 0 }}>{player.reasons.join(' · ')}</p>}
-      {player.cautions.length > 0 && (
-        <p className="ec-muted ec-small" style={{ margin: 0 }}>
-          {player.cautions.join(' · ')}. {CAUTION_ADVICE}
-        </p>
+    <Stack spacing={2} useFlexGap>
+      {player.reasons.length > 0 && (
+        <Typography variant="body2" color="textSecondary">
+          {player.reasons.join(' · ')}
+        </Typography>
       )}
-      {player.pending.length > 0 && <p className="ec-muted ec-small" style={{ margin: 0 }}>{player.pending.join(' · ')}</p>}
-      <dl className="ec-facts">
+      {player.cautions.length > 0 && (
+        <Typography variant="body2" color="textSecondary">
+          {player.cautions.join(' · ')}. {CAUTION_ADVICE}
+        </Typography>
+      )}
+      {player.pending.length > 0 && (
+        <Typography variant="body2" color="textSecondary">
+          {player.pending.join(' · ')}
+        </Typography>
+      )}
+      <div>
         {source === 'csv' && <Fact label="Last registered" value={player.lastRegistered} />}
         <Fact label="Side" value={`${ownLabel} side`} />
         <Fact label="Played" value={player.played} />
@@ -240,29 +356,79 @@ export function PlayerDetailBody({ player, source, ownLabel, fixtures, clubSlug 
         {player.otherSides.map((side) => (
           <Fact key={side.teamName} label={`${side.label} participation`} value={side.participation} />
         ))}
-      </dl>
+      </div>
       {fixtures && fixtures.possible.length > 0 && <PossibleFixtures possible={fixtures.possible} clubSlug={clubSlug} />}
       {fixtures ? (
         <>
           <PlayedRounds sides={fixtures.sides} clubSlug={clubSlug} />
           {otherClubs && otherClubs.length > 0 && <OtherClubRounds otherClubs={otherClubs} clubSlug={clubSlug} />}
-          <p className="ec-muted ec-small" style={{ margin: 0 }}>
+          <Typography variant="body2" color="textSecondary">
             Open a report to check a line against Rugby Xplorer.
-          </p>
+          </Typography>
         </>
       ) : (
-        player.rows.map((row) => (
-          <div key={row.competition || 'report row'}>
-            <h3 style={{ margin: 0, fontSize: '1rem' }}>
-              {row.competition || 'Report row'} — {row.teamName}
-            </h3>
-            <span className="ec-caption ec-muted">
-              Appearances {row.appearances} · Played {row.played} · Substitute {row.substitute}
-            </span>
-          </div>
-        ))
+        <>
+          {player.rows.map((row) => (
+            <div key={row.competition || 'report row'}>
+              <Typography variant="subtitle2" component="h3">
+                {row.competition || 'Report row'} — {row.teamName}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Appearances {row.appearances} · Played {row.played} · Substitute {row.substitute}
+              </Typography>
+            </div>
+          ))}
+          <Stack spacing={1} useFlexGap>
+            <Typography variant="subtitle2" component="h3">Rounds by competition</Typography>
+            <RoundsMatrix rows={player.rows} />
+          </Stack>
+        </>
       )}
       {footer}
-    </div>
+    </Stack>
+  );
+}
+
+/** Full report detail for one player, opened by clicking a table row. A club
+ *  report's players also have a page of their own, linked from here. */
+export function PlayerEligibilityDialog({
+  player,
+  record,
+  pageHref,
+  onClose,
+  ...detail
+}: Omit<PlayerDetailProps, 'player' | 'fixtures'> & {
+  player: PlayerEligibility | null;
+  /** What the fixtures are worked out from; absent for a CSV report. */
+  record: PlayerRecordInput | null;
+  /** The player's own page, when they have one. */
+  pageHref?: string;
+  onClose: () => void;
+}) {
+  const { Link } = useEligibilityLinks();
+  return (
+    <Dialog open={player !== null} onClose={onClose} maxWidth="md" fullWidth>
+      {player !== null && (
+        <>
+          <DialogTitle>
+            <PlayerDetailHeading player={player} source={detail.source} showCmsId={detail.showCmsId} otherClubs={detail.otherClubs} />
+            {pageHref && (
+              <Typography variant="body2">
+                <MuiLink component={Link} href={pageHref}>
+                  Open as a page
+                </MuiLink>
+              </Typography>
+            )}
+          </DialogTitle>
+          <DialogContent dividers>
+            <PlayerDetailBody
+              player={player}
+              fixtures={record ? playerFixtures(player, record) : null}
+              {...detail}
+            />
+          </DialogContent>
+        </>
+      )}
+    </Dialog>
   );
 }

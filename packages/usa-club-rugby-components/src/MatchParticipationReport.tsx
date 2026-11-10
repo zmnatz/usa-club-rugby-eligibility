@@ -1,5 +1,19 @@
 import { type ChangeEvent, useMemo, useState } from 'react';
 import {
+  Alert,
+  Autocomplete,
+  Button,
+  Card,
+  CardContent,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Link as MuiLink,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
+import {
   clubsInRows,
   computeBreakdown,
   DEFAULT_RULES,
@@ -10,6 +24,7 @@ import {
   remainingMatches,
 } from '@zmnatz/usa-club-rugby-data';
 import { EligibilityReportView } from './EligibilityReportView.tsx';
+import { wrapRow } from './layout.ts';
 import { useEligibilityLinks } from './links.tsx';
 
 interface CsvFormProps {
@@ -25,30 +40,36 @@ interface CsvFormProps {
 
 function CsvForm({ csvText, fileName, canClear, loading, onFile, onTextChange, onRun, onClear }: CsvFormProps) {
   return (
-    <div className="ec-stack">
-      <label className="ec-field">
-        Choose a CSV file
-        <input className="ec-input" type="file" accept=".csv,text/csv" onChange={onFile} />
-      </label>
-      <label className="ec-field">
-        …or paste the CSV
-        <textarea
-          className="ec-input"
-          rows={8}
+    <Stack spacing={2} useFlexGap>
+      <Stack direction="row" spacing={2} useFlexGap sx={wrapRow}>
+        <Button variant="outlined" component="label">
+          Choose CSV file…
+          <input type="file" accept=".csv,text/csv" hidden onChange={onFile} />
+        </Button>
+        <TextField
+          label="…or paste the CSV"
+          multiline
+          minRows={6}
+          maxRows={14}
+          fullWidth
           value={csvText}
           onChange={(event) => onTextChange(event.target.value)}
         />
-      </label>
-      <div className="ec-row">
-        <button type="button" className="ec-btn ec-btn--filled" onClick={onRun} disabled={!csvText.trim() || loading}>
-          {loading ? 'Loading…' : 'Run Breakdown'}
-        </button>
-        <button type="button" className="ec-btn" onClick={onClear} disabled={!canClear}>
+      </Stack>
+      <Stack direction="row" spacing={2} useFlexGap sx={wrapRow}>
+        <Button variant="contained" onClick={onRun} disabled={!csvText.trim()} loading={loading}>
+          Run Breakdown
+        </Button>
+        <Button variant="text" onClick={onClear} disabled={!canClear}>
           Clear
-        </button>
-        {fileName && <span className="ec-muted ec-small">Loaded: {fileName}</span>}
-      </div>
-    </div>
+        </Button>
+        {fileName && (
+          <Typography variant="body2" color="text.secondary">
+            Loaded: {fileName}
+          </Typography>
+        )}
+      </Stack>
+    </Stack>
   );
 }
 
@@ -69,8 +90,8 @@ export function MatchParticipationReport({ loadFixtures }: MatchParticipationRep
   const [csvText, setCsvText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [csvRows, setCsvRows] = useState<PlayerRow[] | null>(null);
-  const [editing, setEditing] = useState(false);
-  const [ranAt, setRanAt] = useState(() => new Date());
+  const [activeSide, setActiveSide] = useState(0);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const clubs = useMemo(() => (csvRows ? clubsInRows(csvRows) : []), [csvRows]);
   const club = clubs.find((candidate) => candidate.name === csvClubName) ?? (clubs.length === 1 ? clubs[0] : null);
@@ -105,12 +126,11 @@ export function MatchParticipationReport({ loadFixtures }: MatchParticipationRep
         setLoading(false);
       }
       setCsvRows(rows);
-      setRanAt(new Date());
     } catch (err) {
       setCsvRows(null);
       setError(err instanceof Error ? err.message : 'Could not read the CSV.');
     }
-    setEditing(false);
+    setDialogOpen(false);
   };
 
   const handleClear = () => {
@@ -118,7 +138,7 @@ export function MatchParticipationReport({ loadFixtures }: MatchParticipationRep
     setFileName('');
     setError(null);
     setCsvRows(null);
-    setEditing(false);
+    setDialogOpen(false);
   };
 
   const handleTextChange = (value: string) => {
@@ -128,88 +148,89 @@ export function MatchParticipationReport({ loadFixtures }: MatchParticipationRep
 
   return (
     <>
-      <p className="ec-muted" style={{ maxWidth: 840 }}>
+      <Typography color="textSecondary" gutterBottom>
         {`Paste or upload a Rugby Xplorer Match Participation Report for any club to see
              which players are NCS-eligible for each of its sides. Participation counts as
              Played + Substitute. Players are assumed registered, since the report only lists
              registered players, and the registration date is shown for reference.`}{' '}
-        <Link href={routes.methodology()}>How this report is worked out</Link>
-      </p>
+        <MuiLink component={Link} href={routes.methodology()}>
+          How this report is worked out
+        </MuiLink>
+      </Typography>
 
       {clubs.length > 1 && (
-        <label className="ec-field" style={{ maxWidth: 420, marginBottom: 16 }}>
-          {`Club in this report (${clubs.length})`}
-          <select
-            className="ec-input"
-            value={club?.name ?? ''}
-            onChange={(event) => setCsvClubName(event.target.value)}
-          >
-            <option value="" disabled>
-              Choose a club
-            </option>
-            {clubs.map((option) => (
-              <option key={option.name} value={option.name}>
-                {option.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Autocomplete
+          size="small"
+          sx={{ maxWidth: 420, mb: 2 }}
+          options={clubs}
+          value={club}
+          onChange={(_, next) => {
+            setCsvClubName(next?.name ?? '');
+            setActiveSide(0);
+          }}
+          getOptionLabel={(option) => option.name}
+          isOptionEqualToValue={(option, value) => option.name === value.name}
+          renderInput={(params) => <TextField {...params} label={`Club in this report (${clubs.length})`} />}
+        />
       )}
 
       {!breakdown && (
-        <section className="ec-card" style={{ marginBottom: 32 }}>
+        <Card component="section" sx={{ mb: 4 }}>
+          <CardContent>
+            <CsvForm
+              csvText={csvText}
+              fileName={fileName}
+              canClear={Boolean(csvText)}
+              loading={loading}
+              onFile={handleFile}
+              onTextChange={handleTextChange}
+              onRun={handleRun}
+              onClear={handleClear}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      {!breakdown && !error && (
+        <Typography color="text.secondary">Upload a report and run the breakdown to see player eligibility.</Typography>
+      )}
+
+      {breakdown && club && (
+        <EligibilityReportView
+          source="csv"
+          club={club}
+          breakdown={breakdown}
+          activeSide={activeSide}
+          onActiveSideChange={setActiveSide}
+          actions={
+            <Button variant="outlined" size="small" onClick={() => setDialogOpen(true)}>
+              Edit Report Data
+            </Button>
+          }
+        />
+      )}
+
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Edit Report Data</DialogTitle>
+        <DialogContent dividers>
           <CsvForm
             csvText={csvText}
             fileName={fileName}
-            canClear={Boolean(csvText)}
+            canClear={Boolean(csvText) || Boolean(csvRows)}
             loading={loading}
             onFile={handleFile}
             onTextChange={handleTextChange}
             onRun={handleRun}
             onClear={handleClear}
           />
-        </section>
-      )}
-
-      {error && (
-        <div className="ec-alert ec-alert--error" role="alert" style={{ marginBottom: 24 }}>
-          {error}
-        </div>
-      )}
-
-      {!breakdown && !error && (
-        <p className="ec-muted">Upload a report and run the breakdown to see player eligibility.</p>
-      )}
-
-      {breakdown && club && (
-        <div className="ec-stack">
-          <EligibilityReportView
-            source="csv"
-            club={club}
-            breakdown={breakdown}
-            now={ranAt}
-            actions={
-              <button type="button" className="ec-btn" onClick={() => setEditing((open) => !open)} aria-expanded={editing}>
-                Edit Report Data
-              </button>
-            }
-          />
-          {editing && (
-            <section className="ec-card" aria-label="Edit Report Data">
-              <CsvForm
-                csvText={csvText}
-                fileName={fileName}
-                canClear={Boolean(csvText) || Boolean(csvRows)}
-                loading={loading}
-                onFile={handleFile}
-                onTextChange={handleTextChange}
-                onRun={handleRun}
-                onClear={handleClear}
-              />
-            </section>
-          )}
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
