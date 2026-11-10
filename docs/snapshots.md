@@ -29,7 +29,7 @@ Every request has to succeed or nothing is written, so a failed night leaves the
 
 A push to `main` only builds and deploys. The nightly job cannot push to `main` (it is protected), so it pushes a `snapshot/<run-id>` branch, opens a pull request and squash-merges it. This needs "Allow GitHub Actions to create and approve pull requests" under Settings > Actions > General. Pull requests made with `GITHUB_TOKEN` do not trigger other workflows, so any required status check must not be one that only runs on PRs, or the merge will wait forever (the job then falls back to auto-merge).
 
-GitHub Pages occasionally stalls a deployment in `deployment_queued` or `syncing_files` for many minutes, where a normal one finishes in seconds. The deploy step waits 20 minutes, then retries once with the same artifact. If both time out, re-run the failed job: the artifact is named per attempt (`github-pages-<attempt>`), so a re-run doesn't collide with the earlier attempt's.
+GitHub Pages occasionally stalls a deployment in `deployment_queued` or `syncing_files` until `actions/deploy-pages` gives up at its 10-minute cap, where a normal one finishes in seconds. The same artifact has done both, so it isn't the artifact (ADR 007). deploy-pages names its deployment after the commit, so running it again would reuse the cancelled deployment's ID. Instead, the retry step creates a new deployment of the same artifact through the Pages API, with a build version of its own (`<sha>-retry-<run>-<attempt>`), and waits up to another 10 minutes. If both time out, push a new commit or re-run the failed job later: the artifact is named per attempt (`github-pages-<attempt>`), so a re-run doesn't collide with the earlier attempt's.
 
 ## Running it by hand
 
