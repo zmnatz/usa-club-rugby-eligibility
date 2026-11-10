@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { historicalClubs } from '../historicalSides.ts';
 import { DEFAULT_RULES } from '../rules.ts';
 
-const game = (compName: string, home: string, away = '') => ({
+const game = (compName: string, home: string, away = '', dateTime = '2024-10-05T15:00:00Z') => ({
   compName,
+  dateTime,
   homeTeam: { name: home },
   awayTeam: { name: away },
 });
@@ -384,6 +385,26 @@ describe('American Rugby Premiership sides', () => {
       clubs: [{ name: 'NYAC', sides: [{ teamName: 'NYAC MD2' }] }],
       unplacedTeams: ['NYAC ARP'],
     });
+  });
+});
+
+describe('summer 7s', () => {
+  const july = '2025-07-12T15:00:00Z';
+
+  it('leaves out a team that only played in June or July', () => {
+    expect(place(game('NorCal Mens D2', 'Marin Sevens', '', july), game('NorCal Mens D2', 'Marin Sevens', '', '2025-06-07T15:00:00Z'))).toEqual({
+      clubs: [],
+      unplacedTeams: [],
+    });
+  });
+
+  it('places a team by its other games, not its summer ones', () => {
+    const { clubs } = place(
+      game('NorCal Mens D3', 'Marin Mens', '', july),
+      game('NorCal Mens D3', 'Marin Mens', '', july),
+      game('NorCal Mens D2', 'Marin Mens'),
+    );
+    expect(clubs[0].sides[0].label).toBe('D2');
   });
 });
 

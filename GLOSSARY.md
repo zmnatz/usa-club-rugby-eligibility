@@ -31,7 +31,7 @@ The number of NCS Qualifying Matches a player entered as a starter or substitute
 _Avoid_: appearances, games played
 
 **NCS Qualifying Match**:
-A league or local-playoff match that counts toward a player's Match Participation. Super Regionals, National Championships, 7s, friendlies, crossovers, socials, festivals, and Men's D4 and Women's D3 matches don't count.
+A league or local-playoff match that counts toward a player's Match Participation. Super Regionals, National Championships, 7s, friendlies, crossovers, socials, festivals, matches in June or July (the 7s season), and Men's D4 and Women's D3 matches don't count.
 
 **On Track**:
 A player who hasn't yet met a two-match minimum but can still reach it, because enough of the side's possible matches remain before Super Regionals. Counted as eligible and shown separately.

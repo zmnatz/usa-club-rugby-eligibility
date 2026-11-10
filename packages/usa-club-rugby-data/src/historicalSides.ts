@@ -1,4 +1,4 @@
-import { isQualifying } from './participation.ts';
+import { isQualifyingMatch } from './participation.ts';
 import { isNcsSide, sideLabel } from './teamSide.ts';
 import type { Club, EligibilityRules } from './types.ts';
 
@@ -11,6 +11,7 @@ type Gender = 'M' | 'W';
 
 interface HistoricalFixture {
   compName: string;
+  dateTime?: string;
   homeTeam: { name: string };
   awayTeam: { name: string };
 }
@@ -152,7 +153,7 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
   const inWomensCompetition = new Set<string>();
   const opponents = new Map<string, Set<string>>();
   for (const fixture of fixtures) {
-    if (!isQualifying(fixture.compName, rules)) continue;
+    if (!isQualifyingMatch(fixture, rules)) continue;
     for (const [team, other] of [
       [fixture.homeTeam.name, fixture.awayTeam.name],
       [fixture.awayTeam.name, fixture.homeTeam.name],

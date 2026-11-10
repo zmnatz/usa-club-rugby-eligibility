@@ -20,6 +20,10 @@ export const DEFAULT_RULES: EligibilityRules = {
   // count. Case-insensitive name fragments. Applied to the match record and to
   // possible future matches; Super Regionals are also the deadline for reaching the
   // two-match minimums.
+  // June and July are the 7s season, so no match then counts, whatever its competition
+  // is called. A team with no other matches drops out with them.
+  excludedMonths: [6, 7],
+
   nonQualifyingCompetitions: [
     'Super Regional',
     'ASR ',

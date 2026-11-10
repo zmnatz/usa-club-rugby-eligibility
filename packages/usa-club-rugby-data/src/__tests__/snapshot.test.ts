@@ -115,6 +115,25 @@ describe('build and verify', () => {
   });
 });
 
+describe('summer 7s', () => {
+  it('doesn\'t count a match played in June or July', async () => {
+    const summer: FeedFixture = { ...fixture, id: 'm2', dateTime: '2026-07-11T15:00:00Z' };
+    const summerMatch: MatchCentreData = {
+      ...match,
+      fixture: { ...match.fixture, id: 'm2', dateTime: summer.dateTime },
+      players: [{ id: 'p9__1', name: 'Summer Sevens', position: 'Wing', shirtNumber: '11', isHome: true }],
+    };
+    const file = seasonFile('2026/2027');
+    writeFileSync(path.join(archiveDir, 'fixtures', file), serializeSeasonFixtures('2026/2027', [fixture, summer]));
+    writeFileSync(path.join(archiveDir, 'matches', file), serializeSeasonMatches('2026/2027', { m1: match, m2: summerMatch }));
+    await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
+    const nova = readFileSync(path.join(publishedDir, 'clubs', 'nova.json'), 'utf8');
+    expect(nova).toContain('Ann');
+    expect(nova).not.toContain('Summer');
+    expect(nova).not.toContain('"m2"');
+  });
+});
+
 describe('an Archive holding a Locked Season', () => {
   const files = (root: string) =>
     Object.fromEntries(
@@ -202,6 +221,28 @@ describe('an Archive holding a Locked Season', () => {
     await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
     const again = await runSnapshot({ archiveDir, publishedDir, offline: true, now: new Date('2026-12-01T12:00:00Z') });
     expect(again.changed).toBe(false);
+  });
+
+  it('keeps a player who played summer 7s with their 15s club, with no waiver', async () => {
+    const sevens: FeedFixture = {
+      ...lockedFixture,
+      id: 's1',
+      dateTime: '2026-07-11T15:00:00Z',
+      homeTeam: { name: 'Bayside MD3', score: '21' },
+      awayTeam: { name: 'Potomac MD3', score: '7' },
+    };
+    const sevensMatch: MatchCentreData = {
+      ...lockedMatch,
+      fixture: { ...lockedMatch.fixture, id: 's1', dateTime: sevens.dateTime, homeTeam: side('Bayside MD3', '21'), awayTeam: side('Potomac MD3', '7') },
+    };
+    archiveLocked(LOCKED_SEASON, [lockedFixture, sevens], { o1: lockedMatch, s1: sevensMatch });
+    await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
+    const season = readPublished<{ clubs: { key: string }[]; clubFiles: Record<string, { rows: { firstName: string }[]; transfers?: unknown }> }>(
+      'seasons/2025-26.json',
+    );
+    expect(season.clubs.map((club) => club.key)).toEqual(['nova', 'potomac']);
+    expect(season.clubFiles.nova.rows.map((row) => row.firstName)).toEqual(['Old']);
+    expect(season.clubFiles.nova.transfers).toBeUndefined();
   });
 
   it('catches a Locked Season file that was edited by hand or left over', async () => {

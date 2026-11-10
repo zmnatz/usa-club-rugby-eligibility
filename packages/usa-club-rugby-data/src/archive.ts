@@ -2,7 +2,7 @@ import type { ArchiveFixturesFile, ArchiveMatchesFile } from './data.ts';
 import type { Club, EligibilityRules } from './types.ts';
 import { currentSeason, type FeedFixture, isResult, sortFixtures } from './feeds.ts';
 import { historicalClubs, type HistoricalClub } from './historicalSides.ts';
-import { buildParticipationSnapshot, clubSnapshot, listClubs, type ParticipationSnapshot } from './participation.ts';
+import { buildParticipationSnapshot, clubSnapshot, inExcludedMonth, listClubs, type ParticipationSnapshot } from './participation.ts';
 import { assignTransfers } from './players.ts';
 import {
   aggregatePlayerHistory,
@@ -200,7 +200,8 @@ export function buildPublished(
   const season = currentSeason(fixtures, now);
   const seasonFixtures = sortFixtures(fixtures.filter((fixture) => fixture.season === season));
   const seasonMatches = matches.filter((match) => match.fixture.season === season);
-  const results = seasonFixtures.filter((fixture) => isResult(fixture, now));
+  // A summer 7s match counts for no one, so it gives no rows or gaps.
+  const results = seasonFixtures.filter((fixture) => isResult(fixture, now) && !inExcludedMonth(fixture.dateTime, rules));
   const participation = buildParticipationSnapshot(aggregatePlayerHistory(seasonMatches).values(), results, now);
   const clubs = withClubKeys(listClubs(seasonFixtures, rules));
   const clubFiles = Object.fromEntries(
@@ -220,7 +221,7 @@ export function buildLockedSeason(
 ): LockedSeasonData {
   const seasonFixtures = sortFixtures(fixtures.filter((fixture) => fixture.season === season));
   const seasonMatches = matches.filter((match) => match.fixture.season === season);
-  const results = seasonFixtures.filter((fixture) => isResult(fixture, now));
+  const results = seasonFixtures.filter((fixture) => isResult(fixture, now) && !inExcludedMonth(fixture.dateTime, rules));
   const participation = buildParticipationSnapshot(aggregatePlayerHistory(seasonMatches).values(), results, now);
   const { clubs: found, unplacedTeams } = historicalClubs(seasonFixtures, rules);
   const clubs = withClubKeys(found);

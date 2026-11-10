@@ -121,6 +121,9 @@ export interface EligibilityRules {
   /** Half of a player's matches being with the upper sides loses the lower side.
    *  Otherwise being level with them is enough to keep it. */
   upperSideWinsTie?: boolean;
+  /** Months (1 to 12) whose matches don't count, whatever their competition: the
+   *  summer 7s season. */
+  excludedMonths?: number[];
   /** Competition-name fragments (case-insensitive) that are not NCS Qualifying
    *  Matches. Applied to the match record; a CSV report is taken as given. */
   nonQualifyingCompetitions: string[];
