@@ -95,13 +95,17 @@ function SeasonClubs({ file }: { file: PublishedSeasonFile }) {
         </MuiLink>
         .
       </Typography>
-      {unplacedTeams.length > 0 && (
-        <Typography variant="body2" color="textSecondary" gutterBottom>
-          {unplacedTeams.length} {unplacedTeams.length === 1 ? 'team' : 'teams'} couldn&apos;t be placed in a division, so
-          aren&apos;t assessed.
-        </Typography>
-      )}
       <ClubDirectory clubs={clubs} autoFocus clubHref={(key) => seasonClubPath(slug, key)} />
+      {unplacedTeams.length > 0 && (
+        <section>
+          <Typography variant="h6" component="h2" sx={{ mt: 3 }} gutterBottom>
+            Not matched to a division
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
+            In the {season} record, with no verdicts: {unplacedTeams.join(' · ')}
+          </Typography>
+        </section>
+      )}
     </>
   );
 }
