@@ -4,7 +4,9 @@ Player pages landed on 8 November 2026 (ade4d52) as one static page per player, 
 
 So there is one player page, `/player/?id=<cms-id>`, and the players' profiles are published in 256 files, `player-data/<bucket>.json`, keyed by a hash of the CMS id (`playerBucket` in `src/utils/playerBuckets.ts`). A deploy is back to a few hundred files.
 
-Decisions, so they aren't undone later:
+**This is temporary.** It works around GitHub Pages, a static host. The plan is to move the site to Netlify and render the player page on the server, so each player's page carries its verdict in its HTML again without a file per player in the deploy. When that happens, this ADR is superseded: the grouped files, `bun run players`, and the 404 redirect can go, and player URLs can go back to a path. Until then, the decisions below hold.
+
+Decisions for now:
 
 - **The files are worked out at build time** (`bun run players`, which `dev` and `build` run first) from `public/data`, by the same published client the pages used, with verdicts counted from the build's time as the club pages are. They are written to the gitignored `public/player-data/`, not `public/data/`: they are derived, not part of the nightly data or of `verify`, and not part of the package's published shapes.
 - **A hash, not an id prefix.** CMS ids are base-62 strings, so a prefix would give 62 or 3,844 files. FNV-1a mod 256 spreads them evenly, about 37 players and 145 KB (15 KB gzipped) per file. Changing `PLAYER_BUCKETS` moves every player, which is harmless since the files are rebuilt each time.
