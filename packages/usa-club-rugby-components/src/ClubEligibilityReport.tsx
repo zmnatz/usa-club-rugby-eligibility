@@ -1,14 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Alert, Link as MuiLink, Stack, Typography } from '@mui/material';
 import {
-  clubBreakdown,
-  clubGaps,
+  clubSeason,
   mergedClubNotes,
   type FeedFixture,
   type ParticipationSnapshot,
   type PlayerRecordInput,
   type PublishedClub,
-  rulesForSeason,
 } from '@zmnatz/usa-club-rugby-data';
 import { formatDateTime } from './dates.ts';
 import { EligibilityReportView } from './EligibilityReportView.tsx';
@@ -34,8 +32,7 @@ export function ClubEligibilityReport({ club, saved, fixtures, clubSlug = null }
   const locked = saved.locked === true;
   // A Locked Season's notes come with its file; this season's are worked out here.
   const notes = locked ? club.notes : mergedClubNotes(club);
-  const breakdown = useMemo(() => clubBreakdown(saved, fixtures, club), [club, saved, fixtures]);
-  const gaps = useMemo(() => clubGaps(saved, club, rulesForSeason(saved.season)), [saved, club]);
+  const { breakdown, gaps } = useMemo(() => clubSeason(saved, fixtures, club), [club, saved, fixtures]);
   const playerRecord: PlayerRecordInput = { club, snapshot: saved, fixtures };
 
   return (

@@ -1,6 +1,5 @@
 import type { PublishedSeasonFile } from './data.ts';
-import { clubFixtures } from './clubFixtures.ts';
-import { clubBreakdown, clubGaps } from './clubReport.ts';
+import { clubSeason } from './clubSeason.ts';
 import { isQualifying } from './qualifying.ts';
 import { rulesForSeason } from './rules.ts';
 
@@ -53,7 +52,8 @@ export function seasonSummary(file: PublishedSeasonFile): SeasonSummary {
     if (!snapshot) continue;
     for (const id of snapshot.resultIds ?? []) matches.add(id);
     transfers += Object.keys(snapshot.transfers ?? {}).length;
-    for (const gap of clubGaps(snapshot, club, rules)) {
+    const season = clubSeason(snapshot, file.fixtures, club, { rules });
+    for (const gap of season.gaps) {
       if (gap.kind === 'no-lineup') gaps.noLineup += 1;
       else gaps.noSubstitutions += 1;
     }
@@ -65,7 +65,7 @@ export function seasonSummary(file: PublishedSeasonFile): SeasonSummary {
     }
 
     const women = club.name.endsWith(' Women');
-    const breakdown = clubBreakdown(snapshot, clubFixtures(file.fixtures, club), club, { rules });
+    const { breakdown } = season;
     for (const side of breakdown.sides) {
       const level = side.label.match(/^D(\d)/)?.[1];
       const division = level ? `${women ? "Women's" : "Men's"} D${level}` : 'Division not known';

@@ -5,7 +5,7 @@ Every number on the site can be rebuilt from public inputs. This is the pipeline
 ```
 Rugby Xplorer CMS ──snapshot──▶ archive/ (raw) ──build──▶ public/data/ (published) ──library──▶ verdicts
                                     ▲                          ▲                          ▲
-                              committed nightly         `verify` recalculates it     clubEligibility()
+                              committed nightly         `verify` recalculates it     clubSeason()
 ```
 
 | Stage | Input | Output | Deterministic |

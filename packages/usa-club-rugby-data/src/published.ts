@@ -1,8 +1,7 @@
 import type { PublishedClubFile, PublishedFixturesFile, PublishedPlayersFile, PublishedSeasonFile } from './data.ts';
 import type { Club, EligibilityBreakdown, EligibilityRules, PlayerEligibility } from './types.ts';
 import type { FeedFixture } from './feeds.ts';
-import { clubFixtures } from './clubFixtures.ts';
-import { clubBreakdown } from './clubReport.ts';
+import { clubSeason } from './clubSeason.ts';
 import type { ParticipationSnapshot } from './snapshot.ts';
 import { buildPlayerIndex, clubContext, type PlayerClubEntry, type PlayerProfile, playerEntries, sortEntries } from './players.ts';
 import { parseTeamSide, type TeamSide } from './teamSide.ts';
@@ -79,14 +78,15 @@ export interface EligibilityOptions {
 }
 
 /** One club's per-side verdicts from its published participation. A pure function
- *  of its inputs, so the same data and rules always give the same verdicts. */
+ *  of its inputs, so the same data and rules always give the same verdicts.
+ *  @deprecated Use `clubSeason(...).breakdown`. */
 export function clubEligibility(
   snapshot: ParticipationSnapshot,
   fixtures: FeedFixture[],
   club: Club,
   options: EligibilityOptions = {},
 ): EligibilityBreakdown {
-  return clubBreakdown(snapshot, clubFixtures(fixtures, club), club, options);
+  return clubSeason(snapshot, fixtures, club, options).breakdown;
 }
 
 export function createPublishedClient({
