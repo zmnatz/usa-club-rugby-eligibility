@@ -7,3 +7,7 @@
 
 [build.environment]
   BUN_VERSION = "1.4.4"
+
+# Next's build cache, which the export leaves in .next/cache.
+[[plugins]]
+  package = "./netlify/plugins/next-cache"
