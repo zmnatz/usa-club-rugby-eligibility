@@ -29,7 +29,7 @@ function Fact({ label, value }: { label: string; value: ReactNode }) {
 const ROUND_STATUS: Record<PlayerRoundStatus, string> = {
   started: 'Started',
   substitute: 'Came on as a substitute',
-  unused: "Listed as a substitute, didn't come on",
+  unused: "On the roster as a substitute, didn't come on",
   'not-listed': 'Not in the lineup',
   'no-lineup': 'No lineup recorded',
   forfeit: 'Forfeit, not counted',
@@ -46,7 +46,19 @@ const reportLink = (fixtureId: string, clubSlug: string | null) => (
   </a>
 );
 
-/** One team's fixtures for one player, each linked to its Rugby Xplorer report. */
+/** Statuses where the player was named on the match-day roster, whether or not they came on. */
+const ROSTERED: ReadonlySet<PlayerRoundStatus> = new Set([
+  'started',
+  'substitute',
+  'unused',
+  'forfeit-rostered',
+]);
+
+const isRostered = (round: PlayerRound) => ROSTERED.has(round.status);
+
+/** One team's games for one player: every one they were on the roster for, each linked
+ *  to its Rugby Xplorer report. A game they were listed for but didn't come on in is
+ *  marked, and isn't counted. */
 function TeamRounds({
   teamName,
   rounds,
@@ -56,11 +68,15 @@ function TeamRounds({
   rounds: PlayerRound[];
   clubSlug: string | null;
 }) {
-  const counted = rounds.filter((round) => round.counted).length;
+  const rostered = rounds.filter(isRostered);
+  const counted = rostered.filter((round) => round.counted).length;
+  const unused = rostered.filter((round) => round.status === 'unused').length;
+  const others = rounds.length - rostered.length;
   return (
     <div className="ec-stack-sm">
       <h3 style={{ margin: 0, fontSize: '1rem' }}>
-        {teamName}: {counted} counted {counted === 1 ? 'match' : 'matches'}
+        {teamName}: {rostered.length} on the roster, {counted} counted
+        {unused > 0 && `, ${unused} didn't come on`}
       </h3>
       <div className="ec-table-wrap ec-table-outlined">
         <table className="ec-table">
@@ -76,7 +92,7 @@ function TeamRounds({
             </tr>
           </thead>
           <tbody>
-            {rounds.map((round) => (
+            {rostered.map((round) => (
               <tr key={round.fixtureId}>
                 <td>{round.round}</td>
                 <td>{formatDate(round.dateTime)}</td>
@@ -96,34 +112,32 @@ function TeamRounds({
                 <td>{reportLink(round.fixtureId, clubSlug)}</td>
               </tr>
             ))}
-            {rounds.length === 0 && (
-              <tr>
-                <td colSpan={7} className="ec-center ec-muted">
-                  No fixtures this season.
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>
+      {others > 0 && (
+        <p className="ec-muted ec-small" style={{ margin: 0 }}>
+          Not on the roster for {others} other {others === 1 ? 'fixture' : 'fixtures'} this season.
+        </p>
+      )}
     </div>
   );
 }
 
 /** A round table for each side the player has played for, own side first; every
- *  side feeds the verdict. A side they haven't played for gets only a line. */
+ *  side feeds the verdict. A side they were never on the roster for gets only a line. */
 function PlayedRounds({ sides, clubSlug }: { sides: SideRounds[]; clubSlug: string | null }) {
-  const notPlayed = sides.filter(({ rounds }) => !rounds.some((round) => round.counted));
+  const notPlayed = sides.filter(({ rounds }) => !rounds.some(isRostered));
   return (
     <>
       {sides
-        .filter(({ rounds }) => rounds.some((round) => round.counted))
+        .filter(({ rounds }) => rounds.some(isRostered))
         .map(({ teamName, rounds }) => (
           <TeamRounds key={teamName} teamName={teamName} rounds={rounds} clubSlug={clubSlug} />
         ))}
       {notPlayed.length > 0 && (
         <p className="ec-muted ec-small" style={{ margin: 0 }}>
-          No matches played this season for {notPlayed.map(({ teamName }) => teamName).join(', ')}.
+          Not on the roster this season for {notPlayed.map(({ teamName }) => teamName).join(', ')}.
         </p>
       )}
     </>

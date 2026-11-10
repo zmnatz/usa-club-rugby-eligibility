@@ -116,4 +116,51 @@ describe('PlayerDetailBody', () => {
     render(<PlayerDetailHeading player={player} source="csv" />);
     expect(screen.getByText('USA ID ona')).toBeTruthy();
   });
+
+  it("lists every game on the roster, marks one they didn't come on in, and omits the rest", () => {
+    const fixture = (id: string, round: string, date: string) => ({
+      ...record.fixtures[0],
+      id,
+      round,
+      dateTime: date,
+    });
+    const rostered: PlayerRow = { ...row, rounds: { b1: 'Start', b2: 'R' } };
+    const withUnused: PlayerRecordInput = {
+      ...record,
+      snapshot: { ...record.snapshot, resultIds: ['b1', 'b2', 'b3'], rows: [rostered] },
+      fixtures: [
+        record.fixtures[0],
+        fixture('b2', 'Round 2', '2026-09-18T17:00:00Z'),
+        fixture('b3', 'Round 3', '2026-09-25T17:00:00Z'),
+      ],
+    };
+    const them = { ...player, rows: [rostered] };
+    render(
+      <EligibilityLinksProvider Link="a" routes={routes}>
+        <PlayerDetailBody player={them} source="record" ownLabel="D3" fixtures={playerFixtures(them, withUnused)} />
+      </EligibilityLinksProvider>,
+    );
+    expect(screen.getByText(/2 on the roster, 1 counted, 1 didn't come on/)).toBeTruthy();
+    expect(screen.getByText("On the roster as a substitute, didn't come on")).toBeTruthy();
+    expect(screen.getByText('Round 2')).toBeTruthy();
+    expect(screen.queryByText('Round 3')).toBeNull();
+    expect(screen.getByText('Not on the roster for 1 other fixture this season.')).toBeTruthy();
+  });
+
+  it("still lists a side the player was only ever an unused substitute for", () => {
+    const only: PlayerRow = { ...row, rounds: { b1: 'R' } };
+    const them = { ...player, rows: [only] };
+    render(
+      <EligibilityLinksProvider Link="a" routes={routes}>
+        <PlayerDetailBody
+          player={them}
+          source="record"
+          ownLabel="D3"
+          fixtures={playerFixtures(them, { ...record, snapshot: { ...record.snapshot, rows: [only] } })}
+        />
+      </EligibilityLinksProvider>,
+    );
+    expect(screen.getByText("On the roster as a substitute, didn't come on")).toBeTruthy();
+    expect(screen.queryByText(/Not on the roster this season for/)).toBeNull();
+  });
 });
