@@ -66,6 +66,21 @@ export function ClubEligibilityReport({ club, saved, fixtures, clubSlug = null }
           </Typography>
         </div>
 
+        {club.notes && (
+          <Alert severity="info">
+            <Typography variant="body2" component="p" gutterBottom>
+              The record doesn&apos;t fully say how this club&apos;s teams were set up, so these were assumed:
+            </Typography>
+            <Stack component="ul" spacing={0.5} useFlexGap sx={{ m: 0, pl: 2 }}>
+              {club.notes.map((note) => (
+                <Typography key={note} component="li" variant="body2">
+                  {note}
+                </Typography>
+              ))}
+            </Stack>
+          </Alert>
+        )}
+
         {club.unplacedTeams && (
           <Alert severity="warning">
             The record doesn&apos;t say which division these teams played in, so their matches aren&apos;t

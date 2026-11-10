@@ -18,6 +18,8 @@ export interface PublishedClub extends Club {
   /** Locked Seasons only: teams that look like this club's but have no division, so
    *  its players may have matches the verdicts don't count. */
   unplacedTeams?: string[];
+  /** Locked Seasons only: what was assumed about a team where the record doesn't say. */
+  notes?: string[];
 }
 
 /** A Locked Season as `seasons.json` lists it. */

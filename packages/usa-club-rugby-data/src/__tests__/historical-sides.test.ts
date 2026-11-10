@@ -30,7 +30,7 @@ describe('placing a team in its club and division', () => {
     ['Black Sheep D2 1st XV', 'Approved 3.4.3 Matches', 'Black Sheep', 'D2'],
     ['Buffalo MD3 2nd', 'Approved 3.4.3 Matches', 'Buffalo', 'D3 2nd XV'],
   ])('%s in %s is %s %s', (team, competition, club, label) => {
-    expect(place(game(competition, team)).clubs).toEqual([{ name: club, sides: [{ teamName: team, label }] }]);
+    expect(place(game(competition, team)).clubs).toMatchObject([{ name: club, sides: [{ teamName: team, label }] }]);
   });
 
   it.each([
@@ -49,7 +49,7 @@ describe('placing a team in its club and division', () => {
 
   it('ranks a club\'s sides by division, however differently they are named', () => {
     const { clubs } = place(game('NorCal Mens D2', 'Reno Mens 2nd XV'), game('NorCal Mens D1', 'Reno MD1'));
-    expect(clubs).toEqual([
+    expect(clubs).toMatchObject([
       {
         name: 'Reno',
         sides: [
@@ -76,7 +76,7 @@ describe('placing a team in its club and division', () => {
   });
 
   it('leaves out divisions outside the NCS', () => {
-    expect(place(game('NERFU Men D4', 'Amoskeag Men Senior'), game('NorCal Womens D3', 'Chico Womens'))).toEqual({
+    expect(place(game('NERFU Men D4', 'Amoskeag Men Senior'), game('NorCal Womens D3', 'Chico Womens'))).toMatchObject({
       clubs: [],
       unplacedTeams: [],
     });
@@ -87,7 +87,7 @@ describe('a team with no division', () => {
   it.each(["SWRU Men's D2 & D3", 'Approved 3.4.3 Matches', 'MW Spring 2024 - NCS Pathway Matches'])(
     'is a one-side club when alone at its club: %s',
     (competition) => {
-      expect(place(game(competition, 'Tempe Old Devils Men'))).toEqual({
+      expect(place(game(competition, 'Tempe Old Devils Men'))).toMatchObject({
         clubs: [{ name: 'Tempe Old Devils', sides: [{ teamName: 'Tempe Old Devils Men', label: 'Senior' }] }],
         unplacedTeams: [],
       });
@@ -96,7 +96,7 @@ describe('a team with no division', () => {
 
   it('is a one-side club when its competitions split evenly between divisions', () => {
     const result = place(game('NorCal Mens D2', 'Marin Mens'), game('NorCal Mens D3', 'Marin Mens'));
-    expect(result).toEqual({ clubs: [{ name: 'Marin', sides: [{ teamName: 'Marin Mens', label: 'Senior' }] }], unplacedTeams: [] });
+    expect(result).toMatchObject({ clubs: [{ name: 'Marin', sides: [{ teamName: 'Marin Mens', label: 'Senior' }] }], unplacedTeams: [] });
   });
 
   it('keeps a women\'s team as a women\'s club', () => {
@@ -108,24 +108,24 @@ describe('a team with no division', () => {
     ['Phoenixville Men B-Side B-League', 'Phoenixville'],
     ['Riverton Men B Side', 'Riverton'],
   ])('is taken as Division 3 when it is a B side: %s', (team, club) => {
-    expect(place(game('Approved 3.4.3 Matches', team)).clubs).toEqual([{ name: club, sides: [{ teamName: team, label: 'D3' }] }]);
+    expect(place(game('Approved 3.4.3 Matches', team)).clubs).toMatchObject([{ name: club, sides: [{ teamName: team, label: 'D3' }] }]);
   });
 
   it('ranks a B side below its club\'s main side', () => {
     const { clubs } = place(game('EPRU D2 Men', 'Media MD2'), game('Approved 3.4.3 Matches', 'Media B-Side B-League'));
-    expect(clubs[0].sides).toEqual([
+    expect(clubs[0].sides).toMatchObject([
       { teamName: 'Media MD2', label: 'D2' },
       { teamName: 'Media B-Side B-League', label: 'D3' },
     ]);
   });
 
   it('leaves out a women\'s B side, since Women\'s Division 3 is outside the NCS', () => {
-    expect(place(game('Approved 3.4.3 Matches', 'Riverton Women B-Side'))).toEqual({ clubs: [], unplacedTeams: [] });
+    expect(place(game('Approved 3.4.3 Matches', 'Riverton Women B-Side'))).toMatchObject({ clubs: [], unplacedTeams: [] });
   });
 
   it('ranks a 2nd XV one division below its club\'s other side', () => {
     const { clubs } = place(game('PNRFU Men D2', "Pigs Men's D2 Senior"), game('PNRFU Championship', 'Pigs 2nd XV'));
-    expect(clubs).toEqual([
+    expect(clubs).toMatchObject([
       {
         name: 'Pigs',
         sides: [
@@ -142,12 +142,12 @@ describe('a team with no division', () => {
       game('Capital Men D2', 'Austin MD2'),
       game('Approved 3.4.3 Matches', 'Austin 2nd XV'),
     );
-    expect(clubs[0].sides.map((side) => side.label)).toEqual(['D1', 'D2', 'D3']);
+    expect(clubs[0].sides.map((side) => side.label)).toMatchObject(['D1', 'D2', 'D3']);
   });
 
   it('ranks a 2nd XV below its 1st XV when neither has a division', () => {
     const result = place(game('PNRFU Championship', 'Quake 1st XV'), game('PNRFU Championship', 'Quake 2nd XV'));
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       clubs: [
         {
           name: 'Quake',
@@ -163,12 +163,12 @@ describe('a team with no division', () => {
 
   it('ranks a 3rd XV two divisions below', () => {
     const { clubs } = place(game('Capital Men D1', 'Austin MD1'), game('Approved 3.4.3 Matches', 'Austin 3rd XV'));
-    expect(clubs[0].sides.map((side) => side.label)).toEqual(['D1', 'D3']);
+    expect(clubs[0].sides.map((side) => side.label)).toMatchObject(['D1', 'D3']);
   });
 
   it('leaves out a 2nd XV that would fall below the NCS', () => {
     const result = place(game('NERFU Women D2', 'Riverton WD2'), game('Approved 3.4.3 Matches', 'Riverton Women 2nd XV'));
-    expect(result).toEqual({ clubs: [{ name: 'Riverton Women', sides: [{ teamName: 'Riverton WD2', label: 'D2' }] }], unplacedTeams: [] });
+    expect(result).toMatchObject({ clubs: [{ name: 'Riverton Women', sides: [{ teamName: 'Riverton WD2', label: 'D2' }] }], unplacedTeams: [] });
   });
 
   it.each([
@@ -181,7 +181,7 @@ describe('a team with no division', () => {
     'Atown 10s',
     'Capital Selects Women',
   ])('stays unmatched when it is a round or one-off entry, not a side: %s', (team) => {
-    expect(place(game('Approved 3.4.3 Matches', team))).toEqual({ clubs: [], unplacedTeams: [team] });
+    expect(place(game('Approved 3.4.3 Matches', team))).toMatchObject({ clubs: [], unplacedTeams: [team] });
   });
 
   it.each([
@@ -192,14 +192,14 @@ describe('a team with no division', () => {
     ['Gladiators MD3 18+', 'Utah Spring Season - Mens', 'Gladiators', 'D3'],
     ['OP Lightning 18-99', 'SWRU Women', 'OP Lightning Women', 'Senior'],
   ])('reads an age tag as a senior team: %s', (team, competition, club, label) => {
-    expect(place(game(competition, team)).clubs).toEqual([{ name: club, sides: [{ teamName: team, label }] }]);
+    expect(place(game(competition, team)).clubs).toMatchObject([{ name: club, sides: [{ teamName: team, label }] }]);
   });
 
   it.each([
     ['Boulder Men RMR Premiership', 'Boulder', 'D2'],
     ['Queen City RMR Championship', 'Queen City', 'D3'],
   ])('reads a Rocky Mountain league tier as a division: %s', (team, club, label) => {
-    expect(place(game('RMR Premiership', team)).clubs).toEqual([{ name: club, sides: [{ teamName: team, label }] }]);
+    expect(place(game('RMR Premiership', team)).clubs).toMatchObject([{ name: club, sides: [{ teamName: team, label }] }]);
   });
 
   it('ranks a club\'s Rocky Mountain tiers, including a B side', () => {
@@ -207,7 +207,7 @@ describe('a team with no division', () => {
       game('RMR Premiership', 'Denver Barbarians RMR Premiership'),
       game('RMR Championship', 'Denver Barbarians B RMR Championship'),
     );
-    expect(clubs[0]).toEqual({
+    expect(clubs[0]).toMatchObject({
       name: 'Denver Barbarians',
       sides: [
         { teamName: 'Denver Barbarians RMR Premiership', label: 'D2' },
@@ -218,7 +218,7 @@ describe('a team with no division', () => {
 
   it('stays unmatched when its club has another team with no division, since they cannot be ranked', () => {
     const result = place(game('Approved 3.4.3 Matches', 'Quake Men'), game('Approved 3.4.3 Matches', 'Quake Senior'));
-    expect(result).toEqual({ clubs: [], unplacedTeams: ['Quake Men', 'Quake Senior'] });
+    expect(result).toMatchObject({ clubs: [], unplacedTeams: ['Quake Men', 'Quake Senior'] });
   });
 });
 
@@ -228,12 +228,12 @@ describe('teams that cannot be placed', () => {
       game('EPRU D3 Men', 'Harrisburg MD3', 'York MD3'),
       game('Approved 3.4.3 Matches', 'Harrisburg Men Senior Club', 'York MD3'),
     );
-    expect(clubs[0]).toEqual({
+    expect(clubs[0]).toMatchObject({
       name: 'Harrisburg',
       sides: [{ teamName: 'Harrisburg MD3', label: 'D3' }],
       unplacedTeams: ['Harrisburg Men Senior Club'],
     });
-    expect(unplacedTeams).toEqual(['Harrisburg Men Senior Club']);
+    expect(unplacedTeams).toMatchObject(['Harrisburg Men Senior Club']);
   });
 
   it('keeps apart two clubs that share a name but play nobody in common', () => {
@@ -241,11 +241,11 @@ describe('teams that cannot be placed', () => {
       game('Ohio Men D2', 'Columbus MD2', 'Cincinnati MD2'),
       game('Georgia Rugby Union Matrix 2025', "Columbus Men's 18+", 'Atlanta Bucks 18+'),
     );
-    expect(clubs.filter((club) => club.name === 'Columbus')).toEqual([
+    expect(clubs.filter((club) => club.name === 'Columbus')).toMatchObject([
       { name: 'Columbus', sides: [{ teamName: 'Columbus MD2', label: 'D2' }] },
       { name: 'Columbus', sides: [{ teamName: "Columbus Men's 18+", label: 'Senior' }] },
     ]);
-    expect(unplacedTeams).toEqual([]);
+    expect(unplacedTeams).toMatchObject([]);
   });
 
   it('leaves out a club with two names at one division, which cannot be ranked', () => {
@@ -254,10 +254,67 @@ describe('teams that cannot be placed', () => {
       game('NERFU Men D2', 'Bay Men Senior'),
       game('NERFU Men D1', 'Bay MD1'),
     );
-    expect(result).toEqual({ clubs: [], unplacedTeams: ['Bay MD1', 'Bay Men', 'Bay Men Senior'] });
+    expect(result).toMatchObject({ clubs: [], unplacedTeams: ['Bay MD1', 'Bay Men', 'Bay Men Senior'] });
   });
 
   it('skips a fixture with no team assigned', () => {
-    expect(place(game('NorCal Mens D2', ''))).toEqual({ clubs: [], unplacedTeams: [] });
+    expect(place(game('NorCal Mens D2', ''))).toMatchObject({ clubs: [], unplacedTeams: [] });
+  });
+});
+
+describe('a note on each guess', () => {
+  const notesOf = (...fixtures: ReturnType<typeof game>[]) => place(...fixtures).clubs.map((club) => club.notes ?? []);
+
+  it('says nothing when the name or competition gives the division', () => {
+    expect(notesOf(game('NorCal Mens D2', 'Marin Mens'), game('Approved 3.4.3 Matches', 'Reno MD1'))).toEqual([[], []]);
+  });
+
+  it('a division chosen from several', () => {
+    expect(notesOf(game('NorCal Mens D2', 'Marin Mens'), game('NorCal Mens D2', 'Marin Mens'), game('NorCal Mens D3', 'Marin Mens'))).toEqual([
+      ['Marin Mens: its competitions name more than one division, so it is taken as D2, where most of its matches were.'],
+    ]);
+  });
+
+  it('a one-side club with no division', () => {
+    expect(notesOf(game('Approved 3.4.3 Matches', 'Tempe Old Devils Men'))).toEqual([
+      ["Tempe Old Devils Men: the record doesn't name its division, so the club is assessed as a one-side club."],
+    ]);
+  });
+
+  it('a 2nd XV placed below its club', () => {
+    expect(notesOf(game('PNRFU Men D2', "Pigs Men's D2 Senior"), game('PNRFU Championship', 'Pigs 2nd XV'))).toEqual([
+      ["Pigs 2nd XV: the record doesn't name its division, so as a second side it is taken as D3, below Pigs Men's D2 Senior."],
+    ]);
+  });
+
+  it('a B side with nothing to go below', () => {
+    expect(notesOf(game('Approved 3.4.3 Matches', 'Old Gaelic B-Side B-League'))).toEqual([
+      ["Old Gaelic B-Side B-League: the record doesn't name its division, so as a second side it is taken as D3."],
+    ]);
+  });
+
+  it('a 1st and 2nd XV ranked by name', () => {
+    expect(notesOf(game('PNRFU Championship', 'Quake 1st XV'), game('PNRFU Championship', 'Quake 2nd XV'))).toEqual([
+      ["Quake 1st XV and Quake 2nd XV: the record doesn't name their divisions, so they are ranked by name, 1st XV above 2nd XV."],
+    ]);
+  });
+
+  it('a Rocky Mountain tier', () => {
+    expect(notesOf(game('RMR Premiership', 'Boulder Men RMR Premiership'))).toEqual([
+      ['Boulder Men RMR Premiership: its Rocky Mountain tier, Premiership, is taken as D2.'],
+    ]);
+  });
+
+  it('a club kept apart from a namesake', () => {
+    const { clubs } = place(
+      game('Ohio Men D2', 'Columbus MD2', 'Cincinnati MD2'),
+      game('Georgia Rugby Union Matrix 2025', "Columbus Men's 18+", 'Atlanta Bucks 18+'),
+    );
+    expect(clubs.filter((club) => club.name === 'Columbus').map((club) => club.notes ?? [])).toEqual([
+      [],
+      [
+        "Columbus Men's 18+: another club named Columbus plays different opponents, so this is a club of its own. The record doesn't name its division, so it is assessed as a one-side club.",
+      ],
+    ]);
   });
 });

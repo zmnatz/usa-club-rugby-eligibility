@@ -19,6 +19,8 @@ interface HistoricalFixture {
  *  division: a side left out can make players below it look eligible. */
 export interface HistoricalClub extends Club {
   unplacedTeams?: string[];
+  /** What was assumed about a team where the record doesn't say, one per team. */
+  notes?: string[];
 }
 
 export interface HistoricalClubs {
@@ -54,12 +56,21 @@ const LOWER_SIDE_LEVEL = 3;
 const genderOf = (token: string): Gender => (token.toUpperCase().startsWith('W') ? 'W' : 'M');
 
 /** A team name without its trailing gender, division, XV and decoration. */
-function readTeamName(teamName: string): { base: string; gender?: Gender; level?: number; xv: number; bSide: boolean } {
+function readTeamName(teamName: string): {
+  base: string;
+  gender?: Gender;
+  level?: number;
+  xv: number;
+  bSide: boolean;
+  /** The Rocky Mountain tier the level was read from. */
+  tier?: string;
+} {
   const tokens = teamName.trim().split(/\s+/);
   let gender: Gender | undefined;
   let level: number | undefined;
   let xv = 1;
   let bSide = false;
+  let tierName: string | undefined;
   while (tokens.length > 1) {
     const token = tokens[tokens.length - 1];
     const lettered = tokens[tokens.length - 2].match(/^[ABC]$/);
@@ -68,6 +79,7 @@ function readTeamName(teamName: string): { base: string; gender?: Gender; level?
     const tier = RMR_TIERS[token.toLowerCase()];
     if (tier && /^rmr$/i.test(tokens[tokens.length - 2]) && tokens.length > 2) {
       level = tier;
+      tierName = token;
       tokens.pop();
     } else if (token === 'B') {
       bSide = true;
@@ -89,7 +101,7 @@ function readTeamName(teamName: string): { base: string; gender?: Gender; level?
     }
     tokens.pop();
   }
-  return { base: tokens.join(' '), gender, level, xv, bSide };
+  return { base: tokens.join(' '), gender, level, xv, bSide, tier: tierName };
 }
 
 /** The one division a competition's name gives, if it gives exactly one. */
@@ -147,9 +159,19 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
   const sidesByClub = new Map<string, { teamName: string; level: number; xv: number; label?: string }[]>();
   const noDivision = new Map<string, string>();
   const lowerSides: { teamName: string; club: string; gender: Gender; below: number }[] = [];
+  /** What was assumed about a team, by team name. */
+  const notes = new Map<string, string>();
+  const unnamed = "the record doesn't name its division";
   for (const [teamName, divisions] of divisionsByTeam) {
-    const { base, gender: nameGender, level: nameLevel, xv: nameXv, bSide } = readTeamName(teamName);
+    const { base, gender: nameGender, level: nameLevel, xv: nameXv, bSide, tier } = readTeamName(teamName);
     const common = nameLevel === undefined ? mostCommonDivision(divisions) : null;
+    if (common && new Set(divisions.map((division) => division.level)).size > 1) {
+      notes.set(
+        teamName,
+        `${teamName}: its competitions name more than one division, so it is taken as D${common.level}, where most of its matches were.`,
+      );
+    }
+    if (tier) notes.set(teamName, `${teamName}: its Rocky Mountain tier, ${tier}, is taken as D${nameLevel}.`);
     const compGender =
       common?.gender ??
       divisions.find((division) => division.gender)?.gender ??
@@ -178,6 +200,10 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
       const lowest = gender === 'W' ? 2 : 3;
       const [first] = firsts[0];
       noDivision.delete(first);
+      notes.set(
+        first,
+        `${first} and ${teamName}: the record doesn't name their divisions, so they are ranked by name, 1st XV above ${below === 1 ? '2nd XV' : '3rd XV'}.`,
+      );
       sidesByClub.set(club, [
         { teamName: first, level: lowest - below, xv: 1, label: '1st XV' },
         { teamName, level: lowest, xv: 1, label: below === 1 ? '2nd XV' : '3rd XV' },
@@ -187,6 +213,11 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
     // With no side of its club placed, a second side is taken as Division 3.
     const level = levels.length > 0 ? Math.max(...levels) + below : LOWER_SIDE_LEVEL + below - 1;
     if (isNcsSide({ gender, level })) {
+      const above = (sidesByClub.get(club) ?? []).find((side) => side.level === Math.max(...levels));
+      notes.set(
+        teamName,
+        `${teamName}: ${unnamed}, so as a ${below === 1 ? 'second' : 'third'} side it is taken as D${level}${above ? `, below ${above.teamName}` : ''}.`,
+      );
       sidesByClub.set(club, [...(sidesByClub.get(club) ?? []), { teamName, level, xv: 1 }]);
     }
   }
@@ -208,7 +239,10 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
   for (const [teamName, club] of noDivision) {
     if (NOT_A_SIDE.test(teamName) || sharing.get(club) !== 1) continue;
     if (sidesByClub.has(club) && sameClub(teamName, club)) continue;
-    clubs.push({ name: club, sides: [{ teamName, label: NO_DIVISION_LABEL }] });
+    const note = sidesByClub.has(club)
+      ? `${teamName}: another club named ${club} plays different opponents, so this is a club of its own. The record doesn't name its division, so it is assessed as a one-side club.`
+      : `${teamName}: ${unnamed}, so the club is assessed as a one-side club.`;
+    clubs.push({ name: club, sides: [{ teamName, label: NO_DIVISION_LABEL }], notes: [note] });
     noDivision.delete(teamName);
   }
 
@@ -220,12 +254,13 @@ export function historicalClubs(fixtures: HistoricalFixture[], rules: Eligibilit
       continue;
     }
     const unplacedTeams = [...noDivision].filter(([, club]) => club === name).map(([team]) => team).sort();
+    const ranked = [...sides].sort((a, b) => a.level - b.level || a.xv - b.xv);
+    const clubNotes = ranked.flatMap(({ teamName }) => notes.get(teamName) ?? []);
     clubs.push({
       name,
-      sides: [...sides]
-        .sort((a, b) => a.level - b.level || a.xv - b.xv)
-        .map(({ teamName, level, xv, label }) => ({ teamName, label: label ?? sideLabel({ level, xv }) })),
+      sides: ranked.map(({ teamName, level, xv, label }) => ({ teamName, label: label ?? sideLabel({ level, xv }) })),
       ...(unplacedTeams.length > 0 ? { unplacedTeams } : {}),
+      ...(clubNotes.length > 0 ? { notes: clubNotes } : {}),
     });
   }
   return {

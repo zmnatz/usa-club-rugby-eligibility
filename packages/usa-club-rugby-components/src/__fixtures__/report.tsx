@@ -126,10 +126,11 @@ export const renderClubReport = ({
   clubSlug = undefined as string | undefined,
   locked = false,
   unplacedTeams = undefined as string[] | undefined,
+  notes = undefined as string[] | undefined,
 } = {}) =>
   renderInHost(
     <ClubEligibilityReport
-      club={unplacedTeams ? { ...club, unplacedTeams } : club}
+      club={{ ...club, ...(unplacedTeams ? { unplacedTeams } : {}), ...(notes ? { notes } : {}) }}
       saved={locked ? { ...saved, locked } : saved}
       fixtures={[...fixtures, ...extraFixtures]}
       clubSlug={clubSlug}

@@ -352,6 +352,12 @@ describe('a Locked Season', () => {
     expect(screen.getByText(/Harbor City Men Senior/)).toBeTruthy();
   });
 
+  it('says what was assumed about a team where the record doesn\'t say', async () => {
+    const note = 'Harbor City 2nd XV: the record doesn\'t name its division, so as a second side it is taken as D3.';
+    await renderClubReport({ locked: true, notes: [note] });
+    expect(screen.getByText(note)).toBeTruthy();
+  });
+
   it('keeps the current season\'s report as it was', async () => {
     await renderClubReport();
     expect(screen.getByRole('group', { name: 'Eligibility status' })).toBeTruthy();
