@@ -23,11 +23,14 @@ export const DEFAULT_RULES: EligibilityRules = {
   // June and July are the 7s season, so no match then counts, whatever its competition
   // is called. A team with no other matches drops out with them.
   excludedMonths: [6, 7],
+  // The 15s postseason, which can reach June (2023 XVs Nationals ran 2-4 June).
+  postseasonCompetitions: ['Super Regional', 'National Championship', 'Nationals'],
 
   nonQualifyingCompetitions: [
     'Super Regional',
     'ASR ',
     'National Championships',
+    'Nationals',
     '7s',
     "7's",
     'Sevens',

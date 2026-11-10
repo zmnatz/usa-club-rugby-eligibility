@@ -124,6 +124,11 @@ export interface EligibilityRules {
   /** Months (1 to 12) whose matches don't count, whatever their competition: the
    *  summer 7s season. */
   excludedMonths?: number[];
+  /** Competition-name fragments for the end of the 15s season (Super Regionals,
+   *  Nationals), which can run into an excluded month: still 15s, so a player's match
+   *  there decides which club they last played for, though it isn't an NCS Qualifying
+   *  Match. */
+  postseasonCompetitions?: string[];
   /** Competition-name fragments (case-insensitive) that are not NCS Qualifying
    *  Matches. Applied to the match record; a CSV report is taken as given. */
   nonQualifyingCompetitions: string[];

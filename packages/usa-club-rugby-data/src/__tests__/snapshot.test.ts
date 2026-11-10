@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { seasonFile, serializeSeasonFixtures, serializeSeasonMatches } from '../archive.ts';
 import type { FeedFixture } from '../feeds.ts';
 import { runSnapshot, verifyPublished } from '../node/snapshot.ts';
+import type { ParticipationSnapshot } from '../participation.ts';
 import type { MatchCentreData } from '../playerHistory.ts';
 
 const NOW = new Date('2026-11-07T12:00:00Z');
@@ -243,6 +244,25 @@ describe('an Archive holding a Locked Season', () => {
     expect(season.clubs.map((club) => club.key)).toEqual(['nova', 'potomac']);
     expect(season.clubFiles.nova.rows.map((row) => row.firstName)).toEqual(['Old']);
     expect(season.clubFiles.nova.transfers).toBeUndefined();
+  });
+
+  it('places a player by a June Nationals match, without counting it', async () => {
+    const at = (id: string, dateTime: string, compName: string, home: string): [FeedFixture, MatchCentreData] => [
+      { ...lockedFixture, id, dateTime, compName, homeTeam: { name: home, score: '20' }, awayTeam: { name: 'Potomac MD3', score: '3' } },
+      { ...lockedMatch, fixture: { ...lockedMatch.fixture, id, dateTime, compName, homeTeam: side(home, '20'), awayTeam: side('Potomac MD3', '3') } },
+    ];
+    const games = [
+      at('o1', '2026-03-01T15:00:00Z', 'Capital Men D3', 'NOVA MD3'),
+      at('o2', '2026-04-04T15:00:00Z', 'Capital Men D3', 'Bayside MD3'),
+      at('o3', '2026-06-05T15:00:00Z', '2026 XVs Nationals', 'NOVA MD3'),
+    ];
+    archiveLocked(LOCKED_SEASON, games.map(([item]) => item), Object.fromEntries(games.map(([item, record]) => [item.id, record])));
+    await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
+    const { clubFiles } = readPublished<{ clubFiles: Record<string, ParticipationSnapshot> }>('seasons/2025-26.json');
+    expect(clubFiles.bayside.rows.some((row) => row.firstName === 'Old')).toBe(false);
+    expect(Object.values(clubFiles.nova.transfers ?? {}).flat().map((other) => other.clubKey)).toEqual(['bayside']);
+    const counted = clubFiles.nova.rows.filter((row) => row.firstName === 'Old' && row.competition === 'Capital Men D3');
+    expect(counted.map((row) => row.played)).toEqual([1]);
   });
 
   it('catches a Locked Season file that was edited by hand or left over', async () => {

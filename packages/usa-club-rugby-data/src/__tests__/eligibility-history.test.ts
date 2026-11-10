@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeBreakdown } from '../eligibility.ts';
+import { inExcludedMonth, isQualifyingMatch } from '../participation.ts';
 import { DEFAULT_RULES, rulesForSeason } from '../rules.ts';
 import type { PlayerRow, Side } from '../types.ts';
 
@@ -128,3 +129,20 @@ describe('the 50% comparison', () => {
     expect(eligibleFor('2024/2025', [1, 2], [0, 2], [12, 8])).toEqual(['D1', 'D2']);
   });
 });
+
+describe('the end of the season', () => {
+  const nationals = { compName: '2023 XVs Nationals', dateTime: '2023-06-02T15:00:00Z' };
+
+  it('a June Nationals is 15s, not summer 7s', () => {
+    expect(inExcludedMonth(nationals, DEFAULT_RULES)).toBe(false);
+    expect(inExcludedMonth({ compName: 'SCRFU 7s - Ventura 6/10', dateTime: '2023-06-10T15:00:00Z' }, DEFAULT_RULES)).toBe(true);
+  });
+
+  it.each(['2023 XVs Nationals', '2026 National Championships XVs', '2025 Super Regional Pacific'])(
+    'but %s is no NCS Qualifying Match',
+    (compName) => {
+      expect(isQualifyingMatch({ compName, dateTime: '2023-05-20T15:00:00Z' }, DEFAULT_RULES)).toBe(false);
+    },
+  );
+});
+
