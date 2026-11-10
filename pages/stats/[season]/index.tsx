@@ -72,7 +72,8 @@ function SeasonStatsBody({ summary }: { summary: SeasonSummary }) {
       </span>
       {ineligible.verdicts > 0 && (
         <p className="ec-small" style={{ margin: 0 }}>
-          Of the {count(ineligible.verdicts, 'time', 'times')} a player wasn&apos;t eligible for a side they played for,{' '}
+          {ineligible.verdicts === 1 ? 'There was' : 'There were'} {count(ineligible.verdicts, 'ineligible verdict')}, one for
+          each player and side they were ineligible for.{' '}
           {ineligible.shortOfMinimum.toLocaleString('en-US')} were short of the minimum,{' '}
           {ineligible.upperSideLimit.toLocaleString('en-US')} reached the upper-side limit and{' '}
           {ineligible.upperSideShare.toLocaleString('en-US')} had too many matches for the sides above. Some had more than

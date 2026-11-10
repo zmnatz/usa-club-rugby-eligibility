@@ -133,7 +133,7 @@ export default function AllSeasonsStatsPage({ seasons }: { seasons: SeasonStats[
             label="Why players weren't eligible"
             seasons={seasons}
             rows={[
-              { name: 'Not eligible for a side they played for', ...counted((summary) => summary.ineligible.verdicts) },
+              { name: 'Ineligible (a player counts once per side)', ...counted((summary) => summary.ineligible.verdicts) },
               { name: 'Short of the minimum', ...counted((summary) => summary.ineligible.shortOfMinimum) },
               { name: 'Reached the upper-side limit', ...counted((summary) => summary.ineligible.upperSideLimit) },
               { name: 'Too many matches for the sides above', ...counted((summary) => summary.ineligible.upperSideShare) },
