@@ -15,9 +15,9 @@ import {
   serializeSeasonFixtures,
   serializeSeasonMatches,
 } from '../archive.ts';
-import { currentSeason, FEED_QUERY, type FeedFixture, type FeedSource, fetchFeedPage } from '../feeds.ts';
+import { currentSeason, hashFeedQueries, type FeedFixture, type FeedSource, fetchFeedPage } from '../feeds.ts';
 import { discoverFixtures } from '../live.ts';
-import { MATCH_CENTRE_QUERY, type MatchCentreData } from '../playerHistory.ts';
+import { hashMatchCentreQueries, type MatchCentreData } from '../playerHistory.ts';
 import { DEFAULT_RULES } from '../rules.ts';
 import { DEFAULT_SOURCES, type SourcesConfig } from '../sources.ts';
 import type { EligibilityRules } from '../types.ts';
@@ -141,7 +141,10 @@ async function refreshArchive(
   manifest: ArchiveManifest | null,
   { sources = DEFAULT_SOURCES, fullHistory = false, now = new Date(), log = () => {} }: SnapshotOptions,
 ): Promise<ArchiveManifest> {
-  const fields = createHash('sha256').update(FEED_QUERY).update(MATCH_CENTRE_QUERY).digest('hex').slice(0, 12);
+  const hash = createHash('sha256');
+  hashFeedQueries((text) => hash.update(text));
+  hashMatchCentreQueries((text) => hash.update(text));
+  const fields = hash.digest('hex').slice(0, 12);
   const council: FeedSource = { id: sources.council.id, type: sources.council.type };
   // The newest result says which season is current; results come newest first.
   const firstPage = await fetchFeedPage(council, 0, 100, 'results');
