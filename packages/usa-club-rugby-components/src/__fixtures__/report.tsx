@@ -105,15 +105,15 @@ export const routes: EligibilityRoutes = {
 };
 
 /** Wraps a report in what a host supplies. */
-export const inHost = (ui: ReactElement) => (
-  <EligibilityLinksProvider Link="a" routes={routes}>
+export const inHost = (ui: ReactElement, hostRoutes: EligibilityRoutes = routes) => (
+  <EligibilityLinksProvider Link="a" routes={hostRoutes}>
     {ui}
   </EligibilityLinksProvider>
 );
 
 /** Renders and lets the first load settle. */
-export async function renderInHost(ui: ReactElement) {
-  const view = render(inHost(ui));
+export async function renderInHost(ui: ReactElement, hostRoutes: EligibilityRoutes = routes) {
+  const view = render(inHost(ui, hostRoutes));
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
   });
@@ -129,6 +129,7 @@ export const renderClubReport = ({
   unplacedTeams = undefined as string[] | undefined,
   notes = undefined as string[] | undefined,
   transfers = undefined as TransferRecords | undefined,
+  reportProblem = undefined as EligibilityRoutes['reportProblem'],
 } = {}) =>
   renderInHost(
     <ClubEligibilityReport
@@ -137,6 +138,7 @@ export const renderClubReport = ({
       fixtures={[...fixtures, ...extraFixtures]}
       clubSlug={clubSlug}
     />,
+    reportProblem ? { ...routes, reportProblem } : routes,
   );
 
 /** Eli Clear also played a match for Bayside. */

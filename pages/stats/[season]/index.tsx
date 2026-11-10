@@ -14,7 +14,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { SeasonRules } from '@zmnatz/usa-club-rugby-components';
+import { ReportProblemNote, SeasonRules } from '@zmnatz/usa-club-rugby-components';
 import { type SeasonSummary, seasonSummary } from '@zmnatz/usa-club-rugby-data';
 import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';
 import { seasonPath, statsPath } from '@/utils/paths';
@@ -127,6 +127,7 @@ export default function SeasonStatsPage({ season, slug, summary }: StatsProps) {
       <Stack spacing={3} useFlexGap>
         <SeasonStatsBody summary={summary} />
         <SeasonRules season={season} />
+        <ReportProblemNote season={season} locked />
         <Typography variant="body2">
           <MuiLink component={NextLink} prefetch={false} href={seasonPath(slug)}>
             See each club&apos;s verdicts for {season}

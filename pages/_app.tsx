@@ -9,9 +9,7 @@ import { AppCacheProvider, type EmotionCacheProviderProps } from '@mui/material-
 import { EligibilityLinksProvider, SkipToFirstPlayer } from '@zmnatz/usa-club-rugby-components';
 import { theme } from '@/theme';
 import '@/theme/theme.css';
-import { routes } from '@/utils/paths';
-
-const REPO_URL = 'https://github.com/zmnatz/usa-club-rugby-eligibility';
+import { ISSUES_URL, REPO_URL, routes } from '@/utils/paths';
 
 const DESCRIPTION =
   'NCS player eligibility for every USA Club Rugby senior club, worked out from the Rugby Xplorer match record.';
@@ -57,6 +55,9 @@ export default function App({
                 </MuiLink>
                 <MuiLink href={REPO_URL} color="inherit" target="_blank" rel="noopener noreferrer">
                   Source
+                </MuiLink>
+                <MuiLink href={ISSUES_URL} color="inherit" target="_blank" rel="noopener noreferrer">
+                  Report a problem
                 </MuiLink>
               </Toolbar>
             </AppBar>

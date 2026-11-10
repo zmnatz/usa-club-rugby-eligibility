@@ -52,6 +52,8 @@ const AppLink = ({ href, ...props }: { href: string }) => <RouterLink to={href} 
 
 A route is any function returning a URL, so query strings work: `player: (id) => `/player?id=${encodeURIComponent(id)}``. Include any base path your Link doesn't add for you.
 
+`reportProblem` is optional. Give it and every club report tells people where to report a verdict that looks wrong: Rugby Xplorer first, then your address. Called with no argument, it returns your general address, such as an issue tracker. For a Locked Season it is called with a `ProblemReport` (`kind`, `season` and, on a club report, `club`), so you can open a new report filled in with them. `kind` is `rules-engine` when the record is right but a verdict looks wrong, or `archive-correction` when the season's archived record is wrong. Leave it out and no note shows.
+
 ### The theme
 
 Colours, type and shapes come from your MUI `ThemeProvider`, or from MUI's default theme if there isn't one. No extra theme setup is needed: the layout is on the components, so overriding MUI components in your theme restyles the screens without breaking them.
@@ -104,6 +106,14 @@ A skip link to the first player in the report on the page, for keyboard users. I
 ```
 
 A client-side route change can leave focus partway down the new page. Pass a `ref` and focus the link when your router arrives on a report, so the link is the next stop.
+
+### `ReportProblemNote`
+
+Where to report a problem, for a page of your own about a season, such as a list of a Locked Season's clubs. Club reports already include it. It shows only when your routes have `reportProblem`.
+
+```tsx
+<ReportProblemNote season="2024/2025" locked />
+```
 
 ### Lower-level pieces
 

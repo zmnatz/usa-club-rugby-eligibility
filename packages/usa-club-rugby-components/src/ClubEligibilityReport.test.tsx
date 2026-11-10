@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'bun:test';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NAMES, renderClubReport, transfers } from './__fixtures__/report.tsx';
+import type { ProblemReport } from './links.tsx';
 import { SkipToFirstPlayer } from './SkipToFirstPlayer.tsx';
 
 let user: ReturnType<typeof userEvent.setup>;
@@ -387,5 +388,33 @@ describe('a player who played for another club', () => {
     const dialog = within(await screen.findByRole('dialog'));
     expect(dialog.getByText('Waiver Required')).toBeTruthy();
     expect(dialog.getByText('Bayside · Bayside MD3: 1 counted match')).toBeTruthy();
+  });
+});
+
+describe('reporting a problem', () => {
+  const reportProblem = (report?: ProblemReport) =>
+    report ? `/report/${report.kind}/${report.season}/${report.club?.key ?? ''}` : '/report';
+
+  it('sends this season’s problems to Rugby Xplorer first, then to the host', async () => {
+    await renderClubReport({ reportProblem });
+    expect(screen.getByText(/check and correct it in Rugby Xplorer first/)).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'report it' }).getAttribute('href')).toBe('/report');
+  });
+
+  it('shows no note when the host gives nowhere to report', async () => {
+    await renderClubReport();
+    expect(screen.queryByText(/check and correct it in Rugby Xplorer first/)).toBeNull();
+  });
+
+  it('asks about a Locked Season’s rules and record, since Rugby Xplorer no longer changes it', async () => {
+    await renderClubReport({ reportProblem, locked: true });
+    expect(screen.queryByText(/check and correct it in Rugby Xplorer first/)).toBeNull();
+    expect(screen.getByText(/correcting Rugby Xplorer won’t change them/)).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Report a verdict' }).getAttribute('href')).toBe(
+      '/report/rules-engine/2026/2027/harbor-city',
+    );
+    expect(screen.getByRole('link', { name: 'Report a record correction' }).getAttribute('href')).toBe(
+      '/report/archive-correction/2026/2027/harbor-city',
+    );
   });
 });

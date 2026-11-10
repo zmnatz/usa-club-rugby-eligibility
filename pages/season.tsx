@@ -12,7 +12,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { ClubDirectory, ClubEligibilityReport, SeasonRules } from '@zmnatz/usa-club-rugby-components';
+import { ClubDirectory, ClubEligibilityReport, ReportProblemNote, SeasonRules } from '@zmnatz/usa-club-rugby-components';
 import { clubFixtures, createPublishedClient, type PublishedSeasonFile } from '@zmnatz/usa-club-rugby-data';
 import { seasonClubPath, seasonPath, statsPath } from '@/utils/paths';
 import { readSeasons, type PublishedSeason } from '@/utils/published';
@@ -103,6 +103,7 @@ function SeasonClubs({ file }: { file: PublishedSeasonFile }) {
         </MuiLink>
         .
       </Typography>
+      <ReportProblemNote season={season} locked />
       <Stack spacing={2} useFlexGap sx={{ mb: 2 }}>
         <SeasonRules season={season} />
         <Button component={NextLink} prefetch={false} href={statsPath(slug)} variant="outlined" sx={{ alignSelf: 'flex-start' }}>

@@ -2,6 +2,7 @@ import NextLink from 'next/link';
 import { MDXProvider } from '@mdx-js/react';
 import { Container, Link as MuiLink, Typography } from '@mui/material';
 import { CLUB_ALIASES } from '@zmnatz/usa-club-rugby-data';
+import { ISSUES_URL } from '@/utils/paths';
 
 export const elements = {
   h1: (props) => <Typography component="h1" variant="h4" gutterBottom {...props} />,
@@ -37,6 +38,10 @@ This page explains how the [eligibility report](/) reaches each verdict: the rul
 3. Follow the Rugby Xplorer link on a round to compare it with the match report.
 
 The number of rounds marked as counted is the player's Match Participation for that side.
+
+**Reporting a problem.** All data comes from Rugby Xplorer. If your club's information looks wrong (missing matches, lineups or substitutions, or wrong team names or divisions), check and correct it in Rugby Xplorer first. The site picks up corrections on its next nightly update. If Rugby Xplorer is right and this site is still wrong, <MuiLink href={ISSUES_URL} target="_blank" rel="noopener noreferrer">open an issue on GitHub</MuiLink>.
+
+A past season is a Locked Season, so correcting Rugby Xplorer won't change its verdicts: they come from that season's rules and the team matching its pages describe. Its pages have two links instead, each opening an issue filled in with the season and club. Use **Report a verdict** when the Match Record is right but a verdict looks wrong under those rules (a team in the wrong division or club, two names that should be one club, or a player marked Waiver Required who didn't move). Use **Report a record correction** when the season's Match Record in the Archive is itself wrong, or was corrected in Rugby Xplorer after the season locked (a missing match, lineup or substitution), so the archive needs re-reading or correcting.
 
 ## The rules applied
 
