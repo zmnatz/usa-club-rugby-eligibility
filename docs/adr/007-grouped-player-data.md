@@ -4,6 +4,8 @@ Player pages landed on 8 November 2026 (ade4d52) as one static page per player, 
 
 So there is one player page, `/player/?id=<cms-id>`, and the players' profiles are published in 256 files, `player-data/<bucket>.json`, keyed by a hash of the CMS id (`playerBucket` in `src/utils/playerBuckets.ts`). A deploy is back to a few hundred files.
 
+**Correction, 10 November 2026: the file count was not the cause.** The first deploy of this change (about 1,250 files, 13 MB zipped) stalled in `syncing_files` for the full 10 minutes too. The deploys before it show the same artifact of about 19,800 files syncing in about 5 seconds on some runs (9 November 02:24, 10 November 10:33 and 11:46 UTC), taking 6.5 minutes on another, and stalling on others. Other repositories reported the same stalls from 6 November ([community discussion #212350](https://github.com/orgs/community/discussions/212350)), and GitHub's status page recorded Pages incidents on 4, 5–6 and 9 November, though none covers these stalls. They are intermittent on GitHub's side. The deploy workflow's retry now creates a deployment with a build version of its own (`docs/snapshots.md`). The grouped files stay: a deploy of a few hundred files is still quicker to build and upload, and the move below is planned anyway.
+
 **This is temporary.** It works around GitHub Pages, a static host. The plan is to move the site to Netlify and render the player page on the server, so each player's page carries its verdict in its HTML again without a file per player in the deploy. When that happens, this ADR is superseded: the grouped files, `bun run players`, and the 404 redirect can go, and player URLs can go back to a path. Until then, the decisions below hold.
 
 Decisions for now:
