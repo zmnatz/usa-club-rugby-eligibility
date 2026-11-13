@@ -32,7 +32,7 @@ const renderGames = (games: UnreportedGame[]) =>
   );
 
 describe('UnreportedGames', () => {
-  it("shows a game's date, overdue days, clubs, division and every reason", () => {
+  it("shows a game's date, clubs and every reason", () => {
     renderGames([game]);
     const [, row] = screen.getAllByRole('row');
     const cells = within(row).getAllByRole('cell');
@@ -43,9 +43,9 @@ describe('UnreportedGames', () => {
     expect(within(cells[2]).queryByRole('link')).toBeNull();
     expect(cells[2].textContent).toBe('Bayside');
     expect(within(cells[2]).getByTitle('Bayside MD2')).toBeTruthy();
-    expect(cells[3].textContent).toContain("Men's D1 / Men's D2");
-    expect(cells[4].textContent).toContain('No lineup: Harbor City MD1');
-    expect(cells[4].textContent).toContain('No substitutions: Bayside MD2');
+    expect(cells).toHaveLength(4);
+    expect(cells[3].textContent).toContain('No lineup: Harbor City MD1');
+    expect(cells[3].textContent).toContain('No substitutions: Bayside MD2');
   });
 
   it('emphasizes each side a gap names, and neither side for a missing result', () => {
@@ -59,8 +59,8 @@ describe('UnreportedGames', () => {
       within(row)
         .getAllByRole('cell')
         .map((cell) => cell.classList.contains('ec-flagged'));
-    expect(flagged(gap)).toEqual([false, false, true, false, false]);
-    expect(flagged(noResult)).toEqual([false, false, false, false, false]);
+    expect(flagged(gap)).toEqual([false, false, true, false]);
+    expect(flagged(noResult)).toEqual([false, false, false, false]);
   });
 
   it('groups games by competition in collapsible sections, in name order without the year', () => {

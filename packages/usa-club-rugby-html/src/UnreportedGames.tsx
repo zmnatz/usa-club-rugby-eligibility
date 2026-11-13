@@ -32,7 +32,7 @@ export interface UnreportedGamesProps {
   onFiltersChange?: (filters: UnreportedFilters) => void;
 }
 
-/** The divisions, in order, as the filter and each row show them. */
+/** The divisions, in order, as the filter shows them. */
 const DIVISIONS: [string, string][] = [
   ['M1', "Men's D1"],
   ['M2', "Men's D2"],
@@ -47,8 +47,6 @@ export const UNREPORTED_REASONS: [UnreportedReasonKind, string][] = [
   ['no-lineup', 'No lineup'],
   ['no-substitutions', 'No substitutions'],
 ];
-
-const divisionLabel = (code: string) => DIVISIONS.find(([value]) => value === code)?.[1] ?? code;
 
 const gameCount = (count: number) => (count === 1 ? '1 game' : `${count} games`);
 
@@ -88,9 +86,6 @@ function GameRow({ game }: { game: UnreportedGame }) {
           <Side side={side} />
         </td>
       ))}
-      <td>
-        {game.divisions.map(divisionLabel).join(' / ') || '—'}
-      </td>
       <td>
         <ul className="ec-reasons">
           {game.reasons.map((reason) => (
@@ -207,7 +202,6 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
                   <th>Date</th>
                   <th>Home</th>
                   <th>Away</th>
-                  <th>Division</th>
                   <th>Reason</th>
                 </tr>
               </thead>
