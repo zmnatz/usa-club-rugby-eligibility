@@ -43,7 +43,7 @@ export default function HomePage({ clubs, season, generatedAt, pastSeasons }: Ho
         track (experimental). <PageLink href="/methodology">How this report is worked out</PageLink>.
       </p>
       <p className="small">
-        {season} season · {clubs.length} clubs · data last changed {formatDateTime(generatedAt)}
+        {season} season · {clubs.length} clubs · data as of {formatDateTime(generatedAt)}
       </p>
       <p className="small">
         A club is listed once it has a fixture entered in Rugby Xplorer this season in a competition that counts,

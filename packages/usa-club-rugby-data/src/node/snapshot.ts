@@ -41,8 +41,8 @@ export interface SnapshotOptions extends SnapshotPaths {
   offline?: boolean;
   /** Also read every past season the feeds list. */
   fullHistory?: boolean;
-  /** The time the run is for. Defaults to when a CMS read happens, or to the
-   *  archive's `pulledAt` when offline. */
+  /** The time the run is for. Defaults to the archive's `pulledAt`; an archive
+   *  that records none falls back to the build's own time. */
   now?: Date;
   log?: (message: string) => void;
 }
@@ -111,8 +111,8 @@ export function publishFromArchive(
   return { ...buildPublished(fixtures, matches, rules, now), history };
 }
 
-/** Writes the published files, changing only those whose content changed. The
- *  index's time is the archive's last pull. */
+/** Writes the published files, changing only those whose content changed: a
+ *  differing `generatedAt` alone doesn't count as a change. */
 export function writePublished(publishedDir: string, files: Map<string, string>): boolean {
   let changed = false;
   const keep = new Map<string, Set<string>>([
@@ -198,7 +198,11 @@ export async function runSnapshot(options: SnapshotOptions): Promise<{ changed: 
     writeIfChanged(manifestFile(archiveDir), `${JSON.stringify(manifest, null, 2)}\n`);
   }
   if (!manifest) throw new Error('No archive yet: run without --offline first.');
-  // Calculated as of the last pull, so the same archive always gives the same data.
+  // Calculated as of the last pull, so the same archive always gives the same data
+  // once it records one. An archive from before `pulledAt` falls back to now.
+  if (!options.now && !manifest.pulledAt) {
+    log('No pulledAt in the archive: building as of now, so this build is not reproducible. Run a snapshot to record it.');
+  }
   const now = options.now ?? (manifest.pulledAt ? new Date(manifest.pulledAt) : new Date());
   const data = publishFromArchive(archiveDir, rules, now);
   const changed = writePublished(publishedDir, renderPublished(data, now.toISOString()));

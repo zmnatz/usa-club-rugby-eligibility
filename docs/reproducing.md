@@ -5,7 +5,7 @@ Every number on the site can be rebuilt from public inputs. This is the pipeline
 ```
 Rugby Xplorer CMS ──snapshot──▶ archive/ (raw) ──build──▶ public/data/ (published) ──library──▶ verdicts
                                     ▲                          ▲                          ▲
-                              committed nightly         `verify` recalculates it     clubSeason()
+                              committed nightly         `bun run data` builds it     clubSeason()
 ```
 
 | Stage | Input | Output | Deterministic |
@@ -15,7 +15,7 @@ Rugby Xplorer CMS ──snapshot──▶ archive/ (raw) ──build──▶ pu
 | 3. Count participation | `archive/` + `DEFAULT_RULES` + a time | `public/data/clubs/<club>.json`, `fixtures.json`, `index.json` | **Yes** |
 | 4. Verdicts | A published club file + fixtures + rules + a time | Eligible / not, reasons, matches still needed | **Yes** |
 
-Stages 1 and 2 are frozen into the archive by committing it, which is what makes the rest reproducible: everything after is a pure function of the archive and the rules, calculated as of the manifest's `pulledAt`. `public/data/` is not committed. Every `dev` and `build` calculates it from the archive (`bun run data`), so a rule change shows up with no regeneration step to forget.
+Stages 1 and 2 are frozen into the archive by committing it, which is what makes the rest reproducible: everything after is a pure function of the archive and the rules, calculated as of the manifest's `pulledAt`. `public/data/` is not committed. Every `dev` and `build` calculates it from the archive (`bun run data`), so a rule change shows up with no regeneration step to forget. An archive made before `pulledAt` was recorded has no stamp, and the one build over it falls back to the build's own time; the next snapshot records one.
 
 ## Calculate the published data
 

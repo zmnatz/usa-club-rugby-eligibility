@@ -9,7 +9,7 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 - `bun run build`: static build to `dist/`. `GITHUB_ACTIONS` or `BASE_PATH` sets the Pages base path.
 - `bun run build:quick`: the same build for the first 5 clubs and their players, for checking a change locally. `BUILD_CLUBS` sets the scope to a number of clubs or a comma-separated list of club keys. Its `dist/` is incomplete, so don't deploy it; CI ignores the setting.
 - `bun run test`, `bun run lint`, `bun run typecheck`
-- `bun run snapshot [--offline] [--full-history]`: refreshes `archive` from the CMS; see `docs/snapshots.md`.
+- `bun run snapshot [--offline] [--full-history]`: refreshes `archive` from the CMS (with `--offline`, recalculates `public/data` from it); see `docs/snapshots.md`.
 - `bun run data`: calculates `public/data` from `archive` (no CMS requests). It is gitignored, not committed; `dev` and `build` run it first, so a change to the rules shows up on the next run.
 - `bun run lib`: builds the three packages in `packages/` to their `dist/`. The component packages build incrementally, so an unchanged rebuild is quick. `dev`, `build`, `typecheck` and `test` do it first; `test` runs the data package's tests and the component tests in `src/`, `packages/usa-club-rugby-components/` and `packages/usa-club-rugby-html/`. `bun run dev` serves the HTML package's last build, so rerun `bun run lib` after changing it.
 

@@ -12,8 +12,8 @@ export const readJson = <T>(file: string): T | null => {
  *  differ between two runs over the same data. */
 export const withoutStamp = (text: string): string => text.replace(/"generatedAt":"[^"]*",?/, '');
 
-/** Writes only when the content differs, ignoring `generatedAt`, so a quiet night
- *  changes nothing and makes no commit. */
+/** Writes only when the content differs, ignoring `generatedAt`, so a rebuild over
+ *  the same data changes nothing. */
 export function writeIfChanged(file: string, content: string): boolean {
   const saved = readText(file);
   if (saved !== null && withoutStamp(saved) === withoutStamp(content)) return false;

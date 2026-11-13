@@ -44,7 +44,8 @@ export interface ParticipationGap {
  *  Report rows, with the CMS player id as the join key and no registration data. */
 export interface ParticipationSnapshot {
   season: string;
-  /** When the nightly job wrote this file; absent on a live pull. */
+  /** The archive's last pull, which is when the file was calculated; absent on a
+   *  live pull. */
   generatedAt?: string;
   /** The fixtures already accounted for, so a live pull can skip them. */
   resultIds?: string[];

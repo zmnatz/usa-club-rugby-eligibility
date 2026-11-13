@@ -7,7 +7,7 @@ The page is static. The data is calculated as of the archive's `pulledAt`, not t
 | `archive/manifest.json` | Seasons archived, the current season, a hash of the queries, the club ids whose feeds are read, and when the archive was last pulled (`pulledAt`) | No |
 | `archive/fixtures/<season>.json` | Every senior club fixture that season, from all feeds, one per line | No |
 | `archive/matches/<season>.json` | Every played match's full CMS record, one per line, `null` when the CMS has none | No |
-| `public/data/index.json` | The current season's clubs and their sides, and when the data last changed | Yes |
+| `public/data/index.json` | The current season's clubs and their sides, and when the archive was last pulled | Yes |
 | `public/data/fixtures.json` | The current season's fixtures | Yes |
 | `public/data/clubs/<club>.json` | One club's Match Participation rows, gaps and result ids | Yes |
 | `public/data/seasons.json` | The Locked Seasons published, newest first. Absent until the Archive holds one | Yes |
@@ -21,7 +21,7 @@ Each club's file becomes that club's page at `/club/<club-key>/` at build time, 
 
 1. Reads the council and union feeds from the current season (ADR 001).
 2. Fetches the record of every played match this season, finds clubs from their crests, reads those clubs' feeds, and repeats for any new results.
-3. Writes the archive. Files are written only when their content changes, so a quiet night makes no commit.
+3. Writes the archive. Season files are written only when their content changes, but the manifest's `pulledAt` moves on every read, so a night that reaches the CMS commits a new manifest even when no record changed.
 4. Commits `archive` to `main` if anything changed, then builds (which calculates `public/data` from it) and deploys Pages.
 
 Every request has to succeed or nothing is written, so a failed night leaves the previous data in place. The log ends with the number of requests, rate-limit waits and total time.
@@ -65,4 +65,4 @@ Editing `FEED_QUERY` or `MATCH_CENTRE_QUERY` changes the hash in the manifest, s
 
 - Don't hand-edit `archive/` or `public/data/`; regenerate them.
 - The CMS rate limit is per IP: about 500 requests at once, then about 4 a second. The job batches 100 match records or 20 feed pages per request and waits the limit out; see ADR 001. A local run shares your IP's budget with anything else you're running against the CMS, such as the Rocky Gorge snapshots.
-- GitHub disables a scheduled workflow after 60 days with no commits to the repository. The nightly commits keep it alive during the season; after a quiet off-season, re-enable it from the Actions tab.
+- GitHub disables a scheduled workflow after 60 days with no commits to the repository. The nightly manifest commit keeps it alive, even in a quiet off-season.

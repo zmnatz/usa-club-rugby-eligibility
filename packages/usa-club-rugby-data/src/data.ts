@@ -17,7 +17,7 @@ import type { MatchCentreData } from './playerHistory.ts';
 import type { PublishedIndex, PublishedSeason } from './published.ts';
 
 /** `index.json`: the current season's clubs and their sides, and when the
- *  published data last changed. */
+ *  archive was last pulled. */
 export type PublishedIndexFile = PublishedIndex;
 
 /** `fixtures.json`: the current season's fixtures, in date order. */
@@ -29,7 +29,8 @@ export interface PublishedFixturesFile {
 /** `clubs/<key>.json`: one club's Match Participation rows, gaps and result ids.
  *  A player who played for two clubs appears in both clubs' files. */
 export interface PublishedClubFile extends ParticipationSnapshot {
-  /** When the data last changed; always present in a published file. */
+  /** When the archive was last pulled, which is when the file was calculated;
+   *  always present in a published file. */
   generatedAt: string;
 }
 
