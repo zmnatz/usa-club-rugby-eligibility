@@ -2,13 +2,11 @@ import type { GetStaticProps } from 'next';
 import Head from 'next/head';
 import { type SeasonSummary, seasonSummary } from '@zmnatz/usa-club-rugby-data';
 import { Crumbs, PageLink } from '@/components/Crumbs';
-import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';
 import { statsPath } from '@/utils/paths';
 import { published } from '@/utils/published';
 
 // Every Locked Season's stats side by side, worked out at build time like each
 // season's own stats page.
-export const config = { unstable_runtimeJS: false };
 
 interface SeasonStats {
   season: string;
@@ -87,8 +85,6 @@ export default function AllSeasonsStatsPage({ seasons }: { seasons: SeasonStats[
 
   return (
     <>
-      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed string, with no data in it */}
-      <script dangerouslySetInnerHTML={{ __html: HISTORY_RELOAD_SCRIPT }} />
       <Head>
         <title>Past season stats · USA Club Rugby Eligibility</title>
         <meta

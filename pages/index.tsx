@@ -1,9 +1,8 @@
 import type { GetStaticProps } from 'next';
 import Head from 'next/head';
 import { clubsWithoutFixtures } from '@zmnatz/usa-club-rugby-data';
-import { ClubDirectory } from '@/eligibility';
+import { ClubDirectory } from '@zmnatz/usa-club-rugby-html';
 import { PageLink } from '@/components/Crumbs';
-import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';
 import { seasonClubPath, seasonPath, statsPath } from '@/utils/paths';
 import { published, type PublishedClub, type PublishedSeason } from '@/utils/published';
 
@@ -29,10 +28,6 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   };
 };
 
-// Text, links and a filter. Nothing on the page needs React, so it ships no Next runtime:
-// the filter is the site-wide script, and an inline one reloads on history navigation.
-export const config = { unstable_runtimeJS: false };
-
 // A fixed locale and time zone, so the static HTML reads the same after hydration.
 const formatDateTime = (dateTime: string) =>
   `${new Date(dateTime).toLocaleString('en-US', { timeZone: 'UTC', dateStyle: 'medium', timeStyle: 'short' })} UTC`;
@@ -41,8 +36,6 @@ export default function HomePage({ clubs, season, generatedAt, pastSeasons, with
   const waiting = withoutGames?.clubs.length ? withoutGames : null;
   return (
     <>
-      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed string, with no data in it */}
-      <script dangerouslySetInnerHTML={{ __html: HISTORY_RELOAD_SCRIPT }} />
       <Head>
         <title>USA Club Rugby Eligibility</title>
         <meta

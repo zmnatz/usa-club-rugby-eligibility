@@ -2,7 +2,7 @@
 # Works out which package a release tag is for, and writes its directory to
 # GITHUB_OUTPUT. A tag named for a package must match that package's version.
 # Any other tag publishes the data package, as every release did before there
-# were two packages.
+# was more than one package.
 set -euo pipefail
 
 tag="$1"
@@ -10,7 +10,7 @@ root="$(cd "$(dirname "$0")/../.." && pwd)"
 
 package="usa-club-rugby-data"
 expected=""
-for candidate in usa-club-rugby-components usa-club-rugby-data; do
+for candidate in usa-club-rugby-components usa-club-rugby-html usa-club-rugby-data; do
   if [[ "$tag" == "$candidate-v"* ]]; then
     package="$candidate"
     expected="${tag#"$candidate-v"}"

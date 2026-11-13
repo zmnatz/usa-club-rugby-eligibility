@@ -28,36 +28,35 @@ import {
   Typography,
 } from '@mui/material';
 import {
+  buildReport,
+  CAUTION_ADVICE,
   type Club,
   divisionLabel,
   type EligibilityBreakdown,
+  filterPlayers,
+  gapText,
+  getColumns,
   hasSharedName,
   isNameWithheld,
+  otherSideCount,
   type ParticipationGap,
   type PlayerEligibility,
   type PlayerRecordInput,
+  type ReportMeta,
+  type ReportSource,
+  type SortDirection,
+  type SortKey,
   sameNamePlayers,
   sharedNames,
+  sortPlayers,
+  type StatusFilter,
   type TransferRecords,
 } from '@zmnatz/usa-club-rugby-data';
 import { EligibilityStatusChip, WaiverChip } from './EligibilityStatusChip.tsx';
 import { spreadRow, wrapRow } from './layout.ts';
 import { useEligibilityLinks } from './links.tsx';
 import { PlayerEligibilityDialog } from './PlayerDetail.tsx';
-import { CAUTION_ADVICE, type ReportSource } from './reportModel.ts';
 import { FIRST_PLAYER_ID } from './SkipToFirstPlayer.tsx';
-import {
-  buildReport,
-  filterPlayers,
-  gapText,
-  getColumns,
-  otherSideCount,
-  type ReportMeta,
-  type SortKey,
-  sortPlayers,
-  type StatusFilter,
-} from './reportModel.ts';
-import type { SortDirection } from './sort.ts';
 
 interface DivisionTableProps {
   title: string;

@@ -9,6 +9,7 @@
         "@mdx-js/react": "^3.1.1",
         "@next/mdx": "^16.3.0",
         "@zmnatz/usa-club-rugby-data": "workspace:*",
+        "@zmnatz/usa-club-rugby-html": "workspace:*",
         "next": "^16.3.0",
         "react": "^19.2.8",
         "react-dom": "^19.2.8",
@@ -57,6 +58,23 @@
         "@types/node": "^26.0.0",
         "typescript": "^7.0.2",
         "vitest": "^5.1.0",
+      },
+    },
+    "packages/usa-club-rugby-html": {
+      "name": "@zmnatz/usa-club-rugby-html",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@types/bun": "^1.4.4",
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "@zmnatz/usa-club-rugby-data": "workspace:*",
+        "react": "^19.2.8",
+        "react-dom": "^19.2.8",
+        "typescript": "^7.0.2",
+      },
+      "peerDependencies": {
+        "@zmnatz/usa-club-rugby-data": "^0.6.0",
+        "react": "^19.2.8",
       },
     },
   },
@@ -370,6 +388,8 @@
     "@zmnatz/usa-club-rugby-components": ["@zmnatz/usa-club-rugby-components@workspace:packages/usa-club-rugby-components"],
 
     "@zmnatz/usa-club-rugby-data": ["@zmnatz/usa-club-rugby-data@workspace:packages/usa-club-rugby-data"],
+
+    "@zmnatz/usa-club-rugby-html": ["@zmnatz/usa-club-rugby-html@workspace:packages/usa-club-rugby-html"],
 
     "acorn": ["acorn@8.19.0", "", { "bin": { "acorn": "bin/acorn" } }, "sha512-oJlA3XiRm7Cyk6qFD2Jn8ak9B7jSy0qy00ADO3+8dpT0LSjFihQYv4C02LFCSYJV3Q37xYwwRy5m+IpIiUzqWw=="],
 

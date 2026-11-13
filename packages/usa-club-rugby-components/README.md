@@ -118,3 +118,10 @@ Where to report a problem, for a page of your own about a season, such as a list
 ### Lower-level pieces
 
 `EligibilityReportView` renders a breakdown you've already worked out. `PlayerEligibilityDialog`, `PlayerDetailBody`, `PlayerDetailHeading` and `EligibilityStatusChip` show one player's verdict.
+
+The report's logic with no UI (its columns, sorting, filtering, export text and dates) is in `@zmnatz/usa-club-rugby-data`. For a plain HTML version of these screens, with one stylesheet and no MUI, see [`@zmnatz/usa-club-rugby-html`](https://www.npmjs.com/package/@zmnatz/usa-club-rugby-html).
+
+## Upgrading from 0.4
+
+- `CAUTION_ADVICE` and the `ReportSource` type are no longer exported from this package. Import them from `@zmnatz/usa-club-rugby-data` 0.6 or later, which is now the peer range.
+- An exported report's header now gives its time in UTC (`Generated: Nov 13, 2026, 3:24 AM UTC`), not in the visitor's locale and time zone.

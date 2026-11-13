@@ -29,7 +29,7 @@ This page explains how the [eligibility report](/) reaches each verdict: the rul
 ## Checking a result
 
 1. Open the [eligibility report](/) and choose a club. Each club has its own page at `/<club-key>`, so a verdict can be linked to.
-2. Open a player's page. It lists every round of each side's season, what the player did in it, and whether it counted.
+2. Choose a player. Their detail opens over the report and lists every round of each side's season, what the player did in it, and whether it counted. It links to the player's own page, to keep or share.
 3. Follow the Rugby Xplorer link on a round to compare it with the match report.
 
 The number of rounds marked as counted is the player's Match Participation for that side.
@@ -177,7 +177,7 @@ The report can also read a Rugby Xplorer Match Participation Report for any club
 
 ## Reproducing a result
 
-Every published number is a function of the archived Rugby Xplorer match records, the rules above and a timestamp. `bun run verify` recalculates all of the published data from the archive and fails on any difference, a [notebook](https://github.com/zmnatz/usa-club-rugby-eligibility/blob/main/notebooks/reproduce-eligibility.ipynb) recounts a club's participation from the raw records in plain Python, and the engine is published as the npm package `@zmnatz/usa-club-rugby-data` for use in other tools. The [step-by-step guide](https://github.com/zmnatz/usa-club-rugby-eligibility/blob/main/docs/reproducing.md) covers each stage from the CMS to a verdict.
+Every published number is a function of the archived Rugby Xplorer match records, the rules above and a timestamp. `bun run verify` recalculates all of the published data from the archive and fails on any difference, and the engine is published as the npm package `@zmnatz/usa-club-rugby-data` for use in other tools. The [step-by-step guide](https://github.com/zmnatz/usa-club-rugby-eligibility/blob/main/docs/reproducing.md) covers each stage from the CMS to a verdict.
 
 ## Source
 
