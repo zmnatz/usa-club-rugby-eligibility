@@ -33,6 +33,9 @@ export interface ParticipationGap {
   opponent: string;
   competition: string;
   dateTime: string;
+  /** `no-substitutions` only: how many players the side listed, starters and
+   *  substitutes. With 15 or fewer, no substitute was available to come on. */
+  rostered?: number;
 }
 
 /** One season's Match Participation, written beside the player histories and
@@ -77,7 +80,7 @@ export function buildParticipationSnapshot(
 
   const rows = new Map<string, PlayerRow>();
   // Playing appearances per fixture and side, to spot gaps in the record.
-  const listed = new Map<string, { substitutes: number; cameOn: number }>();
+  const listed = new Map<string, { rostered: number; substitutes: number; cameOn: number }>();
 
   for (const history of histories) {
     for (const game of history.games) {
@@ -108,7 +111,8 @@ export function buildParticipationSnapshot(
       rows.set(rowKey, row);
 
       const sideKey = `${game.fixtureId}\0${game.teamName}`;
-      const side = listed.get(sideKey) ?? { substitutes: 0, cameOn: 0 };
+      const side = listed.get(sideKey) ?? { rostered: 0, substitutes: 0, cameOn: 0 };
+      side.rostered += 1;
       if (!counted.starter) {
         side.substitutes += 1;
         if (counted.played) side.cameOn += 1;
@@ -141,6 +145,7 @@ export function buildParticipationSnapshot(
           opponent,
           competition: fixture.compName,
           dateTime: fixture.dateTime,
+          ...(kind === 'no-substitutions' && side ? { rostered: side.rostered } : {}),
         });
       }
     }

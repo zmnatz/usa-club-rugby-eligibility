@@ -37,4 +37,5 @@ export * from './snapshot.ts';
 export * from './sort.ts';
 export * from './sources.ts';
 export * from './teamSide.ts';
+export * from './unreported.ts';
 export type * from './types.ts';

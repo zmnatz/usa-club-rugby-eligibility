@@ -44,6 +44,7 @@ export default function App({ Component, pageProps }: AppProps) {
             <PageLink href="/" className="brand">
               USA Club Rugby Eligibility
             </PageLink>
+            <PageLink href="/unreported">Unreported games</PageLink>
             <PageLink href="/methodology">Methodology</PageLink>
             <a href={ISSUES_URL} target="_blank" rel="noopener noreferrer">
               Report a problem

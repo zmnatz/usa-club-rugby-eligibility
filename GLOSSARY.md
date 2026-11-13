@@ -61,5 +61,8 @@ A team in a Locked Season that can't be assessed: a round or one-off entry, a te
 **Waiver Required**:
 A player in a Locked Season who played for more than one club that season. Shown only at the last club they played for, with their other clubs' games listed but not counted.
 
+**Unreported Game**:
+A current-season NCS Qualifying Match more than 14 days past kickoff with no result, a result with no lineup for a side, or a side that listed more than 15 players with no substitute recorded coming on. Listed on the unreported games page for chasing; the last is a flag to check, not a proven error.
+
 **National Championship Series (NCS)**:
 USA Rugby's postseason competition for Men's Divisions I, II and III and Women's Divisions I and II.

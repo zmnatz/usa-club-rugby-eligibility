@@ -156,6 +156,18 @@ The API allows each address about 500 requests, refilling at about 4 a second, a
 
 A correction in Rugby Xplorer clears these gaps. They don't catch everything, so a count can be low with no flag: a side may have entered only some of its substitutions, or a substitution may name a player who can't be matched to exactly one listed substitute.
 
+## Unreported games
+
+The [unreported games](/unreported) page lists this season's games whose record still needs chasing, so a union or club can follow up. A game is listed once more than 14 days have passed since kickoff, the leeway for entering a result, and it has one of these:
+
+- **No result:** the fixture still has no score. Cancelled and postponed fixtures, forfeits and byes aren't listed.
+- **No lineup:** a result is entered but a side has no players listed.
+- **No substitutions:** a result is entered and a side listed more than 15 players, starters and substitutes, but none of its substitutes is recorded coming on. A side that listed 15 or fewer had no substitute to bring on, so it isn't listed, though the report beside a club's verdicts still flags it if it listed any substitutes. This is a flag to check, not a proven error: a side can use none of its substitutes.
+
+When both sides of a game have a gap, its row lists both. A lineup or substitution gap is only known for a side of a club listed here, so an opponent that isn't one shows no gap. Days overdue count from the end of the 14 days. Only Qualifying Matches with at least one side the report assesses are listed, so friendlies, 7s, crossovers, Men's Division IV and Women's Division III aren't, and nor are past seasons, which are locked. The list is worked out each night when the site is built.
+
+**Contact details.** Rugby Xplorer's CMS holds a club's contact email and website, but looks a club up only by the short name in its Rugby Xplorer address, and the match record names clubs only by their number. Until those can be matched, each club shows "No contact on file": its page here, and the match in Rugby Xplorer linked from the date, are the way to find it.
+
 ## How the data stays current
 
 **Every night (06:00 UTC).** An automated job re-reads the current season and republishes the report:

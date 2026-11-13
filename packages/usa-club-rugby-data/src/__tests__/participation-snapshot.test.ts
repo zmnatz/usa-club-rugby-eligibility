@@ -111,6 +111,21 @@ describe('buildParticipationSnapshot', () => {
     ]);
   });
 
+  it("counts a no-substitutions side's rostered players, starters and substitutes", () => {
+    const snapshot = buildParticipationSnapshot(
+      [
+        history('pat', 'Pat Coach', [game('f1', { starter: false, played: false, coach: true })]),
+        history('sam', 'Sam Hooker', [game('f1')]),
+        history('joe', 'Joe Bench', [game('f1', { starter: false, played: false })]),
+        history('kai', 'Kai Bench', [game('f1', { starter: false, played: false })]),
+        history('nia', 'Nia Prop', [game('f1', { teamName: 'NOVA MD1', opponent: 'Rocky Gorge MD1' })]),
+      ],
+      [result('f1')],
+    );
+
+    expect(snapshot.gaps).toEqual([expect.objectContaining({ kind: 'no-substitutions', rostered: 3 })]);
+  });
+
   it('ignores fixtures dated after the snapshot, which can carry placeholder scores', () => {
     const snapshot = buildParticipationSnapshot(
       [history('sam', 'Sam Hooker', [game('f1')]), history('nia', 'Nia Prop', [game('f1', { teamName: 'NOVA MD1', opponent: 'Rocky Gorge MD1', starter: true })])],
