@@ -60,9 +60,9 @@ describe('UnreportedGames', () => {
     expect(flagged(noResult)).toEqual([false, false, false, false, false]);
   });
 
-  it('groups games by competition in collapsible sections, in name order', () => {
+  it('groups games by competition in collapsible sections, in name order without the year', () => {
     renderGames([
-      { ...game, competition: 'NERFU Men D2' },
+      { ...game, competition: '2027 NERFU Men D2' },
       { ...game, fixtureId: 'f2' },
       { ...game, fixtureId: 'f3' },
     ]);

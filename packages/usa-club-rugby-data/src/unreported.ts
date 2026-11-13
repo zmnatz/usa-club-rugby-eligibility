@@ -120,3 +120,14 @@ export function unreportedGames({ fixtures, gaps, clubs, rules, now }: Unreporte
       (a.fixtureId < b.fixtureId ? -1 : a.fixtureId > b.fixtureId ? 1 : 0),
   );
 }
+
+/** A year or season in a competition name, e.g. "2027", "2026 - 2027" or "2026/27", with
+ *  a separator beside it. */
+const YEAR = /\s*[-–:]?\s*\b(?:19|20)\d{2}(?:\s*[-–/]\s*(?:(?:19|20)\d{2}|\d{2}))?\b\s*[-–:]?\s*/g;
+
+/** A competition's name without its year, which every current-season competition shares,
+ *  e.g. "2027 Midwest Men's D1 - Eastern" as "Midwest Men's D1 - Eastern". */
+export function competitionLabel(name: string): string {
+  const label = name.replace(YEAR, ' ').replace(/\s+/g, ' ').trim();
+  return label || name.trim();
+}

@@ -3,7 +3,7 @@ import type { FeedFixture } from '../feeds.ts';
 import type { PublishedClub } from '../published.ts';
 import { DEFAULT_RULES } from '../rules.ts';
 import type { ParticipationGap } from '../snapshot.ts';
-import { unreportedGames } from '../unreported.ts';
+import { competitionLabel, unreportedGames } from '../unreported.ts';
 
 const KICKOFF = '2026-10-17T17:00:00Z';
 const DAY = 24 * 60 * 60 * 1000;
@@ -130,5 +130,22 @@ describe('unreportedGames', () => {
   it('lists the most overdue first', () => {
     const games = run([unplayed('late', { dateTime: '2026-10-24T17:00:00Z' }), unplayed('early')], [], daysAfter(30));
     expect(games.map((game) => game.fixtureId)).toEqual(['early', 'late']);
+  });
+});
+
+describe('competitionLabel', () => {
+  it.each([
+    ["2027 Midwest Men's D1 - Eastern", "Midwest Men's D1 - Eastern"],
+    ['Georgia Rugby Union Matrix 2026 - 2027', 'Georgia Rugby Union Matrix'],
+    ["RMRU Men's 2027 - D2", "RMRU Men's D2"],
+    ['Capital Men 2026/27 D3', 'Capital Men D3'],
+    ['PNW Womens D1/D2 Competitive ', 'PNW Womens D1/D2 Competitive'],
+    ['MAC Men D1', 'MAC Men D1'],
+  ])('reads %p as %p', (name, label) => {
+    expect(competitionLabel(name)).toBe(label);
+  });
+
+  it('keeps a name that is only a year', () => {
+    expect(competitionLabel('2027')).toBe('2027');
   });
 });

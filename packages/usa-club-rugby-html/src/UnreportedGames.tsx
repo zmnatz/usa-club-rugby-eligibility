@@ -1,4 +1,5 @@
 import {
+  competitionLabel,
   formatDate,
   matchUrl,
   type UnreportedGame,
@@ -109,7 +110,10 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
     );
   }
 
-  const competitions = [...new Set(games.map((game) => game.competition))].sort((a, b) => a.localeCompare(b));
+  // Shown, suggested and matched without the year every current-season competition shares.
+  const competitions = [...new Set(games.map((game) => game.competition))]
+    .map((name) => ({ name, label: competitionLabel(name) }))
+    .sort((a, b) => a.label.localeCompare(b.label));
   const divisions = DIVISIONS.filter(([code]) => games.some((game) => game.divisions.includes(code)));
   const reasons = REASONS.filter(([kind]) => games.some((game) => game.reasons.some((entry) => entry.kind === kind)));
   const offered = (value: string, options: [string, string][]) =>
@@ -120,11 +124,11 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
   const shown = games.filter(
     (game) =>
       (division === 'all' || game.divisions.includes(division)) &&
-      game.competition.toLowerCase().includes(competition) &&
+      competitionLabel(game.competition).toLowerCase().includes(competition) &&
       (reason === 'all' || game.reasons.some((entry) => entry.kind === reason)),
   );
   const groups = competitions
-    .map((name) => ({ name, games: shown.filter((game) => game.competition === name) }))
+    .map(({ name, label }) => ({ name, label, games: shown.filter((game) => game.competition === name) }))
     .filter((group) => group.games.length > 0);
 
   return (
@@ -157,8 +161,8 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
               onChange={(event) => change({ competition: event.target.value })}
             />
             <datalist id="unreported-competitions">
-              {competitions.map((name) => (
-                <option key={name} value={name} />
+              {competitions.map(({ name, label }) => (
+                <option key={name} value={label} />
               ))}
             </datalist>
           </label>
@@ -183,7 +187,7 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
       {groups.map((group) => (
         <details key={group.name} className="ec-details ec-group" open>
           <summary className="ec-group-title">
-            {group.name} <span className="ec-muted ec-small">({gameCount(group.games.length)})</span>
+            {group.label} <span className="ec-muted ec-small">({gameCount(group.games.length)})</span>
           </summary>
           <div className="ec-table-wrap">
             <table className="ec-table">
