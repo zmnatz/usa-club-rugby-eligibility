@@ -18,7 +18,6 @@ jobs:
       - run: bun run lint
       - run: bun run typecheck
       - run: bun run test
-      - run: bun run verify
 
   # A build of the branch to look at before it merges, and the PR's full build.
   # GitHub Pages serves one site per repository, so a preview can't be hosted beside
@@ -91,6 +90,9 @@ jobs:
           gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json body -q .body > pr-body.md
           # Not `gh pr diff`, which fails above 300 files.
           gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename' > changed-files.txt
+
+      # build-clubs.ts reads the club list from the generated data.
+      - run: bun run data
 
       # The default club, plus the clubs of any club or player pages the PR lists.
       - name: Work out which clubs to build

@@ -9,8 +9,8 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 - `bun run build`: static build to `dist/`. `GITHUB_ACTIONS` or `BASE_PATH` sets the Pages base path.
 - `bun run build:quick`: the same build for the first 5 clubs and their players, for checking a change locally. `BUILD_CLUBS` sets the scope to a number of clubs or a comma-separated list of club keys. Its `dist/` is incomplete, so don't deploy it; CI ignores the setting.
 - `bun run test`, `bun run lint`, `bun run typecheck`
-- `bun run snapshot [--offline] [--full-history]`: see `docs/snapshots.md`.
-- `bun run verify`: recalculates `public/data` from `archive` and fails on any difference. Run it after any change to the rules or the calculation.
+- `bun run snapshot [--offline] [--full-history]`: refreshes `archive` from the CMS; see `docs/snapshots.md`.
+- `bun run data`: calculates `public/data` from `archive` (no CMS requests). It is gitignored, not committed; `dev` and `build` run it first, so a change to the rules shows up on the next run.
 - `bun run lib`: builds the three packages in `packages/` to their `dist/`. The component packages build incrementally, so an unchanged rebuild is quick. `dev`, `build`, `typecheck` and `test` do it first; `test` runs the data package's tests and the component tests in `src/`, `packages/usa-club-rugby-components/` and `packages/usa-club-rugby-html/`. `bun run dev` serves the HTML package's last build, so rerun `bun run lib` after changing it.
 
 ## Structure
@@ -30,7 +30,7 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 - `packages/usa-club-rugby-html/`: the site's eligibility screens, a plain HTML version of the MUI package's, published to npm as `@zmnatz/usa-club-rugby-html` (ADRs 009, 010). Components only: React with semantic HTML and one stylesheet (`src/styles.css`, exported as `@zmnatz/usa-club-rugby-html/styles.css`, `ec-` classes on `--ec-*` variables). Logic with no UI goes in the data package. No MUI or Emotion, no Next.js imports, `@/` aliases or route strings (`src/boundaries.test.ts` fails on them). Relative imports end in `.ts` or `.tsx`. Use CSS where it does the job (`<details>`, anchors) and React state for the rest, including filters; the site ships no script of its own (ADR 010).
 - `src/utils/published.ts`: the package's published client over `public/data` (`fsReader`), for `getStaticPaths` and `getStaticProps` at build time.
 - `src/styles/site.css`, `src/components/`: the site's own chrome, prose and links. `pages/`: the report. `index.tsx` lists the clubs, `club/[club]/index.tsx` is one club's page at `/club/<club-key>`, `player/[player]/index.tsx` one player's at `/player/<cms-id>`, built statically (ADR 008), `season.tsx` shows a Locked Season, loaded in the browser from its one file and chosen by query params, `stats/[season]/index.tsx` its stats, built statically, `csv.tsx` reads a Match Participation Report, and `methodology.mdx` explains the rules. Routes are ordinary paths, so they work on the static host.
-- `archive/`, `public/data/`: generated nightly. Never hand-edit; regenerate.
+- `archive/`: the raw match record, refreshed and committed nightly. Never hand-edit; regenerate. `public/data/`: calculated from it at build time, gitignored.
 
 ## Docs
 

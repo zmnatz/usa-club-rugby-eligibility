@@ -1,6 +1,6 @@
 # Releasing the npm packages
 
-`@zmnatz/usa-club-rugby-data`, `@zmnatz/usa-club-rugby-components` and `@zmnatz/usa-club-rugby-html` are released together, at one version. Publishing a GitHub release tagged `v<version>` runs `.github/workflows/publish.yml`, which stages all three at that version after `bun run test` and `bun run verify` pass.
+`@zmnatz/usa-club-rugby-data`, `@zmnatz/usa-club-rugby-components` and `@zmnatz/usa-club-rugby-html` are released together, at one version. Publishing a GitHub release tagged `v<version>` runs `.github/workflows/publish.yml`, which stages all three at that version after `bun run test` passes.
 
 The tag is the only record of the version: no `package.json` in the repo has a `version`. Between packages, each component package's peer dependency on the data package is `workspace:*`. Just before publishing, the job sets each package's `version` from the tag, and each component package's `@zmnatz/usa-club-rugby-data` peer to that same version. It fails before publishing if the tag isn't a version such as `v1.2.3` (a pre-release such as `v1.2.3-beta.1` is allowed).
 

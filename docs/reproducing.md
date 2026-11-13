@@ -15,25 +15,23 @@ Rugby Xplorer CMS ──snapshot──▶ archive/ (raw) ──build──▶ pu
 | 3. Count participation | `archive/` + `DEFAULT_RULES` + a time | `public/data/clubs/<club>.json`, `fixtures.json`, `index.json` | **Yes** |
 | 4. Verdicts | A published club file + fixtures + rules + a time | Eligible / not, reasons, matches still needed | **Yes** |
 
-Stages 1 and 2 are frozen into the archive by committing it, which is what makes the rest reproducible: everything after is a pure function of the archive, the rules and a timestamp. The timestamp is the published `index.json`'s `generatedAt`, which only moves when the published data changes, so recalculating at that time gives the same files.
+Stages 1 and 2 are frozen into the archive by committing it, which is what makes the rest reproducible: everything after is a pure function of the archive, the rules and a timestamp. `public/data/` is not committed. Every `dev` and `build` calculates it from the archive (`bun run data`), so a rule change shows up with no regeneration step to forget.
 
-## Check the published data
+## Calculate the published data
 
 ```bash
 git clone https://github.com/zmnatz/usa-club-rugby-eligibility && cd usa-club-rugby-eligibility
 bun install
-bun run verify         # OK: 315 published files reproduce from the archive (as of ...)
+bun run data           # calculates public/data from archive/
 ```
 
-`verify` fails if a published file differs from the recalculation, is missing, or has no source in the archive. CI runs it on every pull request and the nightly job runs it before committing, so a rule change or hand edit can't be merged without regenerating `public/data/`.
+To check a directory of published data against the archive, run `usa-club-rugby-data verify --published <dir>`: it fails if a file differs from the recalculation (at the index's `generatedAt`), is missing, or has no source in the archive.
 
 ## Rebuild after changing a rule
 
 ```bash
 bun run test           # the regulation's Figure 1 table must still pass
-bun run snapshot --offline   # recalculate public/data from the archive; no CMS requests
-bun run verify
-git diff public/data   # the verdicts that changed
+bun run data           # recalculate public/data from the archive; no CMS requests
 ```
 
 Rules are data: the thresholds and excluded competitions are `DEFAULT_RULES` in `packages/usa-club-rugby-data/src/rules.ts`, and every function takes the rules it applies, so a different season's rules can be tried without touching the code.

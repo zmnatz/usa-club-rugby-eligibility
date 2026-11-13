@@ -1,7 +1,6 @@
 name: Snapshot and deploy
 
-# Nightly: refresh the raw match archive from the CMS, recalculate the published
-# data, open and merge a pull request if anything changed, then build and deploy GitHub Pages.
+# Nightly: refresh the raw match archive from the CMS, open and merge a pull request if anything changed, then build and deploy GitHub Pages.
 # A push to main redeploys without touching the CMS. See docs/snapshots.md.
 on:
   schedule:
@@ -10,10 +9,6 @@ on:
     inputs:
       full_history:
         description: "Also read every past season the feeds list (slow; for filling in the archive)"
-        type: boolean
-        default: false
-      offline:
-        description: "Rebuild the published data from the archive only, with no CMS requests"
         type: boolean
         default: false
   push:
@@ -50,17 +45,14 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - name: Refresh the archive and published data
-        run: bun run snapshot ${{ inputs.full_history && '--full-history' || '' }} ${{ inputs.offline && '--offline' || '' }}
-
-      - name: Check the published data reproduces from the archive
-        run: bun run verify
+      - name: Refresh the archive
+        run: bun run snapshot ${{ inputs.full_history && '--full-history' || '' }}
 
       - name: Open a pull request and merge it
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git add archive public/data
+          git add archive
           if git diff --cached --quiet; then
             echo "Snapshot unchanged"
             exit 0
@@ -74,7 +66,7 @@ jobs:
           git push origin "$branch"
           url=$(gh pr create --base main --head "$branch" \
             --title "Nightly snapshot update" \
-            --body "Automated refresh of \`archive\` and \`public/data\` from the nightly snapshot.")
+            --body "Automated refresh of \`archive\` from the nightly snapshot.")
           # Merge now so the deploy job below builds the new data; fall back to
           # auto-merge if required checks are still pending.
           gh pr merge "$url" --squash --delete-branch || gh pr merge "$url" --squash --delete-branch --auto

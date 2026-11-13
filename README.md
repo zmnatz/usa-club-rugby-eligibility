@@ -10,7 +10,7 @@ It applies the 2026-27 Senior Club Regulations (§3.4.2, §3.5) to clubs with an
 
 ## How the data is kept current
 
-Each night a GitHub Action reads every senior club fixture from the Senior Club Council's, the unions' and the clubs' feeds, fetches every played match's record, archives the raw records in `archive/`, calculates each club's participation into `public/data/`, and redeploys the page. See [docs/snapshots.md](docs/snapshots.md).
+Each night a GitHub Action reads every senior club fixture from the Senior Club Council's, the unions' and the clubs' feeds, fetches every played match's record, archives the raw records in `archive/`, commits the archive, and redeploys the page, which calculates each club's participation from it into `public/data/` at build time. See [docs/snapshots.md](docs/snapshots.md).
 
 ## Use the data
 
@@ -25,15 +25,14 @@ const players = await createPublishedClient().players('rocky-gorge');
 
 ## Reproducing the numbers
 
-`bun run verify` recalculates all of `public/data` from the committed raw match archive and fails on any difference. See [docs/reproducing.md](docs/reproducing.md).
+`bun run data` calculates all of `public/data` from the committed raw match archive; nothing else is stored. See [docs/reproducing.md](docs/reproducing.md).
 
 ## Development
 
 ```bash
 bun install
-bun run dev        # uses the committed nightly data
+bun run dev        # calculates the data from the committed archive
 bun run test       # the package's tests
-bun run verify     # published data reproduces from the archive
 bun run snapshot   # refresh the data from the CMS
 ```
 
