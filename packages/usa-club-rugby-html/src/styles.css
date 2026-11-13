@@ -232,11 +232,9 @@ textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; 
 .ec-details > summary { cursor: pointer; color: var(--ec-primary); }
 .ec-details[open] > summary { margin-bottom: 12px; }
 
-/* A Locked Season's player detail, a native modal <dialog>. */
+/* A player's name in a report, linking to their page. */
 .ec-table a.ec-player { color: inherit; font-weight: 600; text-decoration: none; }
 .ec-table a.ec-player:hover { text-decoration: underline; }
-.ec-dialog { max-width: min(960px, calc(100vw - 32px)); width: 100%; max-height: calc(100vh - 32px); overflow: auto; background: var(--ec-surface); color: inherit; border: 1px solid var(--ec-border); border-radius: var(--ec-radius); padding: var(--ec-gap); }
-.ec-dialog::backdrop { background: rgb(0 0 0 / 0.5); }
 
 /* Unreported games: a collapsible group per competition. */
 .ec-group + .ec-group { margin-top: 16px; }

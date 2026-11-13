@@ -4,37 +4,57 @@ import type { EligibilityRoutes, ProblemReport } from '@zmnatz/usa-club-rugby-ht
 
 export const clubPath = (clubKey: string): string => `/club/${clubKey}`;
 
-/** A club's report with one player's detail open over it. */
-export const clubPlayerPath = (clubKey: string, playerId: string): string =>
-  `${clubPath(clubKey)}?player=${encodeURIComponent(playerId)}`;
-
-/** A player's page is not under a club: they can play for several over time. */
+/** A player's page is not under a club: they can play for several over time. It shows
+ *  this season, or the newest they're in; a Locked Season they're in has a page of its own. */
 export const playerPath = (playerId: string): string => `/player/${encodeURIComponent(playerId)}`;
+export const playerSeasonPath = (playerId: string, slug: string): string =>
+  `${playerPath(playerId)}/${encodeURIComponent(slug)}`;
 
-/** A player's page with one season's tab open: `season` is a Locked Season's slug, or
- *  "current". With none, the newest season they're in. */
-export const playerSeasonPath = (playerId: string, season: string): string =>
-  `${playerPath(playerId)}?season=${encodeURIComponent(season)}`;
-
-/** The season a page's URL has open, from its `season` query parameter. */
-export const openSeason = (query: Record<string, string | string[] | undefined>): string | null =>
-  typeof query.season === 'string' && query.season ? query.season : null;
-
-/** The player a `/player/?id=<cms-id>` URL names, from while player pages were loaded
- *  in the browser (ADR 007), so it can be sent on. `pathname` is without the base path. */
-export const queryPlayerId = (pathname: string, search: string): string | null =>
-  /^\/player\/?$/.test(pathname) ? new URLSearchParams(search).get('id') || null : null;
-
-/** A Locked Season's list of clubs, and a club's report for it. */
-export const seasonPath = (slug: string): string => `/season?season=${encodeURIComponent(slug)}`;
+/** The Locked Seasons published, a season's list of clubs, and a club's report for it. */
+export const seasonsPath = '/season';
+export const seasonPath = (slug: string): string => `${seasonsPath}/${encodeURIComponent(slug)}`;
 export const seasonClubPath = (slug: string, clubKey: string): string =>
-  `${seasonPath(slug)}&club=${encodeURIComponent(clubKey)}`;
-export const seasonClubPlayerPath = (slug: string, clubKey: string, playerId: string): string =>
-  `${seasonClubPath(slug, clubKey)}&player=${encodeURIComponent(playerId)}`;
+  `${seasonPath(slug)}/${encodeURIComponent(clubKey)}`;
 
-/** The player a report's URL has open, from its `player` query parameter. */
-export const openPlayer = (query: Record<string, string | string[] | undefined>): string | null =>
-  typeof query.player === 'string' && query.player ? query.player : null;
+/** Where a URL from before every page had a path of its own now lives, or null if it isn't
+ *  one. They named the page by query: a Locked Season by `/season/?season=<slug>&club=<key>`
+ *  (ADR 006), a player over a club report by `?player=<cms-id>`, a player page's season tab
+ *  by `?season=<slug>`, and a player by `/player/?id=<cms-id>` (ADR 007). `pathname` is
+ *  without the base path; the target has the trailing slash and no query. */
+export const legacyRedirect = (pathname: string, search: string): string | null => {
+  const query = new URLSearchParams(search);
+  const param = (key: string) => query.get(key) || null;
+  const page = (path: string) => `${path}/`;
+  let parts: string[];
+  try {
+    parts = pathname.split('/').filter(Boolean).map(decodeURIComponent);
+  } catch {
+    // A malformed escape names no page: leave it to the 404.
+    return null;
+  }
+  const [route, first] = parts;
+  const player = param('player');
+
+  if (route === 'season' && parts.length === 1) {
+    const slug = param('season');
+    if (!slug) return null;
+    const club = param('club');
+    if (player) return page(playerSeasonPath(player, slug));
+    return page(club ? seasonClubPath(slug, club) : seasonPath(slug));
+  }
+  if (route === 'season' && parts.length === 3 && player) return page(playerSeasonPath(player, first));
+  if (route === 'club' && parts.length === 2 && player) return page(playerPath(player));
+  if (route === 'player' && parts.length === 1) {
+    const id = param('id');
+    return id ? page(playerPath(id)) : null;
+  }
+  if (route === 'player' && parts.length === 2) {
+    const season = param('season');
+    if (!season) return null;
+    return page(season === 'current' ? playerPath(first) : playerSeasonPath(first, season));
+  }
+  return null;
+};
 
 /** A Locked Season's stats, built as a page of its own; with no season, every season's. */
 export const statsPath = (slug: string): string => (slug ? `/stats/${slug}` : '/stats');

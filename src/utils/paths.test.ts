@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'bun:test';
-import { playerPath, queryPlayerId, reportProblemUrl } from './paths';
+import {
+  legacyRedirect,
+  playerPath,
+  playerSeasonPath,
+  reportProblemUrl,
+  seasonClubPath,
+  seasonPath,
+  seasonsPath,
+} from './paths';
 
 describe('reportProblemUrl', () => {
   it('opens the issues with nothing to fill in', () => {
@@ -28,15 +36,52 @@ describe('reportProblemUrl', () => {
 });
 
 describe('player paths', () => {
-  it('gives each player a page of their own', () => {
+  it('gives each player a page of their own, and one for each Locked Season they are in', () => {
     expect(playerPath('27ZCFXTnfWs8iEaz9')).toBe('/player/27ZCFXTnfWs8iEaz9');
+    expect(playerSeasonPath('27ZCFXTnfWs8iEaz9', '2024-25')).toBe('/player/27ZCFXTnfWs8iEaz9/2024-25');
+  });
+});
+
+describe('season paths', () => {
+  it('gives the seasons, each season and each of its clubs a path', () => {
+    expect(seasonsPath).toBe('/season');
+    expect(seasonPath('2024-25')).toBe('/season/2024-25');
+    expect(seasonClubPath('2024-25', 'harbor-city')).toBe('/season/2024-25/harbor-city');
+  });
+});
+
+describe('legacyRedirect', () => {
+  it('sends an old season or season club URL to its path', () => {
+    expect(legacyRedirect('/season/', '?season=2024-25')).toBe('/season/2024-25/');
+    expect(legacyRedirect('/season', '?season=2024-25&club=harbor-city')).toBe('/season/2024-25/harbor-city/');
   });
 
-  it('reads the player from a /player/?id=<cms-id> URL, and nothing else', () => {
-    expect(queryPlayerId('/player/', '?id=27ZCFXTnfWs8iEaz9')).toBe('27ZCFXTnfWs8iEaz9');
-    expect(queryPlayerId('/player', '?id=27ZCFXTnfWs8iEaz9')).toBe('27ZCFXTnfWs8iEaz9');
-    expect(queryPlayerId('/player/', '')).toBeNull();
-    expect(queryPlayerId('/player/', '?id=')).toBeNull();
-    expect(queryPlayerId('/club/nova/', '?id=x')).toBeNull();
+  it("sends a player opened over a club report to the player's page for that season", () => {
+    expect(legacyRedirect('/club/harbor-city/', '?player=27ZCFX')).toBe('/player/27ZCFX/');
+    expect(legacyRedirect('/season/2024-25/harbor-city/', '?player=27ZCFX')).toBe('/player/27ZCFX/2024-25/');
+    expect(legacyRedirect('/season/', '?season=2024-25&club=harbor-city&player=27ZCFX')).toBe('/player/27ZCFX/2024-25/');
+  });
+
+  it("sends a player page's season tab to the season's path", () => {
+    expect(legacyRedirect('/player/27ZCFX/', '?season=2024-25')).toBe('/player/27ZCFX/2024-25/');
+    expect(legacyRedirect('/player/27ZCFX', '?season=current')).toBe('/player/27ZCFX/');
+  });
+
+  it('sends a /player/?id=<cms-id> URL to the player\'s page', () => {
+    expect(legacyRedirect('/player/', '?id=27ZCFX')).toBe('/player/27ZCFX/');
+    expect(legacyRedirect('/player', '?id=27ZCFX')).toBe('/player/27ZCFX/');
+  });
+
+  it('leaves every other URL alone', () => {
+    expect(legacyRedirect('/season/', '')).toBeNull();
+    expect(legacyRedirect('/season/', '?season=')).toBeNull();
+    expect(legacyRedirect('/season/', '?club=harbor-city')).toBeNull();
+    expect(legacyRedirect('/club/harbor-city/', '')).toBeNull();
+    expect(legacyRedirect('/club/harbor-city/', '?player=')).toBeNull();
+    expect(legacyRedirect('/player/', '')).toBeNull();
+    expect(legacyRedirect('/player/27ZCFX/', '')).toBeNull();
+    expect(legacyRedirect('/player/27ZCFX/2024-25/', '?season=2023-24')).toBeNull();
+    expect(legacyRedirect('/methodology/', '?player=27ZCFX')).toBeNull();
+    expect(legacyRedirect('/club/%E0/', '?player=27ZCFX')).toBeNull();
   });
 });

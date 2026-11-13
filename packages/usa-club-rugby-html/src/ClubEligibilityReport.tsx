@@ -8,7 +8,6 @@ import {
   type PublishedClub,
 } from '@zmnatz/usa-club-rugby-data';
 import { EligibilityReportView } from './EligibilityReportView.tsx';
-import { PlayerDialog, playerSides } from './PlayerDialog.tsx';
 import { ReportProblemNote } from './ReportProblemNote.tsx';
 import { SeasonRules } from './SeasonRules.tsx';
 import { useEligibilityLinks } from './links.tsx';
@@ -19,25 +18,18 @@ export interface ClubEligibilityReportProps {
   saved: ParticipationSnapshot;
   /** The fixtures in the club's divisions, including those still to play. */
   fixtures: FeedFixture[];
-  /** The player whose detail is open in a dialog, from the host's URL. */
-  playerId?: string | null;
-  /** The host's URL for a player's detail on this report, which each name links to. */
+  /** The host's page for a player in this report's season, which each name links to. */
   playerHref?: (playerId: string) => string;
-  /** Closes the dialog, by going to the report's URL without the player. */
-  onClose?: () => void;
 }
 
 /** One club's eligibility report from its saved Match Record. */
-export function ClubEligibilityReport({ club, saved, fixtures, playerId, playerHref, onClose }: ClubEligibilityReportProps) {
+export function ClubEligibilityReport({ club, saved, fixtures, playerHref }: ClubEligibilityReportProps) {
   const { Link, routes } = useEligibilityLinks();
 
   const locked = saved.locked === true;
   // A Locked Season's notes come with its file; this season's are worked out here.
   const notes = locked ? club.notes : mergedClubNotes(club);
   const { breakdown, gaps } = useMemo(() => clubSeason(saved, fixtures, club), [club, saved, fixtures]);
-  // The open player is the host's: it comes from the URL. An id there may name no one
-  // in this club's report, and then no dialog opens.
-  const shown = playerId && playerSides(breakdown, playerId).length > 0 ? playerId : null;
 
   return (
     <>
@@ -52,7 +44,7 @@ export function ClubEligibilityReport({ club, saved, fixtures, playerId, playerH
              senior club league and local playoff match. Fixtures still to play before Super
              Regionals count towards the two-match minimums, shown as on track (experimental).
              A player one upper-side match from losing a side for the season is shown as caution
-             (experimental). Open a player to check their count round by round against the
+             (experimental). Open a player's page to check their count round by round against the
              Rugby Xplorer match reports. This is a guide: the Rugby Xplorer Match Participation
              Report is the official count, and registration isn't checked.`}{' '}
         <Link href={routes.methodology()}>How this report is worked out</Link>
@@ -100,20 +92,6 @@ export function ClubEligibilityReport({ club, saved, fixtures, playerId, playerH
           transfers={saved.transfers}
         />
       </div>
-      {shown && onClose && (
-        <PlayerDialog
-          // A new player is a new dialog, opened afresh.
-          key={shown}
-          club={club}
-          saved={saved}
-          fixtures={fixtures}
-          breakdown={breakdown}
-          playerId={shown}
-          // This season's players also have a page of their own, to keep or share.
-          pageHref={locked ? undefined : routes.player(shown)}
-          onClose={onClose}
-        />
-      )}
     </>
   );
 }

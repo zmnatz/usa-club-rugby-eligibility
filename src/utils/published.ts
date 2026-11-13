@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { createPublishedClient } from '@zmnatz/usa-club-rugby-data';
+import { createPublishedClient, type PublishedSeasonFile } from '@zmnatz/usa-club-rugby-data';
 import { fsReader } from '@zmnatz/usa-club-rugby-data/node';
 
 // The nightly data for getStaticProps, at build time and in a page's function when it is
@@ -10,3 +10,10 @@ import { fsReader } from '@zmnatz/usa-club-rugby-data/node';
 export type { PublishedClub, PublishedIndex, PublishedSeason } from '@zmnatz/usa-club-rugby-data';
 
 export const published = createPublishedClient({ read: fsReader(path.join(process.cwd(), 'public', 'data')) });
+
+/** A Locked Season's file by its slug, or null if no season by that slug is published.
+ *  Only a published season's file is read, so a page's path can't name another file. */
+export async function lockedSeason(slug: unknown): Promise<PublishedSeasonFile | null> {
+  if (typeof slug !== 'string' || !(await published.seasons()).some((season) => season.slug === slug)) return null;
+  return published.season(slug);
+}

@@ -1,6 +1,5 @@
 import type { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 import { ClubEligibilityReport } from '@zmnatz/usa-club-rugby-html';
 import {
   clubFixtures,
@@ -8,7 +7,7 @@ import {
   type ParticipationSnapshot,
 } from '@zmnatz/usa-club-rugby-data';
 import { Crumbs } from '@/components/Crumbs';
-import { clubPath, clubPlayerPath, openPlayer } from '@/utils/paths';
+import { playerPath } from '@/utils/paths';
 import { published, type PublishedClub } from '@/utils/published';
 
 interface ClubPageProps {
@@ -42,8 +41,6 @@ export const getStaticProps: GetStaticProps<ClubPageProps> = async ({ params }) 
 };
 
 export default function ClubPage({ club, saved, fixtures }: ClubPageProps) {
-  // A player's detail is open over the report when the URL names them: /club/<key>/?player=<id>.
-  const router = useRouter();
   return (
     <>
       <Head>
@@ -60,9 +57,7 @@ export default function ClubPage({ club, saved, fixtures }: ClubPageProps) {
         club={club}
         saved={saved}
         fixtures={fixtures}
-        playerId={openPlayer(router.query)}
-        playerHref={(playerId) => clubPlayerPath(club.key, playerId)}
-        onClose={() => router.push(clubPath(club.key), undefined, { shallow: true, scroll: false })}
+        playerHref={playerPath}
       />
     </>
   );

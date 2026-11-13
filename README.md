@@ -38,4 +38,4 @@ bun run snapshot   # refresh the data from the CMS
 
 ## Corrections
 
-If a verdict looks wrong, first check the match reports linked in the player's dialog: most errors are lineups or substitutions missing in Rugby Xplorer, and correcting them there fixes the count the next night. Otherwise, open an issue with the club and player.
+If a verdict looks wrong, first check the match reports linked on the player's page: most errors are lineups or substitutions missing in Rugby Xplorer, and correcting them there fixes the count the next night. Otherwise, open an issue with the club and player.

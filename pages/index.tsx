@@ -2,7 +2,7 @@ import type { GetStaticProps } from 'next';
 import Head from 'next/head';
 import { ClubDirectory } from '@zmnatz/usa-club-rugby-html';
 import { PageLink } from '@/components/Crumbs';
-import { seasonPath, statsPath } from '@/utils/paths';
+import { seasonPath, seasonsPath, statsPath } from '@/utils/paths';
 import { published, type PublishedClub, type PublishedSeason } from '@/utils/published';
 
 interface HomeProps {
@@ -58,7 +58,7 @@ export default function HomePage({ clubs, season, generatedAt, pastSeasons }: Ho
       </p>
       {pastSeasons.length > 0 && (
         <p className="small">
-          Past seasons:{' '}
+          <PageLink href={seasonsPath}>Past seasons</PageLink>:{' '}
           {pastSeasons.map(({ season: past, slug }, index) => (
             <span key={slug}>
               {index > 0 && ' · '}

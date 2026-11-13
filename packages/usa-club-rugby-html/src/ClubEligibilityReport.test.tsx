@@ -187,38 +187,12 @@ describe('sorting', () => {
 });
 
 describe('players', () => {
-  it("links each name to the host's URL for their detail", async () => {
+  it("links each name to the host's page for the player, and opens nothing over the report", async () => {
     await renderClubReport();
     expect(within(d3Row(NAMES.onTrack)).getByRole('link', { name: NAMES.onTrack }).getAttribute('href')).toBe(
-      '/club/harbor-city?player=ona',
+      '/player/ona',
     );
     expect(screen.queryByRole('dialog')).toBeNull();
-  });
-
-  it("opens the detail of the player the URL names, with a link to their own page", async () => {
-    await renderClubReport({ playerId: 'ona' });
-    const dialog = screen.getByRole('dialog', { name: NAMES.onTrack });
-    expect(within(within(dialog).getByRole('region', { name: 'D3 side' })).getByText('ON TRACK')).toBeTruthy();
-    expect(within(dialog).getByRole('link', { name: 'Open player page' }).getAttribute('href')).toBe('/player/ona');
-  });
-
-  it('shows each side a player is listed for', async () => {
-    await renderClubReport({ playerId: 'eli' });
-    const dialog = screen.getByRole('dialog', { name: NAMES.eligible });
-    expect(within(dialog).getByRole('region', { name: 'D1 side' })).toBeTruthy();
-    expect(within(dialog).getByRole('region', { name: 'D3 side' })).toBeTruthy();
-  });
-
-  it('opens nothing for an id that names no one in the club', async () => {
-    await renderClubReport({ playerId: 'nobody' });
-    expect(screen.queryByRole('dialog')).toBeNull();
-  });
-
-  it('asks the host to close it', async () => {
-    let closed = 0;
-    await renderClubReport({ playerId: 'ona', onClose: () => closed++ });
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
-    expect(closed).toBe(1);
   });
 
   it('reaches every player with Tab', async () => {
@@ -302,14 +276,6 @@ describe('a Locked Season', () => {
     expect(screen.getByText(/final/i)).toBeTruthy();
   });
 
-  it("opens a player's detail with no page of their own to link to", async () => {
-    await renderClubReport({ locked: true, playerId: 'ona' });
-    const dialog = screen.getByRole('dialog');
-    expect(within(dialog).getByText(NAMES.onTrack)).toBeTruthy();
-    expect(within(dialog).getAllByText(/Played/).length).toBeGreaterThan(0);
-    expect(within(dialog).queryByRole('link', { name: 'Open player page' })).toBeNull();
-  });
-
   it('warns when a team that looks like the club\'s has no division', async () => {
     await renderClubReport({ locked: true, unplacedTeams: ['Harbor City Men Senior'] });
     expect(screen.getByText(/Harbor City Men Senior/)).toBeTruthy();
@@ -340,13 +306,6 @@ describe('a player who played for another club', () => {
     await renderClubReport({ transfers });
     expect(within(d3Row(NAMES.eligible)).getByText('Waiver Required')).toBeTruthy();
     expect(within(d3Row(NAMES.caution)).queryByText('Waiver Required')).toBeNull();
-  });
-
-  it('shows their games for the other club in a Locked Season\'s dialog', async () => {
-    await renderClubReport({ locked: true, transfers, playerId: 'eli' });
-    const dialog = screen.getByRole('dialog');
-    expect(within(dialog).getAllByText('Waiver Required').length).toBeGreaterThan(0);
-    expect(within(dialog).getAllByText(/Also played for Bayside/).length).toBeGreaterThan(0);
   });
 });
 

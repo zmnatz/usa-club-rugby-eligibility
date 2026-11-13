@@ -26,10 +26,21 @@ rules:
       - path: /club/pittsburgh-forge/
   - files:
       - pages/player/**
+      - src/components/PlayerPage.tsx
+      - src/utils/playerPage.ts
       - packages/usa-club-rugby-html/src/PlayerDetail.tsx
       - packages/usa-club-rugby-html/src/EligibilityStatusChip.tsx
     routes:
       - path: /player/{player}/
+      # A player who moved clubs in a Locked Season.
+      - path: /player/55iaYFdx5tdgJ7LfD/2024-25/
+  - files:
+      - pages/season/**
+      - proxy.ts
+    routes:
+      - path: /season/
+      - path: /season/2024-25/
+      - path: /season/2024-25/akron/
   - files:
       - pages/csv.tsx
       - packages/usa-club-rugby-html/src/MatchParticipationReport.tsx
