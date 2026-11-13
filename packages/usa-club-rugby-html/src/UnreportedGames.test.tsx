@@ -39,8 +39,10 @@ describe('UnreportedGames', () => {
     expect(within(cells[1]).getByRole('link', { name: 'Harbor City' }).getAttribute('href')).toBe(
       '/teams/harbor-city.html',
     );
+    expect(within(cells[1]).getByRole('link').getAttribute('title')).toBe('Harbor City MD1');
     expect(within(cells[2]).queryByRole('link')).toBeNull();
-    expect(cells[2].textContent).toContain('Bayside MD2');
+    expect(cells[2].textContent).toBe('Bayside');
+    expect(within(cells[2]).getByTitle('Bayside MD2')).toBeTruthy();
     expect(cells[3].textContent).toContain("Men's D1 / Men's D2");
     expect(cells[4].textContent).toContain('No lineup: Harbor City MD1');
     expect(cells[4].textContent).toContain('No substitutions: Bayside MD2');

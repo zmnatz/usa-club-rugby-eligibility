@@ -65,11 +65,13 @@ const hasGap = (game: UnreportedGame, side: UnreportedSide) =>
 
 function Side({ side }: { side: UnreportedSide }) {
   const { Link, routes } = useEligibilityLinks();
-  return (
-    <>
-      {side.clubKey ? <Link href={routes.club(side.clubKey)}>{side.clubName}</Link> : side.clubName}
-      <div className="ec-muted ec-small">{side.teamName}</div>
-    </>
+  // The team, which says which of a club's sides played, shows on hover.
+  return side.clubKey ? (
+    <Link href={routes.club(side.clubKey)} title={side.teamName}>
+      {side.clubName}
+    </Link>
+  ) : (
+    <span title={side.teamName}>{side.clubName}</span>
   );
 }
 
