@@ -51,6 +51,7 @@ describe('UnreportedGames', () => {
       { ...game, reasons: [{ kind: 'no-lineup', teamName: 'Bayside MD2' }] },
       { ...game, fixtureId: 'f2', reasons: [{ kind: 'no-result' }] },
     ]);
+    fireEvent.click(screen.getByLabelText('All'));
     const [, gap, noResult] = screen.getAllByRole('row');
     const flagged = (row: HTMLElement) =>
       within(row)
@@ -106,6 +107,8 @@ describe('UnreportedGames', () => {
     const heading = () => screen.getByRole('heading', { level: 2 }).textContent;
     const rows = () => screen.queryAllByRole('row').length;
     const competition = screen.getByRole('combobox', { name: 'Competition' });
+    expect(heading()).toBe('1 of 2 games');
+    fireEvent.click(within(screen.getByRole('group', { name: 'Reason' })).getByLabelText('All'));
     expect(heading()).toBe('2 games');
     fireEvent.change(competition, { target: { value: 'capital' } });
     expect(heading()).toBe('1 of 2 games');
@@ -134,6 +137,12 @@ describe('UnreportedGames', () => {
     expect((screen.getByLabelText('All') as HTMLInputElement).checked).toBe(true);
     fireEvent.click(screen.getByLabelText('No lineup'));
     expect(changes).toEqual([{ division: 'nonsense', competition: 'Capital', reason: 'no-lineup' }]);
+  });
+
+  it('starts on games with no lineup, the gap that matters for eligibility', () => {
+    renderGames([game, { ...game, fixtureId: 'f2', reasons: [{ kind: 'no-result' }] }]);
+    expect((screen.getByLabelText('No lineup') as HTMLInputElement).checked).toBe(true);
+    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('1 of 2 games');
   });
 
   it('says so when no game is overdue', () => {

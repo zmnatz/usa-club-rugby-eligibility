@@ -9,7 +9,7 @@ import {
   type UnreportedGame,
   unreportedGames,
 } from '@zmnatz/usa-club-rugby-data';
-import { ALL_UNREPORTED, type UnreportedFilters, UnreportedGames } from '@zmnatz/usa-club-rugby-html';
+import { DEFAULT_UNREPORTED, type UnreportedFilters, UnreportedGames } from '@zmnatz/usa-club-rugby-html';
 import { Crumbs, PageLink } from '@/components/Crumbs';
 import { published } from '@/utils/published';
 
@@ -38,21 +38,22 @@ const queryValue = (value: string | string[] | undefined, none: string) =>
   typeof value === 'string' && value ? value : none;
 
 export default function UnreportedPage({ games, season, builtAt }: UnreportedProps) {
-  // The filters live in the URL, so a refresh or a shared link keeps them. The static HTML
-  // has no query, so it shows every game until the router reads it.
+  // The filters live in the URL, so a refresh or a shared link keeps them; a filter left at
+  // its default isn't written. The static HTML has no query, so it shows the defaults until
+  // the router reads it.
   const router = useRouter();
   const filters: UnreportedFilters = router.isReady
     ? {
-        division: queryValue(router.query.division, 'all'),
-        competition: queryValue(router.query.competition, ''),
-        reason: queryValue(router.query.reason, 'all'),
+        division: queryValue(router.query.division, DEFAULT_UNREPORTED.division),
+        competition: queryValue(router.query.competition, DEFAULT_UNREPORTED.competition),
+        reason: queryValue(router.query.reason, DEFAULT_UNREPORTED.reason),
       }
-    : ALL_UNREPORTED;
+    : DEFAULT_UNREPORTED;
   const setFilters = ({ division, competition, reason }: UnreportedFilters) => {
     const query = {
-      ...(division !== 'all' && { division }),
-      ...(competition !== '' && { competition }),
-      ...(reason !== 'all' && { reason }),
+      ...(division !== DEFAULT_UNREPORTED.division && { division }),
+      ...(competition !== DEFAULT_UNREPORTED.competition && { competition }),
+      ...(reason !== DEFAULT_UNREPORTED.reason && { reason }),
     };
     router.replace({ pathname: router.pathname, query }, undefined, { shallow: true, scroll: false });
   };

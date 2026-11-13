@@ -17,12 +17,13 @@ export interface UnreportedFilters {
   reason: string;
 }
 
-export const ALL_UNREPORTED: UnreportedFilters = { division: 'all', competition: '', reason: 'all' };
+/** Where the list starts: games with no lineup, the gap that most affects eligibility. */
+export const DEFAULT_UNREPORTED: UnreportedFilters = { division: 'all', competition: '', reason: 'no-lineup' };
 
 export interface UnreportedGamesProps {
   games: UnreportedGame[];
   /** The filters, for a host that keeps them, e.g. in the URL. Without them the list keeps
-   *  its own, starting from `ALL_UNREPORTED`. A division or reason the games don't offer
+   *  its own, starting from `DEFAULT_UNREPORTED`. A division or reason the games don't offer
    *  reads as `all`. */
   filters?: UnreportedFilters;
   onFiltersChange?: (filters: UnreportedFilters) => void;
@@ -98,7 +99,7 @@ function GameRow({ game }: { game: UnreportedGame }) {
 /** Current-season games whose record still needs entering, in a collapsible group per
  *  competition, filterable by division, competition and reason. */
 export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedGamesProps) {
-  const [own, setOwn] = useState(ALL_UNREPORTED);
+  const [own, setOwn] = useState(DEFAULT_UNREPORTED);
   const current = filters ?? own;
   const change = (next: Partial<UnreportedFilters>) => (onFiltersChange ?? setOwn)({ ...current, ...next });
 

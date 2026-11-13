@@ -20,7 +20,7 @@ export { ReportProblemNote, type ReportProblemNoteProps } from './ReportProblemN
 export { SeasonRules, type SeasonRulesProps } from './SeasonRules.tsx';
 export { SkipToFirstPlayer } from './SkipToFirstPlayer.tsx';
 export {
-  ALL_UNREPORTED,
+  DEFAULT_UNREPORTED,
   type UnreportedFilters,
   UnreportedGames,
   type UnreportedGamesProps,
