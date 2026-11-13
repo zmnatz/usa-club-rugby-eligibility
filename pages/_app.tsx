@@ -25,9 +25,7 @@ function PackageLink(props: ComponentProps<typeof PageLink>) {
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
-  const clubReport =
-    router.pathname === "/club/[club]" ||
-    (router.pathname === "/season" && Boolean(router.query.club));
+  const clubReport = router.pathname === "/club/[club]" || router.pathname === "/season/[season]/[club]";
   const narrow = router.pathname === "/methodology";
 
   return (

@@ -2,7 +2,20 @@ import createMDX from '@next/mdx';
 import type { NextConfig } from 'next';
 
 // Netlify's Next.js runtime builds and serves this app (ADR 012). Club and player pages
-// are generated on first request (ADRs 014, 015); every other page at build time.
+// are generated on first request (ADRs 014, 015), and so are a Locked Season's pages
+// (ADR 016); every other page at build time.
+
+// A Locked Season's page and its clubs' read the list of seasons and that season's file,
+// and nothing of the current season's nor the seasons' player indexes.
+const SEASON_PAGE_FILES = ['./public/data/seasons.json', './public/data/seasons/*.json'];
+const SEASON_PAGE_EXCLUDES = [
+  './public/data/index.json',
+  './public/data/fixtures.json',
+  './public/data/players.json',
+  './public/data/clubs/**',
+  './public/data/seasons/*.players.json',
+];
+
 const nextConfig: NextConfig = {
   // Pages keep the /<path>/ URLs they had as a static export.
   trailingSlash: true,
@@ -19,12 +32,15 @@ const nextConfig: NextConfig = {
       './public/data/fixtures.json',
       './public/data/players.json',
       './public/data/clubs/*.json',
-      './public/data/seasons.json',
-      './public/data/seasons/*.json',
+      ...SEASON_PAGE_FILES,
     ],
+    '/season/[[]season[]]': SEASON_PAGE_FILES,
+    '/season/[[]season[]]/[[]club[]]': SEASON_PAGE_FILES,
   },
   outputFileTracingExcludes: {
     '/club/[[]club[]]': ['./public/data/seasons/**', './public/data/seasons.json', './public/data/players.json'],
+    '/season/[[]season[]]': SEASON_PAGE_EXCLUDES,
+    '/season/[[]season[]]/[[]club[]]': SEASON_PAGE_EXCLUDES,
   },
 };
 

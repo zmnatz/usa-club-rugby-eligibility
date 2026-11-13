@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { playerPath, queryPlayerId, reportProblemUrl } from './paths';
+import { legacySeasonRedirect, playerPath, queryPlayerId, reportProblemUrl, seasonClubPath, seasonPath, seasonsPath } from './paths';
 
 describe('reportProblemUrl', () => {
   it('opens the issues with nothing to fill in', () => {
@@ -38,5 +38,27 @@ describe('player paths', () => {
     expect(queryPlayerId('/player/', '')).toBeNull();
     expect(queryPlayerId('/player/', '?id=')).toBeNull();
     expect(queryPlayerId('/club/nova/', '?id=x')).toBeNull();
+  });
+});
+
+describe('season paths', () => {
+  it('gives the seasons, each season and each of its clubs a path', () => {
+    expect(seasonsPath).toBe('/season');
+    expect(seasonPath('2024-25')).toBe('/season/2024-25');
+    expect(seasonClubPath('2024-25', 'harbor-city')).toBe('/season/2024-25/harbor-city');
+  });
+
+  it('sends an old ?season=&club= URL to its path, keeping any other query', () => {
+    expect(legacySeasonRedirect('?season=2024-25')).toBe('/season/2024-25/');
+    expect(legacySeasonRedirect('?season=2024-25&club=harbor-city')).toBe('/season/2024-25/harbor-city/');
+    expect(legacySeasonRedirect('?season=2024-25&club=harbor-city&player=27ZCFX')).toBe(
+      '/season/2024-25/harbor-city/?player=27ZCFX',
+    );
+  });
+
+  it('leaves a URL with no season alone', () => {
+    expect(legacySeasonRedirect('')).toBeNull();
+    expect(legacySeasonRedirect('?season=')).toBeNull();
+    expect(legacySeasonRedirect('?club=harbor-city')).toBeNull();
   });
 });

@@ -31,6 +31,13 @@ rules:
     routes:
       - path: /player/{player}/
   - files:
+      - pages/season/**
+      - proxy.ts
+    routes:
+      - path: /season/
+      - path: /season/2024-25/
+      - path: /season/2024-25/akron/
+  - files:
       - pages/csv.tsx
       - packages/usa-club-rugby-html/src/MatchParticipationReport.tsx
     routes:

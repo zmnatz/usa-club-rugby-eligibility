@@ -46,7 +46,7 @@ SNAPSHOT_CONCURRENCY=8 bun run snapshot
 
 ## Locked Seasons
 
-The Archive can hold every season the feeds list. Each one from 2022-23 on is published as its own file, `public/data/seasons/<slug>.json`, with the regulations of its year (`rulesForSeason`, ADR 006), and read in the browser by the one `/season` page, as `/season?season=<slug>&club=<club-key>`, so past seasons add only one page to the build, plus a small stats page each at `/stats/<slug>/`, worked out at build time. The current season's files aren't affected. A Locked Season's files carry no timestamp, so later nights leave them alone.
+The Archive can hold every season the feeds list. Each one from 2022-23 on is published as its own file, `public/data/seasons/<slug>.json`, with the regulations of its year (`rulesForSeason`, ADR 006), and read by its pages, `/season/<slug>/` and `/season/<slug>/<club-key>/`, which are generated on first request (ADR 016), so past seasons add only the list of seasons to the build, plus a small stats page each at `/stats/<slug>/`, worked out at build time. The current season's files aren't affected. A Locked Season's files carry no timestamp, so later nights leave them alone.
 
 To fill the archive:
 

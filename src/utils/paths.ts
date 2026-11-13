@@ -25,12 +25,28 @@ export const openSeason = (query: Record<string, string | string[] | undefined>)
 export const queryPlayerId = (pathname: string, search: string): string | null =>
   /^\/player\/?$/.test(pathname) ? new URLSearchParams(search).get('id') || null : null;
 
-/** A Locked Season's list of clubs, and a club's report for it. */
-export const seasonPath = (slug: string): string => `/season?season=${encodeURIComponent(slug)}`;
+/** The Locked Seasons published, a season's list of clubs, and a club's report for it. */
+export const seasonsPath = '/season';
+export const seasonPath = (slug: string): string => `${seasonsPath}/${encodeURIComponent(slug)}`;
 export const seasonClubPath = (slug: string, clubKey: string): string =>
-  `${seasonPath(slug)}&club=${encodeURIComponent(clubKey)}`;
+  `${seasonPath(slug)}/${encodeURIComponent(clubKey)}`;
+/** A Locked Season club's report with one player's detail open over it. */
 export const seasonClubPlayerPath = (slug: string, clubKey: string, playerId: string): string =>
-  `${seasonClubPath(slug, clubKey)}&player=${encodeURIComponent(playerId)}`;
+  `${seasonClubPath(slug, clubKey)}?player=${encodeURIComponent(playerId)}`;
+
+/** Where an old `/season/?season=<slug>&club=<key>` URL now lives, with the rest of its
+ *  query kept, or null if it names no season. From while one page showed every Locked
+ *  Season, loaded in the browser (ADR 006). */
+export const legacySeasonRedirect = (search: string): string | null => {
+  const query = new URLSearchParams(search);
+  const slug = query.get('season');
+  if (!slug) return null;
+  const club = query.get('club');
+  query.delete('season');
+  query.delete('club');
+  const rest = query.toString();
+  return `${club ? seasonClubPath(slug, club) : seasonPath(slug)}/${rest ? `?${rest}` : ''}`;
+};
 
 /** The player a report's URL has open, from its `player` query parameter. */
 export const openPlayer = (query: Record<string, string | string[] | undefined>): string | null =>
