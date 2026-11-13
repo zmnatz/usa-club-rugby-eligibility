@@ -26,7 +26,6 @@ for (const club of clubs) {
 const wanted = clubsToBuild({
   defaults: [values.default as string],
   requested: parseScreenshotsSection(fs.readFileSync(values['pr-body'] as string, 'utf-8')),
-  clubs,
   playerClubs,
 });
 console.log(`clubs=${wanted.join(',')}`);

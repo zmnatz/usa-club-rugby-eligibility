@@ -109,23 +109,25 @@ describe('parseScreenshotsSection', () => {
 });
 
 describe('clubsToBuild', () => {
-  const clubs = ['a-club', 'b-club', 'c-club'];
   const playerClubs = new Map([['p1', ['b-club', 'c-club']]]);
   const build = (...paths: string[]) =>
-    clubsToBuild({ defaults: ['a-club'], requested: paths.map((path) => ({ path })), clubs, playerClubs });
+    clubsToBuild({ defaults: ['a-club'], requested: paths.map((path) => ({ path })), playerClubs });
 
   it('builds only the default club when no club or player page is requested', () => {
     expect(build('/', '/csv/')).toEqual(['a-club']);
   });
 
-  it('adds a requested club and every club a requested player is listed for', () => {
-    expect(build('/club/c-club/')).toEqual(['a-club', 'c-club']);
+  it('adds nothing for a club page, which is generated on request', () => {
+    expect(build('/club/c-club/')).toEqual(['a-club']);
+  });
+
+  it('adds every club a requested player is listed for', () => {
     expect(build('/player/?id=p1')).toEqual(['a-club', 'b-club', 'c-club']);
     expect(build('/player/p1/')).toEqual(['a-club', 'b-club', 'c-club']);
   });
 
-  it('leaves out unknown clubs and players, so their pages report a 404', () => {
-    expect(build('/club/nope/', '/player/nobody/')).toEqual(['a-club']);
+  it('leaves out unknown players, so their pages report a 404', () => {
+    expect(build('/player/nobody/')).toEqual(['a-club']);
   });
 });
 
