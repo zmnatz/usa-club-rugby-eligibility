@@ -113,13 +113,16 @@ const columnClass = (column: ReportColumn) =>
     .filter(Boolean)
     .join(' ') || undefined;
 
-/** One side's players: a status filter and column chooser that work with CSS alone, and
+/** One side's players: a status filter, a column chooser that works with CSS alone, and
  *  a table sorted by a column's header. */
 function SideTable({ index, breakdown, source, locked, playerHref, transfers }: SideTableProps) {
   const side = breakdown.sides[index];
   const { summary } = side;
   const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({ key: 'name', direction: 'asc' });
-  const players = sortPlayers(side.players, sort.key, sort.direction);
+  const [status, setStatus] = useState('all');
+  const players = sortPlayers(side.players, sort.key, sort.direction).filter(
+    (player) => status === 'all' || statusGroups(player).split(' ').includes(status),
+  );
   const sortBy = (key: SortKey) =>
     setSort((current) => ({ key, direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc' }));
   const otherLabels = breakdown.sides.filter((entry) => entry.teamName !== side.teamName).map((entry) => entry.label);
@@ -142,7 +145,13 @@ function SideTable({ index, breakdown, source, locked, playerHref, transfers }: 
             <legend className="ec-sr">Eligibility status</legend>
             {filters.map(([value, label]) => (
               <label key={value}>
-                <input type="radio" name={`status-${index}`} value={value} defaultChecked={value === 'all'} />
+                <input
+                  type="radio"
+                  name={`status-${index}`}
+                  value={value}
+                  checked={status === value}
+                  onChange={() => setStatus(value)}
+                />
                 {label}
               </label>
             ))}
@@ -187,7 +196,6 @@ function SideTable({ index, breakdown, source, locked, playerHref, transfers }: 
             {players.map((player, row) => (
               <tr
                 key={player.playerId}
-                data-groups={statusGroups(player)}
                 // The skip link lands on the first row, whichever that is after a sort.
                 id={index === 0 && row === 0 ? FIRST_PLAYER_ID : undefined}
                 tabIndex={index === 0 && row === 0 ? -1 : undefined}
@@ -207,7 +215,7 @@ function SideTable({ index, breakdown, source, locked, playerHref, transfers }: 
             {players.length === 0 && (
               <tr id={index === 0 ? FIRST_PLAYER_ID : undefined} tabIndex={index === 0 ? -1 : undefined}>
                 <td colSpan={columns.length} className="ec-center ec-muted">
-                  No players in this team&apos;s report.
+                  {side.players.length === 0 ? 'No players in this team’s report.' : 'No players match this filter.'}
                 </td>
               </tr>
             )}

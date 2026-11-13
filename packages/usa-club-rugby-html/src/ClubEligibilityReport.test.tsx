@@ -59,13 +59,13 @@ describe('verdicts', () => {
 });
 
 describe('filtering by status', () => {
-  // The filter is CSS on the controls' state, which a test has no stylesheet to run.
-  // So check what the CSS works from: a radio for each filter, and each row's groups.
-  const groups = (name: string) => d3Row(name).getAttribute('data-groups')?.split(' ');
+  const statusFilter = (name: string) => within(within(side(name)).getByRole('group', { name: 'Eligibility status' }));
+  const shownInD3 = () =>
+    Object.values(NAMES).filter((name) => within(side('D3')).queryByText(name) !== null);
 
   it('offers all, eligible, caution and ineligible, starting on all', async () => {
     await renderClubReport();
-    const filters = within(within(side('D3')).getByRole('group', { name: 'Eligibility status' }));
+    const filters = statusFilter('D3');
     expect(filters.getAllByRole('radio').map((radio) => (radio as HTMLInputElement).value)).toEqual([
       'all',
       'eligible',
@@ -75,19 +75,20 @@ describe('filtering by status', () => {
     expect((filters.getByRole('radio', { name: 'All' }) as HTMLInputElement).checked).toBe(true);
   });
 
-  it('files each row under the filters that show it', async () => {
+  it('shows only the players a filter picks, counting on-track and cautioned players as eligible', async () => {
     await renderClubReport();
-    expect(groups(NAMES.ineligible)).toEqual(['ineligible']);
-    expect(groups(NAMES.caution)).toEqual(['eligible', 'caution']);
-    // On-track and cautioned players are eligible.
-    expect(groups(NAMES.onTrack)).toEqual(['eligible']);
-    expect(groups(NAMES.eligible)).toEqual(['eligible']);
+    await user.click(statusFilter('D3').getByRole('radio', { name: 'Ineligible' }));
+    expect(shownInD3()).toEqual([NAMES.ineligible]);
+    await user.click(statusFilter('D3').getByRole('radio', { name: 'Caution' }));
+    expect(shownInD3()).toEqual([NAMES.caution]);
+    await user.click(statusFilter('D3').getByRole('radio', { name: 'Eligible' }));
+    expect(shownInD3().sort()).toEqual([NAMES.caution, NAMES.onTrack, NAMES.eligible].sort());
   });
 
   it('keeps each side’s filter separate', async () => {
     await renderClubReport();
-    const names = [...document.querySelectorAll('input[type="radio"]')].map((radio) => (radio as HTMLInputElement).name);
-    expect(new Set(names)).toEqual(new Set(['status-0', 'status-1']));
+    await user.click(statusFilter('D3').getByRole('radio', { name: 'Ineligible' }));
+    expect((statusFilter('D1').getByRole('radio', { name: 'All' }) as HTMLInputElement).checked).toBe(true);
   });
 
   it('shows the side’s totals', async () => {
