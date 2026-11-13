@@ -151,6 +151,13 @@ textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; 
 }
 .ec-skip:focus-visible { transform: none; }
 
+/* Tabs: a row of links over one panel, the open one underlined. */
+.ec-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 16px 0; border-bottom: 1px solid var(--ec-border); }
+.ec-tab { padding: 8px 16px; border-bottom: 2px solid transparent; color: inherit; text-decoration: none; }
+.ec-tab:hover { background: var(--ec-hover); }
+.ec-tab[aria-selected="true"] { border-bottom-color: var(--ec-primary); color: var(--ec-primary); font-weight: 600; }
+.ec-tab:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
+
 /* A club's sides: the tables, and filters and columns that need no JavaScript. */
 .ec-sidenav { display: flex; flex-wrap: wrap; gap: 8px; }
 .ec-sidenav a {

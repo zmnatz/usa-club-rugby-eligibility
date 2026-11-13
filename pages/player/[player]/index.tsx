@@ -1,10 +1,9 @@
 import type { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import type { PlayerClubEntry, PlayerProfile, PlayerSeasonProfile } from '@zmnatz/usa-club-rugby-data';
 import { Crumbs, PageLink } from '@/components/Crumbs';
-import { EligibilityStatusChip, PlayerDetailBody } from '@zmnatz/usa-club-rugby-html';
+import { EligibilityStatusChip, PlayerDetailBody, Tabs } from '@zmnatz/usa-club-rugby-html';
 import { clubPath, openSeason, playerSeasonPath, seasonClubPath } from '@/utils/paths';
 import { listPlayerIds, published } from '@/utils/published';
 
@@ -70,7 +69,6 @@ export default function PlayerPage({ id, name, seasons }: PlayerPageProps) {
   const { query } = useRouter();
   const selected = openSeason(query);
   const season = seasons.find((candidate) => candidate.slug === selected) ?? seasons[0];
-  const panelProps = seasons.length > 1 ? { role: 'tabpanel', 'aria-labelledby': `season-tab-${season.slug}` } : {};
   return (
     <>
       <Head>
@@ -82,26 +80,11 @@ export default function PlayerPage({ id, name, seasons }: PlayerPageProps) {
       </Head>
       <Crumbs trail={[{ label: 'All clubs', href: '/' }, { label: name }]} />
       <h1>{name}</h1>
-      {seasons.length > 1 && (
-        <div className="ec-tabs" role="tablist" aria-label="Season">
-          {seasons.map((item) => (
-            <Link
-              key={item.slug}
-              href={playerSeasonPath(id, item.slug)}
-              shallow
-              scroll={false}
-              role="tab"
-              id={`season-tab-${item.slug}`}
-              aria-selected={item.slug === season.slug}
-              aria-controls="season-panel"
-              className="ec-tab"
-            >
-              {item.season}
-            </Link>
-          ))}
-        </div>
-      )}
-      <div id="season-panel" {...panelProps}>
+      <Tabs
+        label="Season"
+        selected={season.slug}
+        tabs={seasons.map((item) => ({ key: item.slug, label: item.season, href: playerSeasonPath(id, item.slug) }))}
+      >
         {!season.current && (
           <p className="small">
             Final verdicts under the {season.season} regulations. <PageLink href="/methodology">How this is worked out</PageLink>.
@@ -117,7 +100,7 @@ export default function PlayerPage({ id, name, seasons }: PlayerPageProps) {
             <PlayerInClub key={`${season.slug}-${entry.clubKey}-${entry.player.teamName}`} entry={entry} season={season} />
           ))}
         </div>
-      </div>
+      </Tabs>
     </>
   );
 }

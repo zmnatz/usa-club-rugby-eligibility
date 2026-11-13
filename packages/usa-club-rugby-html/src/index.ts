@@ -19,6 +19,7 @@ export { MatchParticipationReport, type MatchParticipationReportProps } from './
 export { ReportProblemNote, type ReportProblemNoteProps } from './ReportProblemNote.tsx';
 export { SeasonRules, type SeasonRulesProps } from './SeasonRules.tsx';
 export { SkipToFirstPlayer } from './SkipToFirstPlayer.tsx';
+export { type TabItem, Tabs, type TabsProps } from './Tabs.tsx';
 export {
   DEFAULT_UNREPORTED,
   UNREPORTED_REASONS,
