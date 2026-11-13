@@ -1,12 +1,13 @@
-import type { GetStaticProps } from 'next';
+import type { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import { type SeasonSummary, seasonSummary } from '@zmnatz/usa-club-rugby-data';
 import { Crumbs, PageLink } from '@/components/Crumbs';
 import { statsPath } from '@/utils/paths';
 import { published } from '@/utils/published';
 
-// Every Locked Season's stats side by side, worked out at build time like each
-// season's own stats page.
+// Every Locked Season's stats side by side. It reads every season's file, so it is
+// rendered on request rather than at build, and the CDN keeps it until the next deploy
+// (ADR 018).
 
 interface SeasonStats {
   season: string;
@@ -14,16 +15,19 @@ interface SeasonStats {
   summary: SeasonSummary;
 }
 
-export const getStaticProps: GetStaticProps<{ seasons: SeasonStats[] }> = async () => ({
-  props: {
-    seasons: await Promise.all(
-      (await published.seasons()).map(async ({ slug }) => {
-        const file = await published.season(slug);
-        return { season: file.season, slug, summary: seasonSummary(file) };
-      }),
-    ),
-  },
-});
+/** Fresh at the CDN for a year, which a deploy cuts short; never cached by the browser. */
+const UNTIL_NEXT_DEPLOY = 'public, max-age=0, s-maxage=31536000';
+
+export const getServerSideProps: GetServerSideProps<{ seasons: SeasonStats[] }> = async ({ res }) => {
+  const seasons = await Promise.all(
+    (await published.seasons()).map(async ({ slug }) => {
+      const file = await published.season(slug);
+      return { season: file.season, slug, summary: seasonSummary(file) };
+    }),
+  );
+  res.setHeader('Cache-Control', UNTIL_NEXT_DEPLOY);
+  return { props: { seasons } };
+};
 
 const n = (value: number) => value.toLocaleString('en-US');
 const percent = (part: number, whole: number) => (whole === 0 ? '—' : `${Math.round((100 * part) / whole)}%`);
