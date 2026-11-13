@@ -247,5 +247,14 @@ textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; 
 .ec-col-date { width: calc(10ch + var(--ec-cell-pad)); }
 .ec-col-club { width: calc(var(--ec-club-chars, 20) * 1.05ch + var(--ec-cell-pad)); }
 .ec-reasons { margin: 0; padding-left: 1.1em; }
-.ec-table td.ec-flagged { background: var(--ec-warning-bg); box-shadow: inset 3px 0 0 var(--ec-warning); }
+/* Each reason's colour, on its text, its toggle (the key) and the side it names. */
+.ec-tone-error { color: var(--ec-error); }
+.ec-tone-warning { color: var(--ec-warning); }
+.ec-tone-info { color: var(--ec-info); }
+.ec-segmented label.ec-tone-error:has(:checked) { background: var(--ec-error); border-color: var(--ec-error); color: var(--ec-surface); }
+.ec-segmented label.ec-tone-warning:has(:checked) { background: var(--ec-warning); border-color: var(--ec-warning); color: var(--ec-surface); }
+.ec-segmented label.ec-tone-info:has(:checked) { background: var(--ec-info); border-color: var(--ec-info); color: var(--ec-surface); }
+.ec-table td.ec-flagged--error { background: var(--ec-error-bg); box-shadow: inset 3px 0 0 var(--ec-error); }
+.ec-table td.ec-flagged--warning { background: var(--ec-warning-bg); box-shadow: inset 3px 0 0 var(--ec-warning); }
+.ec-table td.ec-flagged--info { background: var(--ec-info-bg); box-shadow: inset 3px 0 0 var(--ec-info); }
 .ec-table td.ec-flagged > :first-child { font-weight: 600; }

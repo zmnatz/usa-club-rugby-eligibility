@@ -48,7 +48,7 @@ describe('UnreportedGames', () => {
     expect(cells[3].textContent).toContain('No substitutions: Bayside MD2');
   });
 
-  it('emphasizes each side a gap names, and neither side for a missing result', () => {
+  it('emphasizes each side a gap names, and the date for a missing result', () => {
     renderGames([
       { ...game, reasons: [{ kind: 'no-lineup', teamName: 'Bayside MD2' }] },
       { ...game, fixtureId: 'f2', reasons: [{ kind: 'no-result' }] },
@@ -60,7 +60,7 @@ describe('UnreportedGames', () => {
         .getAllByRole('cell')
         .map((cell) => cell.classList.contains('ec-flagged'));
     expect(flagged(gap)).toEqual([false, false, true, false]);
-    expect(flagged(noResult)).toEqual([false, false, false, false]);
+    expect(flagged(noResult)).toEqual([true, false, false, false]);
   });
 
   it('groups games by competition in collapsible sections, in name order without the year', () => {
@@ -214,6 +214,36 @@ describe('UnreportedGames', () => {
     const [, first, second] = screen.getAllByRole('row');
     expect(within(first).getAllByRole('cell')[1].textContent).toBe('MAC Men D1');
     expect(within(second).getAllByRole('cell')[1].textContent).toBe('Capital Men D3');
+  });
+
+  it('colours each reason, its toggle and the side it names by the rule, the more serious gap winning', () => {
+    renderGames([
+      {
+        ...game,
+        reasons: [
+          { kind: 'no-substitutions', teamName: 'Harbor City MD1' },
+          { kind: 'no-lineup', teamName: 'Harbor City MD1' },
+          { kind: 'no-substitutions', teamName: 'Bayside MD2' },
+        ],
+      },
+      { ...game, fixtureId: 'f2', reasons: [{ kind: 'no-result' }] },
+    ]);
+    fireEvent.click(screen.getByLabelText('All'));
+    const [, gaps, noResult] = screen.getAllByRole('row');
+    const cells = within(gaps).getAllByRole('cell');
+    expect(cells[0].className).toBe('');
+    expect(within(noResult).getAllByRole('cell')[0].className).toBe('ec-flagged ec-flagged--info');
+    expect(cells[1].className).toBe('ec-flagged ec-flagged--error');
+    expect(cells[2].className).toBe('ec-flagged ec-flagged--warning');
+    expect(screen.getByText('No lineup: Harbor City MD1').className).toBe('ec-tone-error');
+    expect(screen.getByText('No substitutions: Bayside MD2').className).toBe('ec-tone-warning');
+    expect(screen.getByText('No result entered').className).toBe('ec-tone-info');
+    const toggle = (name: string) => screen.getByLabelText(name).closest('label')?.className;
+    expect([toggle('No lineup'), toggle('No substitutions'), toggle('No result')]).toEqual([
+      'ec-tone-error',
+      'ec-tone-warning',
+      'ec-tone-info',
+    ]);
   });
 
   it('says so when no game is overdue', () => {

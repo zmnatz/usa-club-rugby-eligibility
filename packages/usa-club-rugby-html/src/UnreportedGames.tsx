@@ -56,10 +56,24 @@ function reasonText(reason: UnreportedReason): string {
   return `${label}: ${reason.teamName}`;
 }
 
-/** Whether a side is the one a lineup or substitutions reason names. A missing result is
- *  the game's, so it marks neither side. */
-const hasGap = (game: UnreportedGame, side: UnreportedSide) =>
-  game.reasons.some((reason) => reason.kind !== 'no-result' && reason.teamName === side.teamName);
+/** Each reason's colour, most serious first: a missing lineup changes verdicts, missing
+ *  substitutions are a flag to check, and a missing result is the whole game's. The reason
+ *  toggles wear the same colours, so they are the key. */
+const TONES: [UnreportedReasonKind, 'error' | 'warning' | 'info'][] = [
+  ['no-lineup', 'error'],
+  ['no-substitutions', 'warning'],
+  ['no-result', 'info'],
+];
+const toneOf = (kind: UnreportedReasonKind) => TONES.find(([option]) => option === kind)?.[1] ?? 'info';
+
+/** The colour of the most serious gap a reason names a side for, or null when none does. A
+ *  missing result is the game's, so it marks the date instead. */
+function sideTone(game: UnreportedGame, side: UnreportedSide) {
+  const kinds: UnreportedReasonKind[] = game.reasons.flatMap((reason) =>
+    reason.kind !== 'no-result' && reason.teamName === side.teamName ? [reason.kind] : [],
+  );
+  return TONES.find(([kind]) => kinds.includes(kind))?.[1] ?? null;
+}
 
 function Side({ side }: { side: UnreportedSide }) {
   const { Link, routes } = useEligibilityLinks();
@@ -76,21 +90,29 @@ function Side({ side }: { side: UnreportedSide }) {
 function GameRow({ game, showCompetition }: { game: UnreportedGame; showCompetition: boolean }) {
   return (
     <tr>
-      <td>
+      {/* A missing result is the game's, not a side's, so it marks the date. */}
+      <td
+        className={game.reasons.some((reason) => reason.kind === 'no-result') ? 'ec-flagged ec-flagged--info' : undefined}
+      >
         <a href={matchUrl(game.fixtureId)} target="_blank" rel="noopener noreferrer">
           {formatDate(game.dateTime)}
         </a>
       </td>
       {showCompetition && <td>{competitionLabel(game.competition)}</td>}
       {[game.home, game.away].map((side) => (
-        <td key={side.teamName} className={hasGap(game, side) ? 'ec-flagged' : undefined}>
+        <td
+          key={side.teamName}
+          className={sideTone(game, side) ? `ec-flagged ec-flagged--${sideTone(game, side)}` : undefined}
+        >
           <Side side={side} />
         </td>
       ))}
       <td>
         <ul className="ec-reasons">
           {game.reasons.map((reason) => (
-            <li key={reasonText(reason)}>{reasonText(reason)}</li>
+            <li key={reasonText(reason)} className={`ec-tone-${toneOf(reason.kind)}`}>
+              {reasonText(reason)}
+            </li>
           ))}
         </ul>
       </td>
@@ -231,7 +253,7 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
               All
             </label>
             {reasons.map(([kind, label]) => (
-              <label key={kind}>
+              <label key={kind} className={`ec-tone-${toneOf(kind)}`}>
                 <input
                   type="checkbox"
                   value={kind}
