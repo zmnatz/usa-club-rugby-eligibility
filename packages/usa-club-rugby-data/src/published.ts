@@ -12,6 +12,7 @@ import type { ParticipationSnapshot } from './snapshot.ts';
 import {
   buildPlayerIndex,
   clubContext,
+  lockedSeasonPlayerIndex,
   type ClubContext,
   type PlayerClubEntry,
   type PlayerProfile,
@@ -22,7 +23,8 @@ import {
 import { parseTeamSide, type TeamSide } from './teamSide.ts';
 
 // The client for the data the nightly job publishes: public/data/index.json,
-// fixtures.json, players.json, clubs/<key>.json, seasons.json and seasons/<slug>.json. It reads them
+// fixtures.json, players.json, clubs/<key>.json, seasons.json, seasons/<slug>.json and
+// seasons/<slug>.players.json. It reads them
 // through a PublishedReader: over HTTPS by default (static files, so no rate limit and
 // no key), from a directory with `fsReader` from "./node", or from memory in tests.
 
@@ -213,21 +215,17 @@ export function createPublishedClient({ read, ...http }: PublishedClientOptions 
     return memo.index;
   }
 
-  // A Locked Season's players: which clubs each is in the record of. Worked out once per
-  // season and kept as ids only, since a player's own club is worked out again when asked for.
+  // A Locked Season's players: which clubs each is in the record of. Read from the index
+  // published beside the season's file, so a lookup reads only the seasons a player is in.
+  // Data published before that index existed has none, so it's worked out from the file.
   const seasonPlayers = new Map<string, Promise<PublishedPlayersFile>>();
   function seasonIndex(slug: string): Promise<PublishedPlayersFile> {
     let pending = seasonPlayers.get(slug);
     if (!pending) {
-      pending = getJson<PublishedSeasonFile>(`seasons/${slug}.json`).then((file) =>
-        buildPlayerIndex(
-          file.season,
-          file.clubs.map((club) => ({
-            club,
-            breakdown: clubSeason(file.clubFiles[club.key], file.fixtures, club).breakdown,
-          })),
-        ),
-      );
+      pending = getJson<PublishedPlayersFile>(`seasons/${slug}.players.json`).catch(async (error) => {
+        if (!(error instanceof MissingPublishedFile)) throw error;
+        return lockedSeasonPlayerIndex(await getJson<PublishedSeasonFile>(`seasons/${slug}.json`));
+      });
       pending.catch(() => seasonPlayers.delete(slug));
       seasonPlayers.set(slug, pending);
     }
@@ -302,7 +300,7 @@ export function createPublishedClient({ read, ...http }: PublishedClientOptions 
       return { id, name: found.name, clubs: sortEntries(entries) };
     },
     /** The CMS ids of every player in the record of a Locked Season, with the name it gives
-     *  them, by season slug. Reads and works out every club of every season the first time. */
+     *  them. Reads each season's published player index, not its clubs. */
     async pastPlayerIds(): Promise<Record<string, { name: string }>> {
       const found: Record<string, { name: string }> = {};
       // Oldest first, so a player's latest name is the one kept.
@@ -312,7 +310,8 @@ export function createPublishedClient({ read, ...http }: PublishedClientOptions 
       return found;
     },
     /** A player's verdicts in each Locked Season they're in the record of, newest season
-     *  first: what `player` gives for the current one. Empty when they're in none. */
+     *  first: what `player` gives for the current one. Empty when they're in none. Reads each
+     *  season's player index, then the file of only the seasons they're in. */
     async playerSeasons(id: string): Promise<PlayerSeasonProfile[]> {
       const profiles: PlayerSeasonProfile[] = [];
       for (const { slug } of await seasons()) {

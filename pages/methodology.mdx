@@ -189,7 +189,7 @@ The report can also read a Rugby Xplorer Match Participation Report for any club
 
 ## Reproducing a result
 
-Every published number is a function of the archived Rugby Xplorer match records, the rules above and the archive's last pull. `bun run data` calculates all of the published data from the archive: each club's Match Participation, the fixtures, the clubs and their sides, an index of which clubs each player appears in (leaving out Name Withheld profiles), and the Locked Seasons. `usa-club-rugby-data verify` checks a published copy against it, the player index included, and fails on any difference. The engine is published as the npm package `@zmnatz/usa-club-rugby-data` for use in other tools. The [step-by-step guide](https://github.com/zmnatz/usa-club-rugby-eligibility/blob/main/docs/reproducing.md) covers each stage from the CMS to a verdict.
+Every published number is a function of the archived Rugby Xplorer match records, the rules above and the archive's last pull. `bun run data` calculates all of the published data from the archive: each club's Match Participation, the fixtures, the clubs and their sides, an index of which clubs each player appears in (leaving out Name Withheld profiles), and the Locked Seasons, each with its own player index. `usa-club-rugby-data verify` checks a published copy against it, the player indexes included, and fails on any difference. The engine is published as the npm package `@zmnatz/usa-club-rugby-data` for use in other tools. The [step-by-step guide](https://github.com/zmnatz/usa-club-rugby-eligibility/blob/main/docs/reproducing.md) covers each stage from the CMS to a verdict.
 
 ## Source
 

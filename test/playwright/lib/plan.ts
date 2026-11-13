@@ -115,37 +115,7 @@ export function filterFindings(findings: Finding[], noise: NoiseRule[]): Finding
   );
 }
 
-// The player a requested path names: `/player/<cms-id>/`, or the `/player/?id=<cms-id>` of ADR 007.
-function requestedPlayer(path: string): string | undefined {
-  const [pathname, query = ''] = path.split('?');
-  if (/^\/player\/?$/.test(pathname)) return new URLSearchParams(query).get('id') ?? undefined;
-  return pathname.match(/^\/player\/([^/]+)/)?.[1];
-}
-
-// The clubs a PR's build needs: the defaults and every club a requested player is
-// listed for, since BUILD_CLUBS scopes the player pages. Club pages are generated on
-// request (ADR 014), so a requested club needs nothing. Unknown players are left out,
-// so the build still runs and the comment shows their page as not found.
-export function clubsToBuild({
-  defaults,
-  requested,
-  playerClubs,
-}: {
-  defaults: string[];
-  requested: PageSpec[];
-  playerClubs: Map<string, string[]>;
-}): string[] {
-  const wanted = new Set(defaults);
-  for (const { path } of requested) {
-    const player = requestedPlayer(path);
-    for (const key of player ? (playerClubs.get(player) ?? []) : []) {
-      wanted.add(key);
-    }
-  }
-  return [...wanted];
-}
-
-// `{player}` in a mapped route stands for any player in the build, so the route
+// `{player}` in a mapped route stands for any player in the published index, so the route
 // can't go stale when the nightly data changes.
 export function fillSamplePlayer(pages: PageSpec[], playerIds: string[]): PageSpec[] {
   const sample = [...playerIds].sort()[0] ?? 'none';

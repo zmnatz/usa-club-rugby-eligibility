@@ -6,6 +6,7 @@ import { seasonFile, serializeSeasonFixtures, serializeSeasonMatches } from '../
 import type { FeedFixture } from '../feeds.ts';
 import { runSnapshot, verifyPublished } from '../node/snapshot.ts';
 import type { ParticipationSnapshot } from '../snapshot.ts';
+import { lockedSeasonPlayerIndex } from '../players.ts';
 import type { MatchCentreData } from '../playerHistory.ts';
 
 const NOW = new Date('2026-11-07T12:00:00Z');
@@ -196,8 +197,26 @@ describe('an Archive holding a Locked Season', () => {
     expect(Object.keys(published).filter((name) => name.startsWith('season')).sort()).toEqual([
       'seasons.json',
       'seasons/2025-26.json',
+      'seasons/2025-26.players.json',
     ]);
     expect(verifyPublished({ archiveDir, publishedDir: withHistory }).ok).toBe(true);
+  });
+
+  it("publishes the Locked Season's player index beside its file, and verify checks it", async () => {
+    archiveLocked(LOCKED_SEASON, [lockedFixture], { o1: lockedMatch });
+    await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
+    const players = readPublished<{ season: string; players: Record<string, { clubs: string[] }> }>(
+      'seasons/2025-26.players.json',
+    );
+    expect(players.season).toBe(LOCKED_SEASON);
+    expect(Object.keys(players.players).length).toBeGreaterThan(0);
+    expect(players).toEqual(lockedSeasonPlayerIndex(readPublished('seasons/2025-26.json')));
+    const file = path.join(publishedDir, 'seasons/2025-26.players.json');
+    rmSync(file);
+    expect(verifyPublished({ archiveDir, publishedDir })).toMatchObject({
+      ok: false,
+      missing: ['seasons/2025-26.players.json'],
+    });
   });
 
   it('lists the Locked Seasons, newest first', async () => {

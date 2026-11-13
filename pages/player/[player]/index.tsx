@@ -5,14 +5,12 @@ import type { PlayerClubEntry, PlayerProfile, PlayerSeasonProfile } from '@zmnat
 import { Crumbs, PageLink } from '@/components/Crumbs';
 import { EligibilityStatusChip, PlayerDetailBody, Tabs } from '@zmnatz/usa-club-rugby-html';
 import { clubPath, openSeason, playerSeasonPath, seasonClubPath } from '@/utils/paths';
-import { listPlayerIds, published } from '@/utils/published';
+import { published } from '@/utils/published';
 
-/** Every player in the nightly data. Players can change clubs, so a player's page
- *  is under no club. Name Withheld players have no page. */
-export const getStaticPaths: GetStaticPaths = async () => ({
-  paths: (await listPlayerIds()).map((player) => ({ params: { player } })),
-  fallback: false,
-});
+/** No player page is built: each is generated on its first request and cached until
+ *  the next deploy (ADR 015). Players can change clubs, so a player's page is under no
+ *  club. */
+export const getStaticPaths: GetStaticPaths = async () => ({ paths: [], fallback: 'blocking' });
 
 /** One season of a player's record: `current` is the season in progress, whose
  *  fixtures are still being played. */
@@ -29,6 +27,8 @@ interface PlayerPageProps {
   seasons: SeasonView[];
 }
 
+/** A player from the published player indexes, reading only the clubs and Locked Seasons
+ *  they're in. An id in no index, which includes Name Withheld players, is a 404. */
 export const getStaticProps: GetStaticProps<PlayerPageProps> = async ({ params }) => {
   const id = typeof params?.player === 'string' ? params.player : null;
   if (!id) return { notFound: true };

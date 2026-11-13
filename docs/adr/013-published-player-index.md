@@ -10,4 +10,4 @@ Decisions, so they are not "fixed" later:
 - **Additive.** No existing file changes shape. It is still a change to the published JSON, so the package's next release is a new minor version.
 - **The default lookup reads it.** `published.playerIndex()` and `published.player(id)` with no options read `players.json` and then only the clubs it names. Data published before the file existed has none, so the client falls back to working it out.
 - **Custom options still work it out.** A caller passing `rules` or `now` gets an index calculated under those options from every club's file, since a different rule could change who has a verdict where.
-- **Locked Seasons get no index file.** Each is one published file already, so the client works its index out from that file, as before.
+- **Locked Seasons get no index file** (superseded by ADR 015, which publishes one beside each). Each is one published file already, so the client works its index out from that file, as before.

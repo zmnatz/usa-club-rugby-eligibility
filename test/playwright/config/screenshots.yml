@@ -3,9 +3,8 @@
 # A route may add `waitFor` (selector) or `delayMs` for pages that fill in after
 # load; the default is network idle plus a short settle.
 #
-# The job builds the default club in the workflow, plus any club or player pages
-# the PR description asks for. Club routes here must be the default club, and
-# `{player}` stands for any player in the build.
+# Club and player pages are generated on request, so any of them can be listed.
+# `{player}` stands for any player in the published index.
 rules:
   - files:
       - src/styles/**
