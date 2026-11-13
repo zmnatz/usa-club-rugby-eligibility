@@ -32,7 +32,7 @@ const renderGames = (games: UnreportedGame[]) =>
   );
 
 describe('UnreportedGames', () => {
-  it("shows a game's date, clubs and every reason", () => {
+  it("shows a game's date and clubs, with each side's gaps as chips on it", () => {
     renderGames([game]);
     const [, row] = screen.getAllByRole('row');
     const cells = within(row).getAllByRole('cell');
@@ -41,11 +41,12 @@ describe('UnreportedGames', () => {
     );
     expect(within(cells[1]).getByRole('link').getAttribute('title')).toBe('Harbor City MD1');
     expect(within(cells[2]).queryByRole('link')).toBeNull();
-    expect(cells[2].textContent).toBe('Bayside');
-    expect(within(cells[2]).getByTitle('Bayside MD2')).toBeTruthy();
-    expect(cells).toHaveLength(4);
-    expect(cells[3].textContent).toContain('No lineup: Harbor City MD1');
-    expect(cells[3].textContent).toContain('No substitutions: Bayside MD2');
+    expect(within(cells[2]).getByTitle('Bayside MD2').textContent).toBe('Bayside');
+    expect(cells).toHaveLength(3);
+    expect(within(cells[1]).getByText('No lineup')).toBeTruthy();
+    expect(within(cells[1]).queryByText('No substitutions')).toBeNull();
+    expect(within(cells[2]).getByText('No substitutions')).toBeTruthy();
+    expect(screen.queryByRole('columnheader', { name: 'Reason' })).toBeNull();
   });
 
   it('emphasizes each side a gap names, and neither side for a missing result', () => {
@@ -59,8 +60,9 @@ describe('UnreportedGames', () => {
       within(row)
         .getAllByRole('cell')
         .map((cell) => cell.classList.contains('ec-flagged'));
-    expect(flagged(gap)).toEqual([false, false, true, false]);
-    expect(flagged(noResult)).toEqual([false, false, false, false]);
+    expect(flagged(gap)).toEqual([false, false, true]);
+    expect(flagged(noResult)).toEqual([false, false, false]);
+    expect(within(within(noResult).getAllByRole('cell')[0]).getByText('No result')).toBeTruthy();
   });
 
   it('groups games by competition in collapsible sections, in name order without the year', () => {
@@ -184,7 +186,7 @@ describe('UnreportedGames', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Competition' }), { target: { value: 'MAC' } });
     expect(section.style.getPropertyValue('--ec-club-chars')).toBe('20');
     const cols = [...document.querySelectorAll('table col')].map((col) => col.className);
-    expect(cols).toEqual(['ec-col-date', 'ec-col-club', 'ec-col-club', '']);
+    expect(cols).toEqual(['ec-col-date', 'ec-col-club', 'ec-col-club']);
   });
 
   it('expands and collapses every group at once', () => {
@@ -201,18 +203,53 @@ describe('UnreportedGames', () => {
     renderGames([game, { ...game, fixtureId: 'f2', competition: '2027 Capital Men D3' }]);
     fireEvent.click(screen.getByLabelText('Group by competition'));
     expect(document.querySelectorAll('details')).toHaveLength(0);
-    expect(screen.queryByRole('button', { name: 'Expand all' })).toBeNull();
+    expect((screen.getByRole('button', { name: 'Expand all' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Collapse all' }) as HTMLButtonElement).disabled).toBe(true);
     expect(screen.getAllByRole('table')).toHaveLength(1);
     expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
       'Date',
       'Competition',
       'Home',
       'Away',
-      'Reason',
     ]);
     const [, first, second] = screen.getAllByRole('row');
     expect(within(first).getAllByRole('cell')[1].textContent).toBe('MAC Men D1');
     expect(within(second).getAllByRole('cell')[1].textContent).toBe('Capital Men D3');
+  });
+
+  it('colours each chip and side by the rule, the more serious gap edging a side', () => {
+    renderGames([
+      {
+        ...game,
+        reasons: [
+          { kind: 'no-substitutions', teamName: 'Harbor City MD1' },
+          { kind: 'no-lineup', teamName: 'Harbor City MD1' },
+          { kind: 'no-substitutions', teamName: 'Bayside MD2' },
+        ],
+      },
+      { ...game, fixtureId: 'f2', reasons: [{ kind: 'no-result' }] },
+    ]);
+    fireEvent.click(screen.getByLabelText('All'));
+    const [, gaps, noResult] = screen.getAllByRole('row');
+    const cells = within(gaps).getAllByRole('cell');
+    expect(cells[1].className).toBe('ec-flagged ec-flagged--error');
+    expect(within(cells[1]).getAllByText(/^No /).map((chip) => chip.textContent)).toEqual([
+      'No lineup',
+      'No substitutions',
+    ]);
+    expect(within(cells[1]).getByText('No lineup').className).toContain('ec-chip--error');
+    expect(cells[2].className).toBe('ec-flagged ec-flagged--warning');
+    expect(within(cells[2]).getByText('No substitutions').className).toContain('ec-chip--warning');
+    expect(within(noResult).getByText('No result').className).toContain('ec-chip--info');
+  });
+
+  it('colours the reason toggles to match, as the key', () => {
+    renderGames([game, { ...game, fixtureId: 'f2', reasons: [{ kind: 'no-result' }] }]);
+    const toggle = (name: string) => screen.getByLabelText(name).closest('label')?.className;
+    expect(toggle('No lineup')).toBe('ec-tone-error');
+    expect(toggle('No substitutions')).toBe('ec-tone-warning');
+    expect(toggle('No result')).toBe('ec-tone-info');
+    expect(screen.queryByRole('list', { name: 'Key' })).toBeNull();
   });
 
   it('says so when no game is overdue', () => {

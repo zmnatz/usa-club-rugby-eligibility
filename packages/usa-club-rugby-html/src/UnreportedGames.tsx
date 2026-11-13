@@ -50,16 +50,29 @@ export const UNREPORTED_REASONS: [UnreportedReasonKind, string][] = [
 
 const gameCount = (count: number) => (count === 1 ? '1 game' : `${count} games`);
 
-function reasonText(reason: UnreportedReason): string {
-  if (reason.kind === 'no-result') return 'No result entered';
-  const label = UNREPORTED_REASONS.find(([kind]) => kind === reason.kind)?.[1];
-  return `${label}: ${reason.teamName}`;
+/** Each reason's colour, most serious first: a missing lineup changes verdicts, missing
+ *  substitutions are a flag to check, and a missing result is the whole game's. The
+ *  reason toggles wear the same colours, so they are the key. */
+const TONES: [UnreportedReasonKind, 'error' | 'warning' | 'info'][] = [
+  ['no-lineup', 'error'],
+  ['no-substitutions', 'warning'],
+  ['no-result', 'info'],
+];
+const toneOf = (kind: UnreportedReasonKind) => TONES.find(([option]) => option === kind)?.[1] ?? 'info';
+const reasonLabel = (kind: UnreportedReasonKind) => UNREPORTED_REASONS.find(([option]) => option === kind)?.[1];
+
+/** The kinds of gap a reason names a side for, most serious first. A missing result is the
+ *  game's, so it names neither side. */
+function sideGaps(game: UnreportedGame, side: UnreportedSide): UnreportedReasonKind[] {
+  const kinds: UnreportedReasonKind[] = game.reasons.flatMap((reason) =>
+    reason.kind !== 'no-result' && reason.teamName === side.teamName ? [reason.kind] : [],
+  );
+  return TONES.map(([kind]) => kind).filter((kind) => kinds.includes(kind));
 }
 
-/** Whether a side is the one a lineup or substitutions reason names. A missing result is
- *  the game's, so it marks neither side. */
-const hasGap = (game: UnreportedGame, side: UnreportedSide) =>
-  game.reasons.some((reason) => reason.kind !== 'no-result' && reason.teamName === side.teamName);
+function ReasonChip({ kind }: { kind: UnreportedReasonKind }) {
+  return <span className={`ec-chip ec-chip--${toneOf(kind)}`}>{reasonLabel(kind)}</span>;
+}
 
 function Side({ side }: { side: UnreportedSide }) {
   const { Link, routes } = useEligibilityLinks();
@@ -80,20 +93,28 @@ function GameRow({ game, showCompetition }: { game: UnreportedGame; showCompetit
         <a href={matchUrl(game.fixtureId)} target="_blank" rel="noopener noreferrer">
           {formatDate(game.dateTime)}
         </a>
+        {game.reasons.some((reason) => reason.kind === 'no-result') && (
+          <div className="ec-chips">
+            <ReasonChip kind="no-result" />
+          </div>
+        )}
       </td>
       {showCompetition && <td>{competitionLabel(game.competition)}</td>}
-      {[game.home, game.away].map((side) => (
-        <td key={side.teamName} className={hasGap(game, side) ? 'ec-flagged' : undefined}>
-          <Side side={side} />
-        </td>
-      ))}
-      <td>
-        <ul className="ec-reasons">
-          {game.reasons.map((reason) => (
-            <li key={reasonText(reason)}>{reasonText(reason)}</li>
-          ))}
-        </ul>
-      </td>
+      {[game.home, game.away].map((side) => {
+        const gaps = sideGaps(game, side);
+        return (
+          <td key={side.teamName} className={gaps[0] ? `ec-flagged ec-flagged--${toneOf(gaps[0])}` : undefined}>
+            <Side side={side} />
+            {gaps.length > 0 && (
+              <div className="ec-chips">
+                {gaps.map((kind) => (
+                  <ReasonChip key={kind} kind={kind} />
+                ))}
+              </div>
+            )}
+          </td>
+        );
+      })}
     </tr>
   );
 }
@@ -109,7 +130,6 @@ function GamesTable({ games, showCompetition }: { games: UnreportedGame[]; showC
           {showCompetition && <col />}
           <col className="ec-col-club" />
           <col className="ec-col-club" />
-          <col />
         </colgroup>
         <thead>
           <tr>
@@ -117,7 +137,6 @@ function GamesTable({ games, showCompetition }: { games: UnreportedGame[]; showC
             {showCompetition && <th>Competition</th>}
             <th>Home</th>
             <th>Away</th>
-            <th>Reason</th>
           </tr>
         </thead>
         <tbody>
@@ -231,7 +250,7 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
               All
             </label>
             {reasons.map(([kind, label]) => (
-              <label key={kind}>
+              <label key={kind} className={`ec-tone-${toneOf(kind)}`}>
                 <input
                   type="checkbox"
                   value={kind}
@@ -255,20 +274,18 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
           <input type="checkbox" checked={grouped} onChange={(event) => setGrouped(event.target.checked)} /> Group by
           competition
         </label>
-        {grouped && (
-          <>
-            <button type="button" className="ec-btn" onClick={() => setCollapsed(new Set())}>
-              Expand all
-            </button>
-            <button
-              type="button"
-              className="ec-btn"
-              onClick={() => setCollapsed(new Set(competitions.map(({ name }) => name)))}
-            >
-              Collapse all
-            </button>
-          </>
-        )}
+        {/* Disabled rather than hidden without the grouping, so the row keeps its height. */}
+        <button type="button" className="ec-btn" disabled={!grouped} onClick={() => setCollapsed(new Set())}>
+          Expand all
+        </button>
+        <button
+          type="button"
+          className="ec-btn"
+          disabled={!grouped}
+          onClick={() => setCollapsed(new Set(competitions.map(({ name }) => name)))}
+        >
+          Collapse all
+        </button>
       </div>
       {shown.length === 0 && <p className="ec-muted">No games match these filters.</p>}
       {!grouped && shown.length > 0 && <GamesTable games={shown} showCompetition />}

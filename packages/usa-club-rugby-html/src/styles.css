@@ -82,6 +82,7 @@
 .ec-chip--success { background: var(--ec-success-bg); color: var(--ec-success); }
 .ec-chip--warning { background: var(--ec-warning-bg); color: var(--ec-warning); }
 .ec-chip--error { background: var(--ec-error-bg); color: var(--ec-error); }
+.ec-chip--info { background: var(--ec-info-bg); color: var(--ec-info); }
 .ec-chip--default { background: var(--ec-hover); color: var(--ec-muted); }
 .ec-chip--outlined { background: transparent; border-color: currentColor; }
 
@@ -241,11 +242,21 @@ textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; 
   /* The cells' side padding, which each fixed width includes. */
   --ec-cell-pad: 24px;
   table-layout: fixed;
-  min-width: calc(10ch + 2 * var(--ec-club-chars, 20) * 1ch + 4 * var(--ec-cell-pad) + 16ch);
+  min-width: calc(10ch + 2 * var(--ec-club-chars, 20) * 1ch + 3 * var(--ec-cell-pad));
 }
 /* A date is always "MM/DD/YYYY". Bold club names on a flagged side are a little wider. */
 .ec-col-date { width: calc(10ch + var(--ec-cell-pad)); }
 .ec-col-club { width: calc(var(--ec-club-chars, 20) * 1.05ch + var(--ec-cell-pad)); }
-.ec-reasons { margin: 0; padding-left: 1.1em; }
-.ec-table td.ec-flagged { background: var(--ec-warning-bg); box-shadow: inset 3px 0 0 var(--ec-warning); }
+/* A game's gaps, as chips under the side they name, or the date for a missing result. */
+.ec-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+/* A flagged side: its most serious gap's colour on the edge, so its chips stay readable. */
+.ec-table td.ec-flagged--error { box-shadow: inset 3px 0 0 var(--ec-error); }
+.ec-table td.ec-flagged--warning { box-shadow: inset 3px 0 0 var(--ec-warning); }
+/* The reason toggles wear their chips' colours, as the key. */
+.ec-segmented label.ec-tone-error { color: var(--ec-error); }
+.ec-segmented label.ec-tone-warning { color: var(--ec-warning); }
+.ec-segmented label.ec-tone-info { color: var(--ec-info); }
+.ec-segmented label.ec-tone-error:has(:checked) { background: var(--ec-error); border-color: var(--ec-error); color: var(--ec-surface); }
+.ec-segmented label.ec-tone-warning:has(:checked) { background: var(--ec-warning); border-color: var(--ec-warning); color: var(--ec-surface); }
+.ec-segmented label.ec-tone-info:has(:checked) { background: var(--ec-info); border-color: var(--ec-info); color: var(--ec-surface); }
 .ec-table td.ec-flagged > :first-child { font-weight: 600; }
