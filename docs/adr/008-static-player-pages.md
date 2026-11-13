@@ -8,5 +8,5 @@ The site is moving to Netlify (`netlify.toml`), so each player again has a page 
 
 - **Gone:** `bun run players`, the gitignored `public/player-data/`, `src/utils/playerBuckets.ts` and the `/player/?id=` page.
 - **Kept from ADR 007:** the package's `PublishedReader` and `fsReader`, which the build reads `public/data` through, and `published.player()`, which works out every club's verdicts once per build process. (Since [ADR 013](013-published-player-index.md) it finds the player's clubs in the published `players.json` and reads only those.)
-- **Links from ADR 007 still work.** `/player/?id=<cms-id>` reaches the site's 404 page, which sends it on to `/player/<cms-id>/` (`queryPlayerId`).
+- **Links from ADR 007 still work.** `/player/?id=<cms-id>` is sent on to `/player/<cms-id>/`, now by `proxy.ts` ([ADR 017](017-player-season-paths.md)).
 - **GitHub Pages keeps deploying the full site** until the move to Netlify is finished, and may keep stalling as it did before.

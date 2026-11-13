@@ -1,20 +1,9 @@
 import Head from 'next/head';
 import { PageLink } from '@/components/Crumbs';
-import { playerPath, queryPlayerId } from '@/utils/paths';
 
-// Player pages were briefly one page at /player/?id=<cms-id> (ADR 007), which the host
-// now answers with this page. A small inline script sends those links on to the
-// player's own page, so the page needs no React runtime.
+// Old URLs that named a page by query, such as /player/?id=<cms-id>, are redirected
+// before they get here, by proxy.ts.
 export const config = { unstable_runtimeJS: false };
-
-// The functions are `queryPlayerId` and `playerPath`, which are tested, written out.
-const LEGACY_PLAYER_REDIRECT = `(() => {
-  const { pathname, search, hash } = window.location;
-  const id = (${queryPlayerId.toString()})(pathname, search);
-  if (id === null) return;
-  document.documentElement.hidden = true;
-  window.location.replace((${playerPath.toString()})(id) + '/' + hash);
-})();`;
 
 export default function NotFoundPage() {
   return (
@@ -22,8 +11,6 @@ export default function NotFoundPage() {
       <Head>
         <title>Page not found · USA Club Rugby Eligibility</title>
       </Head>
-      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed string, with no visitor data in it */}
-      <script dangerouslySetInnerHTML={{ __html: LEGACY_PLAYER_REDIRECT }} />
       <h1>Page not found</h1>
       <p className="lead">
         That club or page isn&apos;t here. <PageLink href="/">Choose a club from the full list</PageLink>.

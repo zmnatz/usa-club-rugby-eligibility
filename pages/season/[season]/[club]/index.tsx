@@ -1,6 +1,5 @@
 import type { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 import { ClubEligibilityReport } from '@zmnatz/usa-club-rugby-html';
 import {
   clubFixtures,
@@ -9,7 +8,7 @@ import {
   type PublishedSeasonFile,
 } from '@zmnatz/usa-club-rugby-data';
 import { Crumbs } from '@/components/Crumbs';
-import { openPlayer, seasonClubPath, seasonClubPlayerPath, seasonPath, seasonsPath } from '@/utils/paths';
+import { playerSeasonPath, seasonPath, seasonsPath } from '@/utils/paths';
 import { lockedSeason } from '@/utils/published';
 
 interface SeasonClubPageProps {
@@ -37,8 +36,6 @@ export const getStaticProps: GetStaticProps<SeasonClubPageProps> = async ({ para
 
 /** One club's final report for a Locked Season. */
 export default function SeasonClubPage({ season, slug, club, saved, fixtures }: SeasonClubPageProps) {
-  // A player's detail is open over the report when the URL names them: ?player=<id>.
-  const router = useRouter();
   return (
     <>
       <Head>
@@ -59,9 +56,7 @@ export default function SeasonClubPage({ season, slug, club, saved, fixtures }: 
         club={club}
         saved={saved}
         fixtures={fixtures}
-        playerId={openPlayer(router.query)}
-        playerHref={(playerId) => seasonClubPlayerPath(slug, club.key, playerId)}
-        onClose={() => router.push(seasonClubPath(slug, club.key), undefined, { shallow: true, scroll: false })}
+        playerHref={(playerId) => playerSeasonPath(playerId, slug)}
       />
     </>
   );

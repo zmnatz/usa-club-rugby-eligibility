@@ -8,6 +8,15 @@ import type { NextConfig } from 'next';
 // A Locked Season's page and its clubs' read the list of seasons and that season's file,
 // and nothing of the current season's nor the seasons' player indexes.
 const SEASON_PAGE_FILES = ['./public/data/seasons.json', './public/data/seasons/*.json'];
+// A player's pages read the player indexes to find the seasons and clubs they're in, then
+// those clubs' files and Locked Seasons.
+const PLAYER_PAGE_FILES = [
+  './public/data/index.json',
+  './public/data/fixtures.json',
+  './public/data/players.json',
+  './public/data/clubs/*.json',
+  ...SEASON_PAGE_FILES,
+];
 const SEASON_PAGE_EXCLUDES = [
   './public/data/index.json',
   './public/data/fixtures.json',
@@ -23,17 +32,11 @@ const nextConfig: NextConfig = {
   // Each on-demand page's function reads the published data from disk at request time, so
   // it must carry the files it reads. The club page reads the index, the fixtures and the
   // club files, and never the Locked Seasons, which are most of public/data, nor the player
-  // index. The player page also reads the player indexes and, for its past-season tabs,
-  // the Locked Seasons.
+  // index. The player pages also read the player indexes and the Locked Seasons.
   outputFileTracingIncludes: {
     '/club/[[]club[]]': ['./public/data/index.json', './public/data/fixtures.json', './public/data/clubs/*.json'],
-    '/player/[[]player[]]': [
-      './public/data/index.json',
-      './public/data/fixtures.json',
-      './public/data/players.json',
-      './public/data/clubs/*.json',
-      ...SEASON_PAGE_FILES,
-    ],
+    '/player/[[]player[]]': PLAYER_PAGE_FILES,
+    '/player/[[]player[]]/[[]season[]]': PLAYER_PAGE_FILES,
     '/season/[[]season[]]': SEASON_PAGE_FILES,
     '/season/[[]season[]]/[[]club[]]': SEASON_PAGE_FILES,
   },
