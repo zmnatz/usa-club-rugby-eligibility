@@ -49,58 +49,77 @@ describe('clubsWithoutFixtures', () => {
     expect(clubsWithoutFixtures(current, previous())).toEqual([]);
   });
 
-  describe('a similar name in the same competition and division', () => {
+  describe('a club new this season with a similar name, in the same division', () => {
     const thisSeason = {
       clubs: [
         club('bayonne-bombers', 'Bayonne Bombers', 'Bayonne Bombers MD3'),
         club('colorado-springs-grizzlies', 'Colorado Springs Grizzlies', 'Colorado Springs Grizzlies MD3'),
-        club('raleigh-women', 'Raleigh Women', 'Raleigh WD3'),
+        club('raleigh', 'Raleigh', 'Raleigh MD3'),
+        club('denver-black-ice', 'Denver Black Ice', 'Denver Black Ice D3'),
+        club('dayton', 'Dayton', 'Dayton MD3'),
+        club('bucks', 'Bucks', 'Bucks MD3'),
+        club('kansas-city', 'Kansas City', 'Kansas City MD3'),
       ],
-      fixtures: [
-        fixture('2027 Midwest Men’s D3 - Ohio', 'Bayonne Bombers MD3'),
-        fixture('2027 Rocky Mountain Men’s D3', 'Colorado Springs Grizzlies MD3'),
-        fixture('2027 Midwest Women’s D3 - Ohio', 'Raleigh WD3'),
-      ],
+      fixtures: [fixture("RMRU Women's 2027 - D3", 'Denver Black Ice D3', 'Other WD3')],
     };
+    const lastSeason = (...clubs: PublishedClub[]) => ({
+      clubs: [...clubs, club('kansas-city', 'Kansas City', 'Kansas City MD3')],
+      fixtures: [fixture("RMRU Women's 2026 D3", 'Black Ice WD3', 'Other WD3')],
+    });
 
-    it('is the same club, across a change in how the competition is named', () => {
-      const found = clubsWithoutFixtures(thisSeason, {
-        clubs: [club('bayonne', 'Bayonne', 'Bayonne MD3')],
-        fixtures: [fixture('2025-26 MW Men’s D3 - Ohio League', 'Bayonne MD3')],
-      });
+    it('is the club renamed, even when its competition was renamed too', () => {
+      const found = clubsWithoutFixtures(
+        thisSeason,
+        lastSeason(club('raleigh-vipers', 'Raleigh Vipers', 'Raleigh Vipers MD3'), club('bayonne', 'Bayonne', 'Bayonne MD3')),
+      );
       expect(found).toEqual([]);
     });
 
-    it('is the same club when a long word has one letter slipped', () => {
-      const found = clubsWithoutFixtures(thisSeason, {
-        clubs: [club('colorado-springs-grizziles', 'Colorado Springs Grizziles', 'Colorado Springs Grizziles MD3')],
-        fixtures: [fixture('2026 Rocky Mountain Men’s D3', 'Colorado Springs Grizziles MD3')],
-      });
+    it('is the club renamed when a long word has one letter slipped', () => {
+      const found = clubsWithoutFixtures(
+        thisSeason,
+        lastSeason(club('colorado-springs-grizziles', 'Colorado Springs Grizziles', 'Colorado Springs Grizziles MD3')),
+      );
       expect(found).toEqual([]);
     });
 
-    it('is a different club in another competition', () => {
-      const found = clubsWithoutFixtures(thisSeason, {
-        clubs: [club('bayonne', 'Bayonne', 'Bayonne MD3')],
-        fixtures: [fixture('2026 Empire Men’s D3', 'Bayonne MD3')],
-      });
-      expect(keysOf(found)).toEqual(['bayonne']);
-    });
-
-    it('is a different club when the names only share a word', () => {
-      const found = clubsWithoutFixtures(thisSeason, {
-        clubs: [club('colorado-flamingos', 'Northern Colorado Flamingos', 'Northern Colorado Flamingos MD3')],
-        fixtures: [fixture('2026 Rocky Mountain Men’s D3', 'Northern Colorado Flamingos MD3')],
-      });
-      expect(keysOf(found)).toEqual(['colorado-flamingos']);
+    it("knows a women's side from its competition when its name doesn't say", () => {
+      const found = clubsWithoutFixtures(thisSeason, lastSeason(club('black-ice-women', 'Black Ice Women', 'Black Ice WD3')));
+      expect(found).toEqual([]);
     });
 
     it("is a different club when it is the other gender's", () => {
-      const found = clubsWithoutFixtures(thisSeason, {
-        clubs: [club('raleigh', 'Raleigh', 'Raleigh MD3')],
-        fixtures: [fixture('2027 Midwest Women’s D3 - Ohio', 'Raleigh MD3')],
-      });
-      expect(keysOf(found)).toEqual(['raleigh']);
+      const found = clubsWithoutFixtures(thisSeason, lastSeason(club('raleigh-women', 'Raleigh Women', 'Raleigh WD3')));
+      expect(keysOf(found)).toEqual(['raleigh-women']);
+    });
+
+    it('is a different club in another division', () => {
+      const found = clubsWithoutFixtures(thisSeason, lastSeason({ key: 'bayonne', name: 'Bayonne', sides: [{ teamName: 'Bayonne MD2', label: 'D2' }] }));
+      expect(keysOf(found)).toEqual(['bayonne']);
+    });
+
+    it('is a different club when the names only share a word, or are a slip apart', () => {
+      const found = clubsWithoutFixtures(
+        thisSeason,
+        lastSeason(
+          club('northern-colorado-flamingos', 'Northern Colorado Flamingos', 'Northern Colorado Flamingos MD3'),
+          club('daytona-beach', 'Daytona Beach', 'Daytona Beach MD3'),
+        ),
+      );
+      expect(keysOf(found)).toEqual(['daytona-beach', 'northern-colorado-flamingos']);
+    });
+
+    it('is not a club that was there last season too', () => {
+      const found = clubsWithoutFixtures(thisSeason, lastSeason(club('kansas-city-blues', 'Kansas City Blues', 'Kansas City Blues MD3')));
+      expect(keysOf(found)).toEqual(['kansas-city-blues']);
+    });
+
+    it('lists them all when the new club looks like several', () => {
+      const found = clubsWithoutFixtures(
+        thisSeason,
+        lastSeason(club('atlanta-bucks', 'Atlanta Bucks', 'Atlanta Bucks MD3'), club('montgomery-bucks', 'Montgomery Bucks', 'Montgomery Bucks MD3')),
+      );
+      expect(keysOf(found)).toEqual(['atlanta-bucks', 'montgomery-bucks']);
     });
   });
 });
