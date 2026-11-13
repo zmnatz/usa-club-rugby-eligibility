@@ -4,6 +4,7 @@ import {
   CAUTION_ADVICE,
   type Club,
   divisionLabel,
+  filterPlayers,
   type EligibilityBreakdown,
   gapText,
   getColumns,
@@ -17,10 +18,10 @@ import {
   type ReportSource,
   type SortDirection,
   type SortKey,
+  type StatusFilter,
   sameNamePlayers,
   sharedNames,
   sortPlayers,
-  statusGroups,
   type TransferRecords,
 } from '@zmnatz/usa-club-rugby-data';
 import { EligibilityStatusChip, WaiverChip } from './EligibilityStatusChip.tsx';
@@ -119,20 +120,18 @@ function SideTable({ index, breakdown, source, locked, playerHref, transfers }: 
   const side = breakdown.sides[index];
   const { summary } = side;
   const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({ key: 'name', direction: 'asc' });
-  const [status, setStatus] = useState('all');
-  const players = sortPlayers(side.players, sort.key, sort.direction).filter(
-    (player) => status === 'all' || statusGroups(player).split(' ').includes(status),
-  );
+  const [status, setStatus] = useState<StatusFilter>('all');
+  const players = filterPlayers(sortPlayers(side.players, sort.key, sort.direction), status);
   const sortBy = (key: SortKey) =>
     setSort((current) => ({ key, direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc' }));
   const otherLabels = breakdown.sides.filter((entry) => entry.teamName !== side.teamName).map((entry) => entry.label);
   const columns = getColumns(otherLabels, source);
   // From the whole side, so the id shows for both of a pair of same-named players.
   const shared = sharedNames(side.players);
-  const filters = [
+  const filters: [StatusFilter, string][] = [
     ['all', 'All'],
     ['eligible', 'Eligible'],
-    ...(locked ? [] : [['caution', 'Caution']]),
+    ...(locked ? [] : [['caution', 'Caution'] as [StatusFilter, string]]),
     ['ineligible', 'Ineligible'],
   ];
 

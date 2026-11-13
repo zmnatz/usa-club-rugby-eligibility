@@ -82,6 +82,22 @@ const text = buildReport(breakdown, { title: club.name, source: 'record', season
 
 `ReportSource` (`record` or `csv`) says where a report's rows came from: only a CSV report has USA IDs and registration dates.
 
+## Games to chase, and forfeits
+
+```ts
+import { unreportedGames, rulesForSeason } from '@zmnatz/usa-club-rugby-data';
+
+const games = unreportedGames({ fixtures, gaps, clubs, rules: rulesForSeason(season), now: new Date() });
+```
+
+| Export | What |
+| --- | --- |
+| `unreportedGames`, `UNREPORTED_LEEWAY_DAYS`, `FULL_SIDE` | This season's Qualifying Matches more than 14 days past kickoff with no result, a side with no lineup, or a side that listed more than 15 players with no substitute coming on. Forfeits, cancelled and postponed games and byes are left out. `gaps` is every club file's gaps; repeats are ignored |
+| `competitionLabel` | A competition's name without its year, e.g. "2027 Midwest Men's D1 - Eastern" as "Midwest Men's D1 - Eastern" |
+| `isForfeit`, `markForfeits`, `isPenaltyTryForfeit`, `FORFEIT_PENALTY_TRIES` | A forfeit: marked Forfeit in Rugby Xplorer, or entered as a result where one side scored nothing and every score was a penalty try, at least three. The nightly job marks the second kind Forfeit in the published fixtures, so Reg 3.4(h) applies to it |
+
+A `no-substitutions` gap in a club file carries `rostered`, how many players that side listed.
+
 ## Pull live from the CMS
 
 ```ts
