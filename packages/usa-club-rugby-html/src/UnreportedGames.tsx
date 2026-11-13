@@ -8,23 +8,26 @@ import {
 import { useState } from 'react';
 import { useEligibilityLinks } from './links.tsx';
 
-/** What the list is filtered to: a competition name or reason kind, or `all`. */
+/** What the list is filtered to: a division code and reason kind, or `all`, and text a
+ *  competition's name must contain, or none. */
 export interface UnreportedFilters {
+  division: string;
   competition: string;
   reason: string;
 }
 
-export const ALL_UNREPORTED: UnreportedFilters = { competition: 'all', reason: 'all' };
+export const ALL_UNREPORTED: UnreportedFilters = { division: 'all', competition: '', reason: 'all' };
 
 export interface UnreportedGamesProps {
   games: UnreportedGame[];
   /** The filters, for a host that keeps them, e.g. in the URL. Without them the list keeps
-   *  its own, starting from `ALL_UNREPORTED`. A value the games don't offer reads as `all`. */
+   *  its own, starting from `ALL_UNREPORTED`. A division or reason the games don't offer
+   *  reads as `all`. */
   filters?: UnreportedFilters;
   onFiltersChange?: (filters: UnreportedFilters) => void;
 }
 
-/** How a side's division reads in its row. */
+/** The divisions, in order, as the filter and each row show them. */
 const DIVISIONS: [string, string][] = [
   ['M1', "Men's D1"],
   ['M2', "Men's D2"],
@@ -92,7 +95,7 @@ function GameRow({ game }: { game: UnreportedGame }) {
 }
 
 /** Current-season games whose record still needs entering, in a collapsible group per
- *  competition, filterable by competition and reason. */
+ *  competition, filterable by division, competition and reason. */
 export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedGamesProps) {
   const [own, setOwn] = useState(ALL_UNREPORTED);
   const current = filters ?? own;
@@ -106,21 +109,22 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
     );
   }
 
-  const competitions = [...new Set(games.map((game) => game.competition))]
-    .sort((a, b) => a.localeCompare(b))
-    .map((name): [string, string] => [name, name]);
+  const competitions = [...new Set(games.map((game) => game.competition))].sort((a, b) => a.localeCompare(b));
+  const divisions = DIVISIONS.filter(([code]) => games.some((game) => game.divisions.includes(code)));
   const reasons = REASONS.filter(([kind]) => games.some((game) => game.reasons.some((entry) => entry.kind === kind)));
   const offered = (value: string, options: [string, string][]) =>
     options.some(([option]) => option === value) ? value : 'all';
-  const competition = offered(current.competition, competitions);
+  const division = offered(current.division, divisions);
+  const competition = current.competition.trim().toLowerCase();
   const reason = offered(current.reason, reasons);
   const shown = games.filter(
     (game) =>
-      (competition === 'all' || game.competition === competition) &&
+      (division === 'all' || game.divisions.includes(division)) &&
+      game.competition.toLowerCase().includes(competition) &&
       (reason === 'all' || game.reasons.some((entry) => entry.kind === reason)),
   );
   const groups = competitions
-    .map(([name]) => ({ name, games: shown.filter((game) => game.competition === name) }))
+    .map((name) => ({ name, games: shown.filter((game) => game.competition === name) }))
     .filter((group) => group.games.length > 0);
 
   return (
@@ -131,19 +135,32 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
         </h2>
         <div className="ec-controls">
           <label className="ec-field ec-inline">
-            Competition
-            <select
-              className="ec-input"
-              value={competition}
-              onChange={(event) => change({ competition: event.target.value })}
-            >
-              <option value="all">All competitions</option>
-              {competitions.map(([name]) => (
-                <option key={name} value={name}>
-                  {name}
+            Division
+            <select className="ec-input" value={division} onChange={(event) => change({ division: event.target.value })}>
+              <option value="all">All divisions</option>
+              {divisions.map(([code, label]) => (
+                <option key={code} value={code}>
+                  {label}
                 </option>
               ))}
             </select>
+          </label>
+          <label className="ec-field ec-inline">
+            Competition
+            <input
+              className="ec-input"
+              type="search"
+              list="unreported-competitions"
+              placeholder="Any competition"
+              autoComplete="off"
+              value={current.competition}
+              onChange={(event) => change({ competition: event.target.value })}
+            />
+            <datalist id="unreported-competitions">
+              {competitions.map((name) => (
+                <option key={name} value={name} />
+              ))}
+            </datalist>
           </label>
           <fieldset className="ec-segmented">
             <legend className="ec-sr">Reason</legend>

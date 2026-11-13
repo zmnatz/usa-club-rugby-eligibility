@@ -34,18 +34,24 @@ export const getStaticProps: GetStaticProps<UnreportedProps> = async () => {
   return { props: { games, season: index.season, builtAt: now.toISOString() } };
 };
 
-const queryValue = (value: string | string[] | undefined) => (typeof value === 'string' && value ? value : 'all');
+const queryValue = (value: string | string[] | undefined, none: string) =>
+  typeof value === 'string' && value ? value : none;
 
 export default function UnreportedPage({ games, season, builtAt }: UnreportedProps) {
   // The filters live in the URL, so a refresh or a shared link keeps them. The static HTML
   // has no query, so it shows every game until the router reads it.
   const router = useRouter();
   const filters: UnreportedFilters = router.isReady
-    ? { competition: queryValue(router.query.competition), reason: queryValue(router.query.reason) }
+    ? {
+        division: queryValue(router.query.division, 'all'),
+        competition: queryValue(router.query.competition, ''),
+        reason: queryValue(router.query.reason, 'all'),
+      }
     : ALL_UNREPORTED;
-  const setFilters = ({ competition, reason }: UnreportedFilters) => {
+  const setFilters = ({ division, competition, reason }: UnreportedFilters) => {
     const query = {
-      ...(competition !== 'all' && { competition }),
+      ...(division !== 'all' && { division }),
+      ...(competition !== '' && { competition }),
       ...(reason !== 'all' && { reason }),
     };
     router.replace({ pathname: router.pathname, query }, undefined, { shallow: true, scroll: false });
