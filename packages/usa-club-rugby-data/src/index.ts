@@ -20,6 +20,7 @@ export type {
 } from './data.ts';
 export * from './eligibility.ts';
 export * from './feeds.ts';
+export * from './forfeit.ts';
 export * from './historicalSides.ts';
 export * from './live.ts';
 export type * from './match.ts';
@@ -37,4 +38,5 @@ export * from './snapshot.ts';
 export * from './sort.ts';
 export * from './sources.ts';
 export * from './teamSide.ts';
+export * from './unreported.ts';
 export type * from './types.ts';

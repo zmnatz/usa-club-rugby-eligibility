@@ -194,10 +194,7 @@ textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; 
 }
 .ec-columns label { display: block; padding: 2px 0; font-size: 0.875rem; white-space: nowrap; }
 
-/* Filtering by status and hiding optional columns, from the controls' own state. */
-.ec-side:has(input[value="eligible"]:checked) tbody tr:not([data-groups~="eligible"]),
-.ec-side:has(input[value="caution"]:checked) tbody tr:not([data-groups~="caution"]),
-.ec-side:has(input[value="ineligible"]:checked) tbody tr:not([data-groups~="ineligible"]) { display: none; }
+/* Hiding optional columns, from the column chooser's own state. */
 .ec-side:not(:has(input[data-col="lastRegistered"]:checked)) .col-lastRegistered,
 .ec-side:not(:has(input[data-col="played"]:checked)) .col-played,
 .ec-side:not(:has(input[data-col="sub"]:checked)) .col-sub { display: none; }
@@ -233,3 +230,31 @@ textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; 
 .ec-table a.ec-player:hover { text-decoration: underline; }
 .ec-dialog { max-width: min(960px, calc(100vw - 32px)); width: 100%; max-height: calc(100vh - 32px); overflow: auto; background: var(--ec-surface); color: inherit; border: 1px solid var(--ec-border); border-radius: var(--ec-radius); padding: var(--ec-gap); }
 .ec-dialog::backdrop { background: rgb(0 0 0 / 0.5); }
+
+/* Unreported games: a collapsible group per competition. */
+.ec-group + .ec-group { margin-top: 16px; }
+.ec-group-controls { gap: 8px 12px; margin-bottom: 12px; }
+.ec-group-title { font-weight: 600; }
+.ec-inline { flex-direction: row; align-items: center; gap: 8px; }
+.ec-inline .ec-input { width: auto; padding: 4px 8px; }
+.ec-unreported-table {
+  /* The cells' side padding, which each fixed width includes. */
+  --ec-cell-pad: 24px;
+  table-layout: fixed;
+  min-width: calc(10ch + 2 * var(--ec-club-chars, 20) * 1ch + 4 * var(--ec-cell-pad) + 16ch);
+}
+/* A date is always "MM/DD/YYYY". Bold club names on a flagged side are a little wider. */
+.ec-col-date { width: calc(10ch + var(--ec-cell-pad)); }
+.ec-col-club { width: calc(var(--ec-club-chars, 20) * 1.05ch + var(--ec-cell-pad)); }
+.ec-reasons { margin: 0; padding-left: 1.1em; }
+/* Each reason's colour, on its text, its toggle (the key) and the side it names. */
+.ec-tone-error { color: var(--ec-error); }
+.ec-tone-warning { color: var(--ec-warning); }
+.ec-tone-info { color: var(--ec-info); }
+.ec-segmented label.ec-tone-error:has(:checked) { background: var(--ec-error); border-color: var(--ec-error); color: var(--ec-surface); }
+.ec-segmented label.ec-tone-warning:has(:checked) { background: var(--ec-warning); border-color: var(--ec-warning); color: var(--ec-surface); }
+.ec-segmented label.ec-tone-info:has(:checked) { background: var(--ec-info); border-color: var(--ec-info); color: var(--ec-surface); }
+.ec-table td.ec-flagged--error { background: var(--ec-error-bg); box-shadow: inset 3px 0 0 var(--ec-error); }
+.ec-table td.ec-flagged--warning { background: var(--ec-warning-bg); box-shadow: inset 3px 0 0 var(--ec-warning); }
+.ec-table td.ec-flagged--info { background: var(--ec-info-bg); box-shadow: inset 3px 0 0 var(--ec-info); }
+.ec-table td.ec-flagged > :first-child { font-weight: 600; }

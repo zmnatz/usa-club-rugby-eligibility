@@ -17,6 +17,7 @@ import {
   type FetchMatchesOptions,
   type MatchCentreData,
 } from './playerHistory.ts';
+import { markForfeits } from './forfeit.ts';
 import { buildParticipationSnapshot, type ParticipationSnapshot } from './snapshot.ts';
 import { DEFAULT_SOURCES, type SourcesConfig } from './sources.ts';
 import type { Club, PlayerRow } from './types.ts';
@@ -176,7 +177,10 @@ async function pullClubParticipation(
   // A lineup can be posted before kickoff, so only scored matches count.
   const played = matches.filter((match) => isScored(match.fixture));
   const playedIds = new Set(played.map((match) => match.fixture.id));
-  const results = own.filter((fixture) => playedIds.has(fixture.id) || isScored(fixture));
+  const results = markForfeits(
+    own.filter((fixture) => playedIds.has(fixture.id) || isScored(fixture)),
+    played,
+  );
 
   const pulled: ParticipationSnapshot = {
     ...buildParticipationSnapshot(aggregatePlayerHistory(played).values(), results, now),

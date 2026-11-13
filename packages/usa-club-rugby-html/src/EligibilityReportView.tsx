@@ -4,6 +4,7 @@ import {
   CAUTION_ADVICE,
   type Club,
   divisionLabel,
+  filterPlayers,
   type EligibilityBreakdown,
   gapText,
   getColumns,
@@ -17,10 +18,10 @@ import {
   type ReportSource,
   type SortDirection,
   type SortKey,
+  type StatusFilter,
   sameNamePlayers,
   sharedNames,
   sortPlayers,
-  statusGroups,
   type TransferRecords,
 } from '@zmnatz/usa-club-rugby-data';
 import { EligibilityStatusChip, WaiverChip } from './EligibilityStatusChip.tsx';
@@ -113,23 +114,24 @@ const columnClass = (column: ReportColumn) =>
     .filter(Boolean)
     .join(' ') || undefined;
 
-/** One side's players: a status filter and column chooser that work with CSS alone, and
+/** One side's players: a status filter, a column chooser that works with CSS alone, and
  *  a table sorted by a column's header. */
 function SideTable({ index, breakdown, source, locked, playerHref, transfers }: SideTableProps) {
   const side = breakdown.sides[index];
   const { summary } = side;
   const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({ key: 'name', direction: 'asc' });
-  const players = sortPlayers(side.players, sort.key, sort.direction);
+  const [status, setStatus] = useState<StatusFilter>('all');
+  const players = filterPlayers(sortPlayers(side.players, sort.key, sort.direction), status);
   const sortBy = (key: SortKey) =>
     setSort((current) => ({ key, direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc' }));
   const otherLabels = breakdown.sides.filter((entry) => entry.teamName !== side.teamName).map((entry) => entry.label);
   const columns = getColumns(otherLabels, source);
   // From the whole side, so the id shows for both of a pair of same-named players.
   const shared = sharedNames(side.players);
-  const filters = [
+  const filters: [StatusFilter, string][] = [
     ['all', 'All'],
     ['eligible', 'Eligible'],
-    ...(locked ? [] : [['caution', 'Caution']]),
+    ...(locked ? [] : [['caution', 'Caution'] as [StatusFilter, string]]),
     ['ineligible', 'Ineligible'],
   ];
 
@@ -142,7 +144,13 @@ function SideTable({ index, breakdown, source, locked, playerHref, transfers }: 
             <legend className="ec-sr">Eligibility status</legend>
             {filters.map(([value, label]) => (
               <label key={value}>
-                <input type="radio" name={`status-${index}`} value={value} defaultChecked={value === 'all'} />
+                <input
+                  type="radio"
+                  name={`status-${index}`}
+                  value={value}
+                  checked={status === value}
+                  onChange={() => setStatus(value)}
+                />
                 {label}
               </label>
             ))}
@@ -187,7 +195,6 @@ function SideTable({ index, breakdown, source, locked, playerHref, transfers }: 
             {players.map((player, row) => (
               <tr
                 key={player.playerId}
-                data-groups={statusGroups(player)}
                 // The skip link lands on the first row, whichever that is after a sort.
                 id={index === 0 && row === 0 ? FIRST_PLAYER_ID : undefined}
                 tabIndex={index === 0 && row === 0 ? -1 : undefined}
@@ -207,7 +214,7 @@ function SideTable({ index, breakdown, source, locked, playerHref, transfers }: 
             {players.length === 0 && (
               <tr id={index === 0 ? FIRST_PLAYER_ID : undefined} tabIndex={index === 0 ? -1 : undefined}>
                 <td colSpan={columns.length} className="ec-center ec-muted">
-                  No players in this team&apos;s report.
+                  {side.players.length === 0 ? 'No players in this team’s report.' : 'No players match this filter.'}
                 </td>
               </tr>
             )}
