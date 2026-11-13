@@ -70,8 +70,16 @@ function sideGaps(game: UnreportedGame, side: UnreportedSide): UnreportedReasonK
   return TONES.map(([kind]) => kind).filter((kind) => kinds.includes(kind));
 }
 
+/** About how many characters of a cell's text a row of chips takes: a chip's text is a
+ *  little smaller than the cell's, plus its padding and the gap before it. */
+const chipChars = (kinds: UnreportedReasonKind[]) =>
+  kinds.reduce((total, kind) => total + Math.ceil((reasonLabel(kind)?.length ?? 0) * 0.9) + 4, 0);
+
+/** A date is always "MM/DD/YYYY". */
+const DATE_CHARS = 10;
+
 function ReasonChip({ kind }: { kind: UnreportedReasonKind }) {
-  return <span className={`ec-chip ec-chip--${toneOf(kind)}`}>{reasonLabel(kind)}</span>;
+  return <span className={`ec-chip ec-chip--${toneOf(kind)} ec-chip--solid`}>{reasonLabel(kind)}</span>;
 }
 
 function Side({ side }: { side: UnreportedSide }) {
@@ -94,9 +102,9 @@ function GameRow({ game, showCompetition }: { game: UnreportedGame; showCompetit
           {formatDate(game.dateTime)}
         </a>
         {game.reasons.some((reason) => reason.kind === 'no-result') && (
-          <div className="ec-chips">
+          <span className="ec-chips">
             <ReasonChip kind="no-result" />
-          </div>
+          </span>
         )}
       </td>
       {showCompetition && <td>{competitionLabel(game.competition)}</td>}
@@ -106,11 +114,11 @@ function GameRow({ game, showCompetition }: { game: UnreportedGame; showCompetit
           <td key={side.teamName} className={gaps[0] ? `ec-flagged ec-flagged--${toneOf(gaps[0])}` : undefined}>
             <Side side={side} />
             {gaps.length > 0 && (
-              <div className="ec-chips">
+              <span className="ec-chips">
                 {gaps.map((kind) => (
                   <ReasonChip key={kind} kind={kind} />
                 ))}
-              </div>
+              </span>
             )}
           </td>
         );
@@ -192,7 +200,15 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
       competitionLabel(game.competition).toLowerCase().includes(competition) &&
       (current.reasons.length === 0 || game.reasons.some((entry) => current.reasons.includes(entry.kind))),
   );
-  const clubChars = Math.max(...games.flatMap((game) => [game.home.clubName.length, game.away.clubName.length]));
+  // Every row stays on one line, so a club's column fits its longest name and chips, and
+  // the date's a missing-result chip, over every game, filtered or not.
+  const clubChars = Math.max(
+    ...games.flatMap((game) =>
+      [game.home, game.away].map((side) => side.clubName.length + chipChars(sideGaps(game, side))),
+    ),
+  );
+  const dateChars =
+    DATE_CHARS + (games.some((game) => game.reasons.some((reason) => reason.kind === 'no-result')) ? chipChars(['no-result']) : 0);
   const groups = competitions
     .map(({ name, label }) => ({ name, label, games: shown.filter((game) => game.competition === name) }))
     .filter((group) => group.games.length > 0);
@@ -201,9 +217,9 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
     <section
       className="ec-card ec-unreported"
       aria-labelledby="unreported-title"
-      // Every group's table shares its column widths: the clubs' fit the longest club name
-      // in the list, filtered or not, so they don't move as the filters change.
-      style={{ '--ec-club-chars': clubChars } as CSSProperties}
+      // Every group's table shares its column widths, so they line up and don't move as the
+      // filters change.
+      style={{ '--ec-club-chars': clubChars, '--ec-date-chars': dateChars } as CSSProperties}
     >
       <div className="ec-toolbar">
         <h2 id="unreported-title" aria-live="polite">

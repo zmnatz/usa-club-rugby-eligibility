@@ -85,6 +85,11 @@
 .ec-chip--info { background: var(--ec-info-bg); color: var(--ec-info); }
 .ec-chip--default { background: var(--ec-hover); color: var(--ec-muted); }
 .ec-chip--outlined { background: transparent; border-color: currentColor; }
+/* Filled with the tone itself, so the chip stands out from the cell it sits in. */
+.ec-chip--solid.ec-chip--error { background: var(--ec-error); color: var(--ec-surface); }
+.ec-chip--solid.ec-chip--warning { background: var(--ec-warning); color: var(--ec-surface); }
+.ec-chip--solid.ec-chip--info { background: var(--ec-info); color: var(--ec-surface); }
+.ec-chip--solid.ec-chip--success { background: var(--ec-success); color: var(--ec-surface); }
 
 .ec-btn {
   display: inline-block;
@@ -242,13 +247,15 @@ textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; 
   /* The cells' side padding, which each fixed width includes. */
   --ec-cell-pad: 24px;
   table-layout: fixed;
-  min-width: calc(10ch + 2 * var(--ec-club-chars, 20) * 1ch + 3 * var(--ec-cell-pad));
+  min-width: calc(var(--ec-date-chars, 10) * 1ch + 2 * var(--ec-club-chars, 20) * 1.05ch + 3 * var(--ec-cell-pad));
 }
-/* A date is always "MM/DD/YYYY". Bold club names on a flagged side are a little wider. */
-.ec-col-date { width: calc(10ch + var(--ec-cell-pad)); }
+/* Widths in characters, from the list. Bold club names on a flagged side are a little wider. */
+.ec-col-date { width: calc(var(--ec-date-chars, 10) * 1ch + var(--ec-cell-pad)); }
 .ec-col-club { width: calc(var(--ec-club-chars, 20) * 1.05ch + var(--ec-cell-pad)); }
-/* A game's gaps, as chips under the side they name, or the date for a missing result. */
-.ec-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+/* A game's gaps, as chips beside the side they name, or the date for a missing result. */
+.ec-chips { display: inline-flex; gap: 4px; margin-left: 6px; vertical-align: middle; }
+/* One line per game: each column fits its longest content. */
+.ec-unreported-table td { white-space: nowrap; }
 /* A flagged side: its most serious gap's colour on the edge, so its chips stay readable. */
 .ec-table td.ec-flagged--error { box-shadow: inset 3px 0 0 var(--ec-error); }
 .ec-table td.ec-flagged--warning { box-shadow: inset 3px 0 0 var(--ec-warning); }
