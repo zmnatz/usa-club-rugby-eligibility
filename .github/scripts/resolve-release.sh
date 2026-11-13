@@ -1,30 +1,17 @@
 #!/usr/bin/env bash
-# Works out which package a release tag is for, and writes its directory to
-# GITHUB_OUTPUT. A tag named for a package must match that package's version.
-# Any other tag publishes the data package, as every release did before there
-# was more than one package.
+# Works out the version a release tag publishes, and writes it to GITHUB_OUTPUT.
+# Every package is published together at the tag's version: the tag is the only
+# record of it, as no package.json in the repo has one.
 set -euo pipefail
 
 tag="$1"
-root="$(cd "$(dirname "$0")/../.." && pwd)"
+version="${tag#v}"
 
-package="usa-club-rugby-data"
-expected=""
-for candidate in usa-club-rugby-components usa-club-rugby-html usa-club-rugby-data; do
-  if [[ "$tag" == "$candidate-v"* ]]; then
-    package="$candidate"
-    expected="${tag#"$candidate-v"}"
-  fi
-done
-
-directory="packages/$package"
-if [[ -n "$expected" ]]; then
-  actual="$(node -p "require('$root/$directory/package.json').version")"
-  if [[ "$actual" != "$expected" ]]; then
-    echo "Tag $tag doesn't match $package's version, $actual." >&2
-    exit 1
-  fi
+# Semantic versioning: MAJOR.MINOR.PATCH, with an optional pre-release such as -beta.1.
+if [[ "$tag" != v* || ! "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$ ]]; then
+  echo "Tag $tag isn't a version such as v1.2.3." >&2
+  exit 1
 fi
 
-echo "Publishing $package from $tag"
-echo "directory=$directory" >> "${GITHUB_OUTPUT:-/dev/null}"
+echo "Publishing every package as $version from $tag"
+echo "version=$version" >> "${GITHUB_OUTPUT:-/dev/null}"

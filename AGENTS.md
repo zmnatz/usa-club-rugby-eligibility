@@ -37,9 +37,9 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 - `GLOSSARY.md`: domain terms. Use them.
 - `docs/adr/`: decisions, including ones carried from the Rocky Gorge tool (000). Read before changing a rule, the nightly job or the package.
 - `docs/reproducing.md`: the pipeline from CMS to verdict and how to check each stage.
-- `docs/releasing.md`: releasing each npm package from a tagged GitHub release.
+- `docs/releasing.md`: releasing the npm packages together from a tagged GitHub release.
 - Keep `pages/methodology.mdx` in step with any change to the rules or data.
-- A change to the shape of the published JSON, or to an export of the package, is a breaking change to the npm package: bump its version. The same goes for the exports of the two component packages. Bump a version only if its current version has been released, that is, its tag (`<package>-v<version>`, see `docs/releasing.md`) exists. An unreleased version already carries the change.
+- A change to the shape of the published JSON, or to an export of the package, is a breaking change to the npm package, so its next release is a new minor version (a new major from 1.0). The same goes for the exports of the two component packages. The packages share one version, which lives only in release tags (`v<version>`, see `docs/releasing.md`), not in `package.json`: don't add one, and keep the component packages' peer on the data package at `workspace:*`. Say in the PR when a change is breaking.
 
 ## Pull Requests
 
