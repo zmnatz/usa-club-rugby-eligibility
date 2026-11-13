@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import type { UnreportedGame } from '@zmnatz/usa-club-rugby-data';
 import { EligibilityLinksProvider, type EligibilityRoutes } from './links.tsx';
 import { UnreportedGames } from './UnreportedGames.tsx';
@@ -68,6 +68,24 @@ describe('UnreportedGames', () => {
       'no-lineup',
       'no-substitutions',
     ]);
+  });
+
+  it('counts the games the filters leave showing', () => {
+    const noResult: UnreportedGame = {
+      ...game,
+      fixtureId: 'f2',
+      divisions: ['W2'],
+      reasons: [{ kind: 'no-result' }],
+    };
+    renderGames([game, noResult]);
+    const heading = () => screen.getByRole('heading', { level: 2 }).textContent;
+    expect(heading()).toBe('2 games');
+    fireEvent.click(within(screen.getByRole('group', { name: 'Division' })).getByLabelText("Women's D2"));
+    expect(heading()).toBe('1 of 2 games');
+    fireEvent.click(within(screen.getByRole('group', { name: 'Reason' })).getByLabelText('No lineup'));
+    expect(heading()).toBe('0 of 2 games');
+    fireEvent.click(within(screen.getByRole('group', { name: 'Division' })).getByLabelText('All'));
+    expect(heading()).toBe('1 of 2 games');
   });
 
   it('says so when no game is overdue', () => {

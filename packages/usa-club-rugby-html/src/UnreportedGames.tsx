@@ -5,6 +5,7 @@ import {
   type UnreportedReason,
   type UnreportedSide,
 } from '@zmnatz/usa-club-rugby-data';
+import { useState } from 'react';
 import { useEligibilityLinks } from './links.tsx';
 
 export interface UnreportedGamesProps {
@@ -34,9 +35,18 @@ function reasonText(reason: UnreportedReason): string {
   return `${label}: ${reason.teamName}`;
 }
 
-function Filter({ name, legend, options }: { name: string; legend: string; options: [string, string][] }) {
+interface FilterProps {
+  name: string;
+  legend: string;
+  options: [string, string][];
+  onChange: (value: string) => void;
+}
+
+function Filter({ name, legend, options, onChange }: FilterProps) {
   return (
-    <fieldset className="ec-segmented">
+    <fieldset className="ec-segmented" onChange={(event) => {
+        if (event.target instanceof HTMLInputElement) onChange(event.target.value);
+      }}>
       <legend className="ec-sr">{legend}</legend>
       {[['all', 'All'], ...options].map(([value, label]) => (
         <label key={value}>
@@ -58,9 +68,19 @@ function Side({ side }: { side: UnreportedSide }) {
   );
 }
 
+const gameCount = (count: number) => (count === 1 ? '1 game' : `${count} games`);
+
 /** Current-season games whose record still needs entering, filterable by division and
- *  reason without JavaScript. */
+ *  reason. The stylesheet hides the rows a filter leaves out, so filtering needs no
+ *  JavaScript; React only keeps the count in step. */
 export function UnreportedGames({ games }: UnreportedGamesProps) {
+  const [division, setDivision] = useState('all');
+  const [reason, setReason] = useState('all');
+  const shown = games.filter(
+    (game) =>
+      (division === 'all' || game.divisions.includes(division)) &&
+      (reason === 'all' || game.reasons.some((entry) => entry.kind === reason)),
+  ).length;
   const divisions = DIVISIONS.filter(([code]) => games.some((game) => game.divisions.includes(code)));
   const reasons = REASONS.filter(([kind]) => games.some((game) => game.reasons.some((reason) => reason.kind === kind)));
 
@@ -75,10 +95,12 @@ export function UnreportedGames({ games }: UnreportedGamesProps) {
   return (
     <section className="ec-card ec-unreported" aria-labelledby="unreported-title">
       <div className="ec-toolbar">
-        <h2 id="unreported-title">{games.length === 1 ? '1 game' : `${games.length} games`}</h2>
+        <h2 id="unreported-title" aria-live="polite">
+          {shown === games.length ? gameCount(games.length) : `${shown} of ${gameCount(games.length)}`}
+        </h2>
         <div className="ec-controls">
-          <Filter name="unreported-division" legend="Division" options={divisions} />
-          <Filter name="unreported-reason" legend="Reason" options={reasons} />
+          <Filter name="unreported-division" legend="Division" options={divisions} onChange={setDivision} />
+          <Filter name="unreported-reason" legend="Reason" options={reasons} onChange={setReason} />
         </div>
       </div>
       <div className="ec-table-wrap">
