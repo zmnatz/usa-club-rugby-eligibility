@@ -91,6 +91,7 @@ describe('UnreportedGames', () => {
     expect(screen.getByRole('combobox', { name: 'Competition' }).getAttribute('list')).toBe('unreported-competitions');
     const reasons = screen.getByRole('group', { name: 'Reasons' });
     expect(within(reasons).getAllByRole('checkbox').map((box) => (box as HTMLInputElement).value)).toEqual([
+      'all',
       'no-lineup',
       'no-substitutions',
     ]);
@@ -147,7 +148,7 @@ describe('UnreportedGames', () => {
     expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('1 of 2 games');
   });
 
-  it('turns each reason on and off on its own, showing a game when any of its reasons is on', () => {
+  it('turns each reason on and off on its own, showing a game when any of its reasons is on, and every game when none is', () => {
     const noSubs: UnreportedGame = { ...game, fixtureId: 'f2', reasons: [{ kind: 'no-substitutions', teamName: 'Bayside MD2' }] };
     const noResult: UnreportedGame = { ...game, fixtureId: 'f3', reasons: [{ kind: 'no-result' }] };
     renderGames([{ ...game, reasons: [{ kind: 'no-lineup', teamName: 'Harbor City MD1' }] }, noSubs, noResult]);
@@ -160,7 +161,17 @@ describe('UnreportedGames', () => {
     expect(heading()).toBe('2 of 3 games');
     fireEvent.click(screen.getByLabelText('No result'));
     fireEvent.click(screen.getByLabelText('No substitutions'));
-    expect(heading()).toBe('0 of 3 games');
+    expect(heading()).toBe('3 games');
+    expect((screen.getByLabelText('All') as HTMLInputElement).checked).toBe(true);
+  });
+
+  it('clears every reason with All', () => {
+    renderGames([game, { ...game, fixtureId: 'f2', reasons: [{ kind: 'no-result' }] }]);
+    expect((screen.getByLabelText('All') as HTMLInputElement).checked).toBe(false);
+    fireEvent.click(screen.getByLabelText('All'));
+    expect((screen.getByLabelText('All') as HTMLInputElement).checked).toBe(true);
+    expect((screen.getByLabelText('No lineup') as HTMLInputElement).checked).toBe(false);
+    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('2 games');
   });
 
   it('says so when no game is overdue', () => {

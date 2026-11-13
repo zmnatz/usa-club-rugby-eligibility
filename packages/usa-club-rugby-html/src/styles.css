@@ -177,9 +177,6 @@ textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; 
 .ec-segmented label:last-of-type { border-radius: 0 var(--ec-radius) var(--ec-radius) 0; }
 .ec-segmented input { position: absolute; opacity: 0; pointer-events: none; }
 .ec-segmented label:has(:checked) { background: var(--ec-primary); border-color: var(--ec-primary); color: var(--ec-on-primary); }
-/* Toggles: segmented buttons each turned on and off on their own, so they stand apart. */
-.ec-toggles { gap: 6px; }
-.ec-toggles label, .ec-toggles label:first-of-type, .ec-toggles label:last-of-type { margin-left: 0; border-radius: var(--ec-radius); }
 
 .ec-columns { position: relative; }
 .ec-columns summary { cursor: pointer; padding: 4px 12px; border: 1px solid var(--ec-border); border-radius: var(--ec-radius); font-size: 0.875rem; }

@@ -43,14 +43,15 @@ export const getStaticProps: GetStaticProps<UnreportedProps> = async () => {
 const queryValue = (value: string | string[] | undefined, none: string) =>
   typeof value === 'string' && value ? value : none;
 
-/** The reasons turned on, written as `no-lineup,no-result`, or `none` when every one is off. */
-const NO_REASONS = 'none';
+/** The reasons turned on, written as `no-lineup,no-result`, or `all` when none is, which
+ *  shows every game. */
+const ALL_REASONS = 'all';
 const readReasons = (value: string | string[] | undefined): UnreportedReasonKind[] => {
   if (typeof value !== 'string' || !value) return DEFAULT_UNREPORTED.reasons;
   const named = value.split(',');
   return UNREPORTED_REASONS.map(([kind]) => kind).filter((kind) => named.includes(kind));
 };
-const writeReasons = (reasons: UnreportedReasonKind[]) => (reasons.length ? reasons.join(',') : NO_REASONS);
+const writeReasons = (reasons: UnreportedReasonKind[]) => (reasons.length ? reasons.join(',') : ALL_REASONS);
 
 export default function UnreportedPage({ games, season, builtAt }: UnreportedProps) {
   // The filters live in the URL, so a refresh or a shared link keeps them; a filter left at

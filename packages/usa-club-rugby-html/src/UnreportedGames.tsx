@@ -13,7 +13,7 @@ export type UnreportedReasonKind = UnreportedReason['kind'];
 
 /** What the list is filtered to: a division code, or `all`; text a competition's name must
  *  contain, or none; and the reasons shown, each turned on or off on its own. A game shows
- *  when any of its reasons is on. */
+ *  when any of its reasons is on, and every game shows when none is. */
 export interface UnreportedFilters {
   division: string;
   competition: string;
@@ -126,7 +126,7 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
     (game) =>
       (division === 'all' || game.divisions.includes(division)) &&
       competitionLabel(game.competition).toLowerCase().includes(competition) &&
-      game.reasons.some((entry) => current.reasons.includes(entry.kind)),
+      (current.reasons.length === 0 || game.reasons.some((entry) => current.reasons.includes(entry.kind))),
   );
   const groups = competitions
     .map(({ name, label }) => ({ name, label, games: shown.filter((game) => game.competition === name) }))
@@ -167,8 +167,17 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
               ))}
             </datalist>
           </label>
-          <fieldset className="ec-segmented ec-toggles">
+          <fieldset className="ec-segmented">
             <legend className="ec-sr">Reasons</legend>
+            <label>
+              <input
+                type="checkbox"
+                value="all"
+                checked={current.reasons.length === 0}
+                onChange={() => change({ reasons: [] })}
+              />
+              All
+            </label>
             {reasons.map(([kind, label]) => (
               <label key={kind}>
                 <input
