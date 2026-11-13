@@ -15,7 +15,7 @@ import { hasSharedName, sharedNames } from './eligibility.ts';
 // or play for more than one), and a verdict only means something within a club, so a
 // profile is one verdict for each club side the player is listed on, with the
 // fixtures behind it. The nightly job publishes players.json, which says which
-// clubs to look in; everything else is worked out from the club files.
+// clubs to look in; everything else is worked out from those clubs' files.
 
 export interface PlayerOptions {
   rules?: EligibilityRules;

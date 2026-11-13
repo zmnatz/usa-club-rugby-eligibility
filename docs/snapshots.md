@@ -10,10 +10,11 @@ The page is static. The data is calculated as of the archive's `pulledAt`, not t
 | `public/data/index.json` | The current season's clubs and their sides, and when the archive was last pulled | Yes |
 | `public/data/fixtures.json` | The current season's fixtures | Yes |
 | `public/data/clubs/<club>.json` | One club's Match Participation rows, gaps and result ids | Yes |
+| `public/data/players.json` | The player index: each current-season player's name and the clubs they appear in, by CMS id, without Name Withheld players | Yes |
 | `public/data/seasons.json` | The Locked Seasons published, newest first. Absent until the Archive holds one | Yes |
 | `public/data/seasons/<slug>.json` | One Locked Season in a single file: its clubs, Unplaced Teams, fixtures and each club's Match Participation | Yes |
 
-Each club's file becomes that club's page at `/club/<club-key>/` at build time, and each player in any of them a page at `/player/<cms-id>/` (except players whose name is withheld; under no club, since players change clubs; the page has a section for each club they appear in), so a report can be linked to and shared. Player pages are built from `public/data` at build time by the package's published client (`src/utils/published.ts`), which works out every club's verdicts once per build process, so each page's HTML carries its own verdict and match table (ADR 008).
+Each club's file becomes that club's page at `/club/<club-key>/` at build time, and each player in any of them a page at `/player/<cms-id>/` (except players whose name is withheld; under no club, since players change clubs; the page has a section for each club they appear in), so a report can be linked to and shared. Player pages are built from `public/data` at build time by the package's published client (`src/utils/published.ts`), which finds each player's clubs in `players.json` and works out each club's verdicts once per build process, so each page's HTML carries its own verdict and match table (ADR 008).
 
 ## What a night does
 

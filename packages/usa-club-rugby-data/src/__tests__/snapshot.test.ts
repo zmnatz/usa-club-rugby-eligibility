@@ -90,9 +90,23 @@ describe('build and verify', () => {
     expect(verifyPublished({ archiveDir, publishedDir }).ok).toBe(true);
   });
 
-  it('does not publish a player index, which each consumer works out for itself', async () => {
+  it('publishes which clubs each player is in, without Name Withheld players, and verify checks it', async () => {
+    const withheld = {
+      ...match,
+      players: [...match.players, { id: 'hidden__1', name: 'Name Withheld', position: 'Hooker', shirtNumber: '2', isHome: true }],
+    };
+    writeFileSync(path.join(archiveDir, 'matches', seasonFile('2026/2027')), serializeSeasonMatches('2026/2027', { m1: withheld }));
     await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
-    expect(existsSync(path.join(publishedDir, 'players.json'))).toBe(false);
+    const file = path.join(publishedDir, 'players.json');
+    expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({
+      season: '2026/2027',
+      players: { p1: { name: 'Ann Test', clubs: ['nova'] } },
+    });
+    expect(verifyPublished({ archiveDir, publishedDir }).ok).toBe(true);
+    writeFileSync(file, readFileSync(file, 'utf8').replace('"nova"', '"potomac"'));
+    expect(verifyPublished({ archiveDir, publishedDir })).toMatchObject({ ok: false, different: ['players.json'] });
+    rmSync(file);
+    expect(verifyPublished({ archiveDir, publishedDir })).toMatchObject({ ok: false, missing: ['players.json'] });
   });
 
   it('leaves the files alone when nothing changed, even at a later time', async () => {
