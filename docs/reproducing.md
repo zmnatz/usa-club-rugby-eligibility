@@ -27,10 +27,6 @@ bun run verify         # OK: 315 published files reproduce from the archive (as 
 
 `verify` fails if a published file differs from the recalculation, is missing, or has no source in the archive. CI runs it on every pull request and the nightly job runs it before committing, so a rule change or hand edit can't be merged without regenerating `public/data/`.
 
-## Recount one club independently
-
-[`notebooks/reproduce-eligibility.ipynb`](../notebooks/reproduce-eligibility.ipynb) recounts a club's Match Participation from the raw archive in about 100 lines of standard-library Python, with none of this repository's code, and compares every row with the published file. Use it to audit the implementation against the written rules (starters, substitutes who came on, Reg 3.4(h) forfeits), or as a starting point for an analysis in another language.
-
 ## Rebuild after changing a rule
 
 ```bash

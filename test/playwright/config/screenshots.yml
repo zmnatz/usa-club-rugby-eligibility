@@ -1,0 +1,41 @@
+# PR screenshots (test/playwright/screenshots.ts). The home page is always captured.
+# When a PR changes a file matching `files`, the listed routes are captured too.
+# A route may add `waitFor` (selector) or `delayMs` for pages that fill in after
+# load; the default is network idle plus a short settle.
+#
+# The job builds the default club in the workflow, plus any club or player pages
+# the PR description asks for. Club routes here must be the default club, and
+# `{player}` stands for any player in the build.
+rules:
+  - files:
+      - src/styles/**
+      - packages/usa-club-rugby-html/src/styles.css
+      - pages/_app.tsx
+      - pages/_document.tsx
+    routes:
+      - path: /club/pittsburgh-forge/
+      - path: /player/{player}/
+      - path: /csv/
+      - path: /methodology/
+  - files:
+      - pages/club/**
+      - packages/usa-club-rugby-html/src/ClubEligibilityReport.tsx
+      - packages/usa-club-rugby-html/src/EligibilityReportView.tsx
+      - packages/usa-club-rugby-html/src/EligibilityStatusChip.tsx
+    routes:
+      - path: /club/pittsburgh-forge/
+  - files:
+      - pages/player/**
+      - packages/usa-club-rugby-html/src/PlayerDetail.tsx
+      - packages/usa-club-rugby-html/src/EligibilityStatusChip.tsx
+    routes:
+      - path: /player/{player}/
+  - files:
+      - pages/csv.tsx
+      - packages/usa-club-rugby-html/src/MatchParticipationReport.tsx
+    routes:
+      - path: /csv/
+  - files:
+      - pages/methodology.mdx
+    routes:
+      - path: /methodology/

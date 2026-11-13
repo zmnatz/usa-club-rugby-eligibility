@@ -1,16 +1,14 @@
 import type { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
-import { ReportProblemNote, SeasonRules } from '@/eligibility';
+import { ReportProblemNote, SeasonRules } from '@zmnatz/usa-club-rugby-html';
 import { type SeasonSummary, seasonSummary } from '@zmnatz/usa-club-rugby-data';
 import { Crumbs, PageLink } from '@/components/Crumbs';
-import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';
 import { seasonPath, statsPath } from '@/utils/paths';
 import { published } from '@/utils/published';
 
 // One page per Locked Season, worked out at build time from its file, so it opens at
-// once, can be linked to and needs no JavaScript. There are only a few seasons, so
-// they cost the build little, unlike a page per club.
-export const config = { unstable_runtimeJS: false };
+// once and can be linked to. There are only a few seasons, so they cost the build
+// little, unlike a page per club.
 
 interface StatsProps {
   season: string;
@@ -91,8 +89,6 @@ function SeasonStatsBody({ summary }: { summary: SeasonSummary }) {
 export default function SeasonStatsPage({ season, slug, summary }: StatsProps) {
   return (
     <>
-      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed string, with no data in it */}
-      <script dangerouslySetInnerHTML={{ __html: HISTORY_RELOAD_SCRIPT }} />
       <Head>
         <title>{`${season} season stats · USA Club Rugby Eligibility`}</title>
         <meta

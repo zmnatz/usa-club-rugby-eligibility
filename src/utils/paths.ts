@@ -1,6 +1,6 @@
 // Routes, relative to the site's base path (Next adds that).
 
-import type { EligibilityRoutes, ProblemReport } from '@/eligibility';
+import type { EligibilityRoutes, ProblemReport } from '@zmnatz/usa-club-rugby-html';
 
 export const clubPath = (clubKey: string): string => `/club/${clubKey}`;
 

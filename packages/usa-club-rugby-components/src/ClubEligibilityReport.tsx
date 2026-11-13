@@ -2,13 +2,13 @@ import { useMemo, useState } from 'react';
 import { Alert, Link as MuiLink, Stack, Typography } from '@mui/material';
 import {
   clubSeason,
+  formatDateTime,
   mergedClubNotes,
   type FeedFixture,
   type ParticipationSnapshot,
   type PlayerRecordInput,
   type PublishedClub,
 } from '@zmnatz/usa-club-rugby-data';
-import { formatDateTime } from './dates.ts';
 import { EligibilityReportView } from './EligibilityReportView.tsx';
 import { ReportProblemNote } from './ReportProblemNote.tsx';
 import { SeasonRules } from './SeasonRules.tsx';

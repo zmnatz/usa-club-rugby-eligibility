@@ -1,5 +1,5 @@
 import Head from 'next/head';
-import { MatchParticipationReport } from '@/eligibility';
+import { MatchParticipationReport } from '@zmnatz/usa-club-rugby-html';
 import { createPublishedClient } from '@zmnatz/usa-club-rugby-data';
 import { Crumbs } from '@/components/Crumbs';
 
