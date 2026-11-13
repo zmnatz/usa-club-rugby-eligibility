@@ -49,7 +49,7 @@ describe('UnreportedGames', () => {
     expect(screen.queryByRole('columnheader', { name: 'Reason' })).toBeNull();
   });
 
-  it('emphasizes each side a gap names, and neither side for a missing result', () => {
+  it('emphasizes each side a gap names, and tints the whole row for a missing result', () => {
     renderGames([
       { ...game, reasons: [{ kind: 'no-lineup', teamName: 'Bayside MD2' }] },
       { ...game, fixtureId: 'f2', reasons: [{ kind: 'no-result' }] },
@@ -62,7 +62,9 @@ describe('UnreportedGames', () => {
         .map((cell) => cell.classList.contains('ec-flagged'));
     expect(flagged(gap)).toEqual([false, false, true]);
     expect(flagged(noResult)).toEqual([false, false, false]);
-    expect(within(within(noResult).getAllByRole('cell')[0]).getByText('No result')).toBeTruthy();
+    expect(noResult.className).toBe('ec-no-result');
+    expect(within(noResult).queryByText('No result')).toBeNull();
+    expect(gap.className).toBe('');
   });
 
   it('groups games by competition in collapsible sections, in name order without the year', () => {
@@ -242,7 +244,7 @@ describe('UnreportedGames', () => {
     expect(within(cells[1]).getByText('No lineup').className).toContain('ec-chip--error');
     expect(cells[2].className).toBe('ec-flagged ec-flagged--warning');
     expect(within(cells[2]).getByText('No substitutions').className).toContain('ec-chip--warning');
-    expect(within(noResult).getByText('No result').className).toContain('ec-chip--info');
+    expect(noResult.className).toBe('ec-no-result');
   });
 
   it('colours the reason toggles to match, as the key', () => {

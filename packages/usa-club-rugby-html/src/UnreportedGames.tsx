@@ -95,17 +95,14 @@ function Side({ side }: { side: UnreportedSide }) {
 }
 
 function GameRow({ game, showCompetition }: { game: UnreportedGame; showCompetition: boolean }) {
+  // A missing result is the whole game's, so its row is tinted rather than a side chipped.
+  const noResult = game.reasons.some((reason) => reason.kind === 'no-result');
   return (
-    <tr>
+    <tr className={noResult ? 'ec-no-result' : undefined}>
       <td>
         <a href={matchUrl(game.fixtureId)} target="_blank" rel="noopener noreferrer">
           {formatDate(game.dateTime)}
         </a>
-        {game.reasons.some((reason) => reason.kind === 'no-result') && (
-          <span className="ec-chips">
-            <ReasonChip kind="no-result" />
-          </span>
-        )}
       </td>
       {showCompetition && <td>{competitionLabel(game.competition)}</td>}
       {[game.home, game.away].map((side) => {
@@ -200,15 +197,13 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
       competitionLabel(game.competition).toLowerCase().includes(competition) &&
       (current.reasons.length === 0 || game.reasons.some((entry) => current.reasons.includes(entry.kind))),
   );
-  // Every row stays on one line, so a club's column fits its longest name and chips, and
-  // the date's a missing-result chip, over every game, filtered or not.
+  // Every row stays on one line, so a club's column fits its longest name and chips over
+  // every game, filtered or not.
   const clubChars = Math.max(
     ...games.flatMap((game) =>
       [game.home, game.away].map((side) => side.clubName.length + chipChars(sideGaps(game, side))),
     ),
   );
-  const dateChars =
-    DATE_CHARS + (games.some((game) => game.reasons.some((reason) => reason.kind === 'no-result')) ? chipChars(['no-result']) : 0);
   const groups = competitions
     .map(({ name, label }) => ({ name, label, games: shown.filter((game) => game.competition === name) }))
     .filter((group) => group.games.length > 0);
@@ -219,7 +214,7 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
       aria-labelledby="unreported-title"
       // Every group's table shares its column widths, so they line up and don't move as the
       // filters change.
-      style={{ '--ec-club-chars': clubChars, '--ec-date-chars': dateChars } as CSSProperties}
+      style={{ '--ec-club-chars': clubChars, '--ec-date-chars': DATE_CHARS } as CSSProperties}
     >
       <div className="ec-toolbar">
         <h2 id="unreported-title" aria-live="polite">

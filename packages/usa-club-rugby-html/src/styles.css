@@ -252,11 +252,14 @@ textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; 
 /* Widths in characters, from the list. Bold club names on a flagged side are a little wider. */
 .ec-col-date { width: calc(var(--ec-date-chars, 10) * 1ch + var(--ec-cell-pad)); }
 .ec-col-club { width: calc(var(--ec-club-chars, 20) * 1.05ch + var(--ec-cell-pad)); }
-/* A game's gaps, as chips beside the side they name, or the date for a missing result. */
+/* A game's gaps, as chips beside the side they name. */
 .ec-chips { display: inline-flex; gap: 4px; margin-left: 6px; vertical-align: middle; }
 /* One line per game: each column fits its longest content. */
 .ec-unreported-table td { white-space: nowrap; }
 /* A flagged side: its most serious gap's colour on the edge, so its chips stay readable. */
+/* A game with no result: the whole row tinted, edged at its start. */
+.ec-table tr.ec-no-result td { background: var(--ec-info-bg); }
+.ec-table tr.ec-no-result td:first-child { box-shadow: inset 3px 0 0 var(--ec-info); }
 .ec-table td.ec-flagged--error { box-shadow: inset 3px 0 0 var(--ec-error); }
 .ec-table td.ec-flagged--warning { box-shadow: inset 3px 0 0 var(--ec-warning); }
 /* The reason toggles wear their chips' colours, as the key. */
