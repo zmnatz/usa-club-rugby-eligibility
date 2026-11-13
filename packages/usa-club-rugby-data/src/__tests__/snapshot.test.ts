@@ -324,4 +324,46 @@ describe('an Archive holding a Locked Season', () => {
       extra: ['seasons/2019-20.json'],
     });
   });
+
+  describe('with a cache directory', () => {
+    const build = (publishedDir: string, cacheDir: string, log: string[] = []) =>
+      runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW, cacheDir, log: (line) => log.push(line) });
+
+    it('publishes the same files as a run without one, and reuses them the next time', async () => {
+      archiveLocked(LOCKED_SEASON, [lockedFixture], { o1: lockedMatch });
+      const cacheDir = path.join(dir, 'cache');
+      await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
+
+      const first: string[] = [];
+      await build(path.join(dir, 'first'), cacheDir, first);
+      expect(files(path.join(dir, 'first'))).toEqual(files(publishedDir));
+      expect(first).toContain(`Locked Seasons: 0 of 1 reused from ${cacheDir}`);
+
+      const second: string[] = [];
+      await build(path.join(dir, 'second'), cacheDir, second);
+      expect(files(path.join(dir, 'second'))).toEqual(files(publishedDir));
+      expect(second).toContain(`Locked Seasons: 1 of 1 reused from ${cacheDir}`);
+      expect(verifyPublished({ archiveDir, publishedDir: path.join(dir, 'second') }).ok).toBe(true);
+    });
+
+    it("recalculates a Locked Season whose archive changed, and drops the old season's files", async () => {
+      archiveLocked(LOCKED_SEASON, [lockedFixture], { o1: lockedMatch });
+      const cacheDir = path.join(dir, 'cache');
+      await build(publishedDir, cacheDir);
+      const before = readdirSync(cacheDir).sort();
+
+      const renamed = { ...lockedMatch, players: [{ ...lockedMatch.players[0], name: 'New Timer' }] };
+      writeFileSync(
+        path.join(archiveDir, 'matches', seasonFile(LOCKED_SEASON)),
+        serializeSeasonMatches(LOCKED_SEASON, { o1: renamed }),
+      );
+      const log: string[] = [];
+      await build(publishedDir, cacheDir, log);
+      expect(log).toContain(`Locked Seasons: 0 of 1 reused from ${cacheDir}`);
+      expect(readFileSync(path.join(publishedDir, 'seasons/2025-26.json'), 'utf8')).toContain('"firstName":"New"');
+      const after = readdirSync(cacheDir).sort();
+      expect(after).toHaveLength(2);
+      expect(after.some((name) => before.includes(name))).toBe(false);
+    });
+  });
 });

@@ -19,6 +19,8 @@ Options
   --offline           snapshot: make no CMS requests
   --full-history      snapshot: also read every past season the feeds list
   --now <iso>         build/verify: the time to calculate for (verify defaults to the published index's generatedAt)
+  --cache <dir>       snapshot/build: keep the Locked Seasons' files here and reuse them while their archive and this
+                      package's code are unchanged (verify always recalculates)
 `;
 
 const { positionals, values } = parseArgs({
@@ -29,6 +31,7 @@ const { positionals, values } = parseArgs({
     offline: { type: 'boolean', default: false },
     'full-history': { type: 'boolean', default: false },
     now: { type: 'string' },
+    cache: { type: 'string' },
     help: { type: 'boolean', short: 'h', default: false },
   },
 });
@@ -47,6 +50,7 @@ if (values.help || !command) {
     offline: command === 'build' || values.offline,
     fullHistory: values['full-history'],
     now,
+    cacheDir: values.cache,
     log,
   });
   log(`Done: ${result.clubs} clubs, ${requestStats.requests} CMS requests`);

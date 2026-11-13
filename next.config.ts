@@ -6,53 +6,19 @@ import type { NextConfig } from 'next';
 // its stats page (ADR 016). The all-seasons stats page is rendered on request and cached
 // by the CDN until the next deploy (ADR 018); every other page at build time.
 
-// A Locked Season's page, its clubs', its stats page and the all-seasons stats page read the list of seasons and that
-// season's file, and nothing of the current season's nor the seasons' player indexes. The
-// season files are matched by their slug (2024-25): `*.json` would also name the player
-// indexes, and an exclude doesn't remove a file an include names.
-const SEASON_PAGE_FILES = ['./public/data/seasons.json', './public/data/seasons/[0-9][0-9][0-9][0-9]-[0-9][0-9].json'];
-// A player's pages read the player indexes to find the seasons and clubs they're in, then
-// those clubs' files and Locked Seasons, and the seasons' player indexes.
-const PLAYER_PAGE_FILES = [
-  './public/data/index.json',
-  './public/data/fixtures.json',
-  './public/data/players.json',
-  './public/data/clubs/*.json',
-  ...SEASON_PAGE_FILES,
-  './public/data/seasons/*.players.json',
-];
-const SEASON_PAGE_EXCLUDES = [
-  './public/data/index.json',
-  './public/data/fixtures.json',
-  './public/data/players.json',
-  './public/data/clubs/**',
-  './public/data/seasons/*.players.json',
-];
+// A deployed page's function reads the published data over HTTP from its own deploy's copy
+// of public/data on the CDN, so the function doesn't carry it (ADR 019). Next's trace finds
+// the directory the build reads it from and would bundle all of it, so every route excludes
+// it. DEPLOY_URL is the deploy's permalink, set by Netlify at build time, so a function reads
+// its own deploy's data, never a later one's. A build without it (local, CI) reads the disk.
+const DEPLOY_URL = process.env.DEPLOY_URL ?? '';
 
 const nextConfig: NextConfig = {
   // Pages keep the /<path>/ URLs they had as a static export.
   trailingSlash: true,
   pageExtensions: ['ts', 'tsx', 'mdx'],
-  // Each on-demand page's function reads the published data from disk at request time, so
-  // it must carry the files it reads. The club page reads the index, the fixtures and the
-  // club files, and never the Locked Seasons, which are most of public/data, nor the player
-  // index. The player pages also read the player indexes and the Locked Seasons.
-  outputFileTracingIncludes: {
-    '/club/[[]club[]]': ['./public/data/index.json', './public/data/fixtures.json', './public/data/clubs/*.json'],
-    '/player/[[]player[]]': PLAYER_PAGE_FILES,
-    '/player/[[]player[]]/[[]season[]]': PLAYER_PAGE_FILES,
-    '/season/[[]season[]]': SEASON_PAGE_FILES,
-    '/season/[[]season[]]/[[]club[]]': SEASON_PAGE_FILES,
-    '/stats/[[]season[]]': SEASON_PAGE_FILES,
-    '/stats': SEASON_PAGE_FILES,
-  },
-  outputFileTracingExcludes: {
-    '/club/[[]club[]]': ['./public/data/seasons/**', './public/data/seasons.json', './public/data/players.json'],
-    '/season/[[]season[]]': SEASON_PAGE_EXCLUDES,
-    '/season/[[]season[]]/[[]club[]]': SEASON_PAGE_EXCLUDES,
-    '/stats/[[]season[]]': SEASON_PAGE_EXCLUDES,
-    '/stats': SEASON_PAGE_EXCLUDES,
-  },
+  env: { PUBLISHED_DATA_URL: DEPLOY_URL ? `${DEPLOY_URL.replace(/\/+$/, '')}/data` : '' },
+  outputFileTracingExcludes: { '/**': ['./public/data/**'] },
 };
 
 const withMDX = createMDX({
