@@ -1,10 +1,10 @@
-name: Publish library
+name: Publish packages
 
-# Publishes one package to npm when a GitHub release is published, by npm trusted
-# publishing (OIDC): no token is stored. The release's tag picks the package; see
-# docs/releasing.md, which also has the one-time npm setup for each package.
-# The job only stages the version; approve it with 2FA on npmjs.com (Staged
-# Packages) or with `npm stage approve <stage-id>` and it goes public.
+# Publishes every package to npm, at the version the release's tag names, when a
+# GitHub release is published, by npm trusted publishing (OIDC): no token is stored.
+# See docs/releasing.md, which also has the one-time npm setup for each package.
+# The job only stages each version; approve them with 2FA on npmjs.com (Staged
+# Packages) or with `npm stage approve <stage-id>` and they go public.
 on:
   release:
     types: [published]
@@ -31,6 +31,21 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run test
       - run: bun run verify
+      # The tag is the version of every package: no package.json in the repo has
+      # one. Set after install, so the lockfile still matches, and with each
+      # component package needing this same data package. Data goes first, as the
+      # others need it.
       # Staged publishing needs npm 11.15.0 or later, which Node 26 ships.
-      - run: npm stage publish
-        working-directory: ${{ steps.release.outputs.directory }}
+      - name: Stage every package
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          for package in usa-club-rugby-data usa-club-rugby-components usa-club-rugby-html; do
+            cd "packages/$package"
+            npm pkg set version="$VERSION"
+            if [[ "$package" != usa-club-rugby-data ]]; then
+              npm pkg set "peerDependencies.@zmnatz/usa-club-rugby-data=$VERSION"
+            fi
+            npm stage publish
+            cd - > /dev/null
+          done

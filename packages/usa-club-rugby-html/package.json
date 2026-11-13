@@ -1,6 +1,5 @@
 {
   "name": "@zmnatz/usa-club-rugby-html",
-  "version": "0.1.0",
   "description": "React components that render plain HTML and one stylesheet for USA Club Rugby NCS eligibility: the club directory, eligibility report and player detail, for any app using @zmnatz/usa-club-rugby-data.",
   "keywords": [
     "rugby",
@@ -46,7 +45,7 @@
   },
   "peerDependencies": {
     "react": "^19.2.8",
-    "@zmnatz/usa-club-rugby-data": "^0.6.0"
+    "@zmnatz/usa-club-rugby-data": "workspace:*"
   },
   "devDependencies": {
     "react": "^19.2.8",
