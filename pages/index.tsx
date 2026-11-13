@@ -1,9 +1,8 @@
 import type { GetStaticProps } from 'next';
 import Head from 'next/head';
-import { clubsWithoutFixtures } from '@zmnatz/usa-club-rugby-data';
 import { ClubDirectory } from '@zmnatz/usa-club-rugby-html';
 import { PageLink } from '@/components/Crumbs';
-import { seasonClubPath, seasonPath, statsPath } from '@/utils/paths';
+import { seasonPath, statsPath } from '@/utils/paths';
 import { published, type PublishedClub, type PublishedSeason } from '@/utils/published';
 
 interface HomeProps {
@@ -11,26 +10,12 @@ interface HomeProps {
   season: string;
   generatedAt: string;
   pastSeasons: PublishedSeason[];
-  /** Clubs of the last Locked Season with no games on record yet this season. */
-  withoutGames: { season: PublishedSeason; clubs: PublishedClub[] } | null;
 }
 
 export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   const [index, pastSeasons] = await Promise.all([published.index(), published.seasons()]);
-  // A club is listed from the fixtures this season, so one whose season starts later
-  // isn't there yet: list it from the last season, marked as having no games yet.
-  const last = pastSeasons[0];
-  const withoutGames = last
-    ? {
-        season: last,
-        clubs: clubsWithoutFixtures(
-          { clubs: index.clubs, fixtures: await published.fixtures() },
-          await published.season(last.slug),
-        ),
-      }
-    : null;
   return {
-    props: { clubs: index.clubs, season: index.season, generatedAt: index.generatedAt, pastSeasons, withoutGames },
+    props: { clubs: index.clubs, season: index.season, generatedAt: index.generatedAt, pastSeasons },
   };
 };
 
@@ -38,8 +23,7 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
 const formatDateTime = (dateTime: string) =>
   `${new Date(dateTime).toLocaleString('en-US', { timeZone: 'UTC', dateStyle: 'medium', timeStyle: 'short' })} UTC`;
 
-export default function HomePage({ clubs, season, generatedAt, pastSeasons, withoutGames }: HomeProps) {
-  const waiting = withoutGames?.clubs.length ? withoutGames : null;
+export default function HomePage({ clubs, season, generatedAt, pastSeasons }: HomeProps) {
   return (
     <>
       <Head>
@@ -59,16 +43,18 @@ export default function HomePage({ clubs, season, generatedAt, pastSeasons, with
         track (experimental). <PageLink href="/methodology">How this report is worked out</PageLink>.
       </p>
       <p className="small">
-        {season} season · {clubs.length} clubs with games on record
-        {waiting && ` and ${waiting.clubs.length} without yet`} · data last changed {formatDateTime(generatedAt)}
+        {season} season · {clubs.length} clubs · data last changed {formatDateTime(generatedAt)}
       </p>
-      {waiting && (
-        <p className="small">
-          Clubs marked &ldquo;No games on record yet&rdquo; have no fixtures in Rugby Xplorer this season, often
-          because their season starts later. They are listed from the {waiting.season.season} season, and link to
-          that season&apos;s report until their first fixture is entered.
-        </p>
-      )}
+      <p className="small">
+        Only clubs with a fixture entered in Rugby Xplorer this season are listed, whether or not it has been played
+        yet. A club whose season starts later appears once its first fixture is entered
+        {pastSeasons[0] && (
+          <>
+            ; until then, find it in <PageLink href={seasonPath(pastSeasons[0].slug)}>last season&apos;s clubs</PageLink>
+          </>
+        )}
+        .
+      </p>
       {pastSeasons.length > 0 && (
         <p className="small">
           Past seasons:{' '}
@@ -87,13 +73,7 @@ export default function HomePage({ clubs, season, generatedAt, pastSeasons, with
           Check a Match Participation Report (CSV)
         </PageLink>
       </p>
-      <ClubDirectory
-        clubs={clubs}
-        autoFocus
-        withoutGames={
-          waiting ? { clubs: waiting.clubs, href: (key) => seasonClubPath(waiting.season.slug, key) } : undefined
-        }
-      />
+      <ClubDirectory clubs={clubs} autoFocus />
     </>
   );
 }

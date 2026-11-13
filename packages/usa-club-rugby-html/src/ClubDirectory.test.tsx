@@ -45,28 +45,6 @@ describe('ClubDirectory', () => {
     expect(document.activeElement).toBe(screen.getByRole('searchbox', { name: 'Find a club' }));
   });
 
-  it("lists clubs with no games yet among the others, marked, linking to the given address", () => {
-    render(
-      <EligibilityLinksProvider Link="a" routes={routes}>
-        <ClubDirectory
-          clubs={clubs}
-          withoutGames={{
-            clubs: [{ key: 'cove', name: 'Cove', sides: [{ label: 'D3', teamName: 'Cove MD3' }] }],
-            href: (key) => `/season/2025-26/club/${key}`,
-          }}
-        />
-      </EligibilityLinksProvider>,
-    );
-    const links = screen.getAllByRole('link');
-    expect(links.map((link) => link.textContent)).toEqual([
-      'BaysideD2',
-      'CoveD3No games on record yet',
-      'Harbor CityD1',
-    ]);
-    expect(links[1]?.getAttribute('href')).toBe('/season/2025-26/club/cove');
-    expect(screen.getByText('3 of 3 clubs')).toBeTruthy();
-  });
-
   it('leaves focus alone by default', () => {
     renderDirectory();
     expect(document.activeElement).toBe(document.body);

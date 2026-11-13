@@ -135,8 +135,6 @@ textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; 
 .ec-clubs a { display: block; padding: 8px 0; color: var(--ec-primary); text-decoration: none; }
 .ec-clubs a:hover { text-decoration: underline; }
 .ec-clubs a > span { margin-left: 8px; font-size: 0.75rem; color: var(--ec-muted); }
-/* A club with no games on record yet this season, listed from an earlier one. */
-.ec-clubs a > .ec-no-games { display: block; margin-left: 0; font-style: italic; }
 .ec-search { flex: 1 1 260px; max-width: 420px; }
 
 /* Takes a keyboard user past the controls; off screen until focused. */

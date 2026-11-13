@@ -8,7 +8,6 @@ export * from './clubReport.ts';
 export * from './clubSeason.ts';
 export * from './csv.ts';
 export * from './dates.ts';
-export * from './directory.ts';
 export type {
   ArchiveFixturesFile,
   ArchiveMatchesFile,
