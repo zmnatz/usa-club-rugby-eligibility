@@ -3,7 +3,7 @@ import { selectClubs } from './buildScope';
 
 const clubs = [{ key: 'a' }, { key: 'b' }, { key: 'c' }];
 // Both are always passed, so the machine's own environment can't change a result.
-const keysFor = (scope: string, ci = '') => selectClubs(clubs, { scope, ci }).map((club) => club.key);
+const keysFor = (scope: string, deployed = '') => selectClubs(clubs, { scope, deployed }).map((club) => club.key);
 
 describe('selectClubs', () => {
   it('builds every club by default', () => {
@@ -23,7 +23,7 @@ describe('selectClubs', () => {
     expect(() => keysFor('a,nope')).toThrow('nope');
   });
 
-  it('ignores the scope in CI, so a deployed site is complete', () => {
+  it('ignores the scope on Netlify, so a deployed site is complete', () => {
     expect(keysFor('1', 'true')).toEqual(['a', 'b', 'c']);
   });
 });

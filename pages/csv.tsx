@@ -6,7 +6,7 @@ import { Crumbs } from '@/components/Crumbs';
 // A report can be for any club, so it needs the national fixture list, which is too
 // big to put in the page for visitors who never run one.
 const { fixtures: loadFixtures } = createPublishedClient({
-  baseUrl: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/data`,
+  baseUrl: '/data',
 });
 
 export default function CsvPage() {

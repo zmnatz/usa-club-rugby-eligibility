@@ -1,6 +1,6 @@
 # @zmnatz/usa-club-rugby-data
 
-USA Club Rugby senior club **teams, players and NCS eligibility**, from the Rugby Xplorer match record. It is the engine behind [the eligibility report](https://zmnatz.github.io/usa-club-rugby-eligibility/), packaged so other apps can read the same data and so anyone can reproduce the numbers.
+USA Club Rugby senior club **teams, players and NCS eligibility**, from the Rugby Xplorer match record. It is the engine behind [the eligibility report](https://usa-club-rugby-eligibility.netlify.app/), packaged so other apps can read the same data and so anyone can reproduce the numbers.
 
 > A guide, not an official tool. The Rugby Xplorer Match Participation Report is the official count, and registration isn't checked.
 
