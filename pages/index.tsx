@@ -45,6 +45,17 @@ export default function HomePage({ clubs, season, generatedAt, pastSeasons }: Ho
       <p className="small">
         {season} season · {clubs.length} clubs · data last changed {formatDateTime(generatedAt)}
       </p>
+      <p className="small">
+        A club is listed once it has a fixture entered in Rugby Xplorer this season in a competition that counts,
+        whether or not it has been played yet. A club whose season starts later appears once its first fixture is
+        entered
+        {pastSeasons[0] && (
+          <>
+            ; until then, find it in <PageLink href={seasonPath(pastSeasons[0].slug)}>last season&apos;s clubs</PageLink>
+          </>
+        )}
+        .
+      </p>
       {pastSeasons.length > 0 && (
         <p className="small">
           Past seasons:{' '}
