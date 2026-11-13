@@ -24,6 +24,7 @@ import {
   type TransferRecords,
 } from '@zmnatz/usa-club-rugby-data';
 import { EligibilityStatusChip, WaiverChip } from './EligibilityStatusChip.tsx';
+import { useEligibilityLinks } from './links.tsx';
 import { FIRST_PLAYER_ID } from './SkipToFirstPlayer.tsx';
 
 /** The columns a visitor can show or hide; the rest are always shown. */
@@ -34,7 +35,7 @@ interface SideTableProps {
   breakdown: EligibilityBreakdown;
   source: ReportSource;
   locked: boolean;
-  onPlayerSelect?: (playerId: string, teamName: string) => void;
+  playerHref?: (playerId: string) => string;
   transfers: TransferRecords;
 }
 
@@ -42,19 +43,20 @@ function PlayerCell({
   player,
   source,
   showCmsId,
-  onPlayerSelect,
+  playerHref,
 }: {
   player: PlayerEligibility;
   source: ReportSource;
   showCmsId: boolean;
-  onPlayerSelect?: (playerId: string, teamName: string) => void;
+  playerHref?: (playerId: string) => string;
 }) {
+  const { Link } = useEligibilityLinks();
   return (
     <>
-      {onPlayerSelect && !isNameWithheld(player.name) ? (
-        <button type="button" className="ec-player ec-link-button" onClick={() => onPlayerSelect(player.playerId, player.teamName)}>
+      {playerHref && !isNameWithheld(player.name) ? (
+        <Link className="ec-player" href={playerHref(player.playerId)}>
           {player.name}
-        </button>
+        </Link>
       ) : (
         <strong>{player.name}</strong>
       )}
@@ -70,7 +72,7 @@ function cellContent(
   context: {
     source: ReportSource;
     showCmsId: boolean;
-    onPlayerSelect?: (playerId: string, teamName: string) => void;
+    playerHref?: (playerId: string) => string;
     moved: boolean;
   },
 ): ReactNode {
@@ -113,7 +115,7 @@ const columnClass = (column: ReportColumn) =>
 
 /** One side's players: a status filter and column chooser that work with CSS alone, and
  *  a table sorted by a column's header. */
-function SideTable({ index, breakdown, source, locked, onPlayerSelect, transfers }: SideTableProps) {
+function SideTable({ index, breakdown, source, locked, playerHref, transfers }: SideTableProps) {
   const side = breakdown.sides[index];
   const { summary } = side;
   const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({ key: 'name', direction: 'asc' });
@@ -195,7 +197,7 @@ function SideTable({ index, breakdown, source, locked, onPlayerSelect, transfers
                     {cellContent(player, column.key, {
                       source,
                       showCmsId: hasSharedName(player, shared),
-                      onPlayerSelect,
+                      playerHref,
                       moved: player.playerId in transfers,
                     })}
                   </td>
@@ -230,9 +232,9 @@ export interface EligibilityReportViewProps {
   recordsUpdated?: string;
   /** Stamps the exported report, and names its file. Defaults to the current time. */
   now?: Date;
-  /** Makes each player's name a button that calls this, so the host can open their
-   *  detail. Without it, names are plain text. */
-  onPlayerSelect?: (playerId: string, teamName: string) => void;
+  /** Where each player's name links, such as the host's URL for their detail. Without
+   *  it, names are plain text. */
+  playerHref?: (playerId: string) => string;
   /** A Locked Season: every verdict is final, so there is no Caution to filter by. */
   locked?: boolean;
   /** Players who also played for another club that season, marked Waiver Required. */
@@ -251,7 +253,7 @@ export function EligibilityReportView({
   season,
   recordsUpdated,
   now,
-  onPlayerSelect,
+  playerHref,
   locked = false,
   transfers = {},
   actions,
@@ -350,7 +352,7 @@ export function EligibilityReportView({
           breakdown={breakdown}
           source={source}
           locked={locked}
-          onPlayerSelect={onPlayerSelect}
+          playerHref={playerHref}
           transfers={transfers}
         />
       ))}

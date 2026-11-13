@@ -45,6 +45,8 @@ Every style is an `ec-` class on `--ec-*` custom properties, with a dark scheme 
 
 ## Behaviour
 
-A report's tables sort on their header buttons, the directory filters as it is typed in, Export Report downloads the report as text, and a player's name opens their detail in a dialog. For this season's players the dialog links to your `player` route. The status filter, the optional columns and the jumps between sides are HTML and CSS (`:has()`, `<details>`, anchors), so they work before the page hydrates.
+A report's tables sort on their header buttons, the directory filters as it is typed in, and Export Report downloads the report as text.
+
+A player's detail opens in a dialog that your URL controls, so the component holds no state for it. Give `ClubEligibilityReport` a `playerHref` (where each name links, such as the report's URL with `?player=<id>`), the `playerId` your URL names, and an `onClose` that goes back to the report's URL without it. Leave them out and names are plain text. For this season's players the dialog links to your `player` route. The status filter, the optional columns and the jumps between sides are HTML and CSS (`:has()`, `<details>`, anchors), so they work before the page hydrates.
 
 The report's data logic (columns, sorting, filtering, the export text) is in `@zmnatz/usa-club-rugby-data`, for an app that wants it with its own UI.

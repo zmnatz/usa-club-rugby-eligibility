@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { ClubDirectory, ClubEligibilityReport, ReportProblemNote, SeasonRules } from '@zmnatz/usa-club-rugby-html';
 import { clubFixtures, createPublishedClient, type PublishedSeasonFile } from '@zmnatz/usa-club-rugby-data';
 import { Crumbs, PageLink } from '@/components/Crumbs';
-import { seasonClubPath, seasonPath, statsPath } from '@/utils/paths';
+import { openPlayer, seasonClubPath, seasonClubPlayerPath, seasonPath, statsPath } from '@/utils/paths';
 import { published, type PublishedSeason } from '@/utils/published';
 
 // One page for every Locked Season, so past seasons add nothing to the build. The
@@ -90,6 +90,7 @@ function SeasonClubs({ file }: { file: PublishedSeasonFile }) {
 }
 
 function SeasonClub({ file, clubKey }: { file: PublishedSeasonFile; clubKey: string }) {
+  const router = useRouter();
   const club = file.clubs.find((candidate) => candidate.key === clubKey);
   if (!club) {
     return (
@@ -111,6 +112,9 @@ function SeasonClub({ file, clubKey }: { file: PublishedSeasonFile; clubKey: str
         club={club}
         saved={file.clubFiles[club.key]}
         fixtures={clubFixtures(file.fixtures, club)}
+        playerId={openPlayer(router.query)}
+        playerHref={(playerId) => seasonClubPlayerPath(file.slug, club.key, playerId)}
+        onClose={() => router.push(seasonClubPath(file.slug, club.key), undefined, { shallow: true, scroll: false })}
       />
     </>
   );

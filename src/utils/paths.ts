@@ -4,6 +4,10 @@ import type { EligibilityRoutes, ProblemReport } from '@zmnatz/usa-club-rugby-ht
 
 export const clubPath = (clubKey: string): string => `/club/${clubKey}`;
 
+/** A club's report with one player's detail open over it. */
+export const clubPlayerPath = (clubKey: string, playerId: string): string =>
+  `${clubPath(clubKey)}?player=${encodeURIComponent(playerId)}`;
+
 /** A player's page is not under a club: they can play for several over time. */
 export const playerPath = (playerId: string): string => `/player/${encodeURIComponent(playerId)}`;
 
@@ -16,6 +20,12 @@ export const queryPlayerId = (pathname: string, search: string): string | null =
 export const seasonPath = (slug: string): string => `/season?season=${encodeURIComponent(slug)}`;
 export const seasonClubPath = (slug: string, clubKey: string): string =>
   `${seasonPath(slug)}&club=${encodeURIComponent(clubKey)}`;
+export const seasonClubPlayerPath = (slug: string, clubKey: string, playerId: string): string =>
+  `${seasonClubPath(slug, clubKey)}&player=${encodeURIComponent(playerId)}`;
+
+/** The player a report's URL has open, from its `player` query parameter. */
+export const openPlayer = (query: Record<string, string | string[] | undefined>): string | null =>
+  typeof query.player === 'string' && query.player ? query.player : null;
 
 /** A Locked Season's stats, built as a page of its own; with no season, every season's. */
 export const statsPath = (slug: string): string => (slug ? `/stats/${slug}` : '/stats');

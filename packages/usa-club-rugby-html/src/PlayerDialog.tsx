@@ -9,6 +9,7 @@ import {
   type PublishedClub,
 } from '@zmnatz/usa-club-rugby-data';
 import { useEligibilityLinks } from './links.tsx';
+import { EligibilityStatusChip, WaiverChip } from './EligibilityStatusChip.tsx';
 import { PlayerDetailBody, PlayerDetailHeading } from './PlayerDetail.tsx';
 
 export interface PlayerDialogProps {
@@ -17,17 +18,25 @@ export interface PlayerDialogProps {
   saved: ParticipationSnapshot;
   fixtures: FeedFixture[];
   breakdown: EligibilityBreakdown;
-  /** The player and the side whose verdict to show. */
-  selected: { playerId: string; teamName: string };
+  /** The player to show, on every side of the club they're listed for. */
+  playerId: string;
   /** The player's own page, linked from the dialog. A Locked Season's players have none. */
   pageHref?: string;
   onClose: () => void;
 }
 
-/** A player's verdict and games in a club's report, in a modal dialog. The dialog is
- *  the platform's: it traps focus, closes on Escape and returns focus to the name that
- *  opened it. */
-export function PlayerDialog({ club, saved, fixtures, breakdown, selected, pageHref, onClose }: PlayerDialogProps) {
+/** The sides a player is listed on in a club's breakdown, with their verdict on each,
+ *  as on their own page. */
+export const playerSides = (breakdown: EligibilityBreakdown, playerId: string) =>
+  breakdown.sides.flatMap((side) => {
+    const player = side.players.find((candidate) => candidate.playerId === playerId);
+    return player ? [{ side, player }] : [];
+  });
+
+/** A player's verdict and games in a club's report, in a modal dialog: one section per
+ *  side they're listed for. The dialog is the platform's: it traps focus, closes on
+ *  Escape and returns focus to the name that opened it. */
+export function PlayerDialog({ club, saved, fixtures, breakdown, playerId, pageHref, onClose }: PlayerDialogProps) {
   const { Link } = useEligibilityLinks();
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -35,9 +44,10 @@ export function PlayerDialog({ club, saved, fixtures, breakdown, selected, pageH
     if (dialog && !dialog.open) dialog.showModal();
   }, []);
 
-  const side = breakdown.sides.find((entry) => entry.teamName === selected.teamName);
-  const player = side?.players.find((candidate) => candidate.playerId === selected.playerId);
-  const otherClubs = saved.transfers?.[selected.playerId] ?? [];
+  const entries = playerSides(breakdown, playerId);
+  const otherClubs = saved.transfers?.[playerId] ?? [];
+  const [first] = entries;
+  const oneSide = entries.length === 1;
 
   return (
     // Escape closes the dialog natively, so the backdrop click needs no key handler.
@@ -45,26 +55,31 @@ export function PlayerDialog({ club, saved, fixtures, breakdown, selected, pageH
     <dialog
       ref={ref}
       className="ec-dialog"
-      aria-label={player ? `${player.name}, ${side?.label}` : 'Player'}
+      aria-label={first ? (oneSide ? `${first.player.name}, ${first.side.label}` : first.player.name) : 'Player'}
       onClose={onClose}
       // A click on the backdrop lands on the dialog itself, not its content.
       onClick={(event) => event.target === ref.current && ref.current?.close()}
     >
-      {side && player && (
+      {first && (
         <div className="ec-stack">
           <div className="ec-row" style={{ justifyContent: 'space-between' }}>
-            <PlayerDetailHeading
-              player={player}
-              source="record"
-              showCmsId={hasSharedName(player, sharedNames(side.players))}
-              otherClubs={otherClubs}
-            />
+            {oneSide ? (
+              <PlayerDetailHeading
+                player={first.player}
+                source="record"
+                showCmsId={hasSharedName(first.player, sharedNames(first.side.players))}
+                otherClubs={otherClubs}
+              />
+            ) : (
+              <span style={{ fontSize: '1.25rem', fontWeight: 600 }}>{first.player.name}</span>
+            )}
             <button type="button" className="ec-btn" onClick={() => ref.current?.close()}>
               Close
             </button>
           </div>
           <p className="ec-muted ec-small" style={{ margin: 0 }}>
             {club.name} · {saved.season} season
+            {!oneSide && ` · listed for ${entries.length} sides, each assessed on its own`}
             {pageHref && (
               <>
                 {' · '}
@@ -72,13 +87,24 @@ export function PlayerDialog({ club, saved, fixtures, breakdown, selected, pageH
               </>
             )}
           </p>
-          <PlayerDetailBody
-            player={player}
-            source="record"
-            ownLabel={side.label}
-            fixtures={playerFixtures(player, { club, snapshot: saved, fixtures })}
-            otherClubs={otherClubs}
-          />
+          {entries.map(({ side, player }) => (
+            <section key={side.teamName} className="ec-stack" aria-label={oneSide ? undefined : `${side.label} side`}>
+              {!oneSide && (
+                <div className="ec-row">
+                  <h3 style={{ margin: 0 }}>{side.label} side</h3>
+                  <EligibilityStatusChip player={player} />
+                  {otherClubs.length > 0 && <WaiverChip />}
+                </div>
+              )}
+              <PlayerDetailBody
+                player={player}
+                source="record"
+                ownLabel={side.label}
+                fixtures={playerFixtures(player, { club, snapshot: saved, fixtures })}
+                otherClubs={otherClubs}
+              />
+            </section>
+          ))}
         </div>
       )}
     </dialog>

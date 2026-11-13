@@ -229,7 +229,7 @@ textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; 
 .ec-details[open] > summary { margin-bottom: 12px; }
 
 /* A Locked Season's player detail, a native modal <dialog>. */
-.ec-link-button { background: none; border: 0; padding: 0; font: inherit; color: inherit; font-weight: 600; text-align: left; cursor: pointer; }
-.ec-link-button:hover { text-decoration: underline; }
+.ec-table a.ec-player { color: inherit; font-weight: 600; text-decoration: none; }
+.ec-table a.ec-player:hover { text-decoration: underline; }
 .ec-dialog { max-width: min(960px, calc(100vw - 32px)); width: 100%; max-height: calc(100vh - 32px); overflow: auto; background: var(--ec-surface); color: inherit; border: 1px solid var(--ec-border); border-radius: var(--ec-radius); padding: var(--ec-gap); }
 .ec-dialog::backdrop { background: rgb(0 0 0 / 0.5); }

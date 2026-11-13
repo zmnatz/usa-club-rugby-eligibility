@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   clubSeason,
   formatDateTime,
@@ -8,7 +8,7 @@ import {
   type PublishedClub,
 } from '@zmnatz/usa-club-rugby-data';
 import { EligibilityReportView } from './EligibilityReportView.tsx';
-import { PlayerDialog } from './PlayerDialog.tsx';
+import { PlayerDialog, playerSides } from './PlayerDialog.tsx';
 import { ReportProblemNote } from './ReportProblemNote.tsx';
 import { SeasonRules } from './SeasonRules.tsx';
 import { useEligibilityLinks } from './links.tsx';
@@ -19,18 +19,25 @@ export interface ClubEligibilityReportProps {
   saved: ParticipationSnapshot;
   /** The fixtures in the club's divisions, including those still to play. */
   fixtures: FeedFixture[];
+  /** The player whose detail is open in a dialog, from the host's URL. */
+  playerId?: string | null;
+  /** The host's URL for a player's detail on this report, which each name links to. */
+  playerHref?: (playerId: string) => string;
+  /** Closes the dialog, by going to the report's URL without the player. */
+  onClose?: () => void;
 }
 
 /** One club's eligibility report from its saved Match Record. */
-export function ClubEligibilityReport({ club, saved, fixtures }: ClubEligibilityReportProps) {
+export function ClubEligibilityReport({ club, saved, fixtures, playerId, playerHref, onClose }: ClubEligibilityReportProps) {
   const { Link, routes } = useEligibilityLinks();
 
   const locked = saved.locked === true;
   // A Locked Season's notes come with its file; this season's are worked out here.
   const notes = locked ? club.notes : mergedClubNotes(club);
   const { breakdown, gaps } = useMemo(() => clubSeason(saved, fixtures, club), [club, saved, fixtures]);
-  // A player's detail opens in a dialog over the report.
-  const [selected, setSelected] = useState<{ playerId: string; teamName: string } | null>(null);
+  // The open player is the host's: it comes from the URL. An id there may name no one
+  // in this club's report, and then no dialog opens.
+  const shown = playerId && playerSides(breakdown, playerId).length > 0 ? playerId : null;
 
   return (
     <>
@@ -88,21 +95,23 @@ export function ClubEligibilityReport({ club, saved, fixtures }: ClubEligibility
           gaps={gaps}
           season={saved.season}
           recordsUpdated={saved.generatedAt || undefined}
-          onPlayerSelect={(playerId, teamName) => setSelected({ playerId, teamName })}
+          playerHref={playerHref}
           locked={locked}
           transfers={saved.transfers}
         />
       </div>
-      {selected && (
+      {shown && onClose && (
         <PlayerDialog
+          // A new player is a new dialog, opened afresh.
+          key={shown}
           club={club}
           saved={saved}
           fixtures={fixtures}
           breakdown={breakdown}
-          selected={selected}
+          playerId={shown}
           // This season's players also have a page of their own, to keep or share.
-          pageHref={locked ? undefined : routes.player(selected.playerId)}
-          onClose={() => setSelected(null)}
+          pageHref={locked ? undefined : routes.player(shown)}
+          onClose={onClose}
         />
       )}
     </>
