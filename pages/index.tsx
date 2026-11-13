@@ -21,7 +21,13 @@ export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   // isn't there yet: list it from the last season, marked as having no games yet.
   const last = pastSeasons[0];
   const withoutGames = last
-    ? { season: last, clubs: clubsWithoutFixtures(index.clubs, (await published.season(last.slug)).clubs) }
+    ? {
+        season: last,
+        clubs: clubsWithoutFixtures(
+          { clubs: index.clubs, fixtures: await published.fixtures() },
+          await published.season(last.slug),
+        ),
+      }
     : null;
   return {
     props: { clubs: index.clubs, season: index.season, generatedAt: index.generatedAt, pastSeasons, withoutGames },
