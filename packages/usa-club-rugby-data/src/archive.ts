@@ -1,4 +1,5 @@
 import type { ArchiveFixturesFile, ArchiveMatchesFile } from './data.ts';
+import { markForfeits } from './forfeit.ts';
 import type { Club, EligibilityRules } from './types.ts';
 import { currentSeason, type FeedFixture, isResult, sortFixtures } from './feeds.ts';
 import { historicalClubs, type HistoricalClub } from './historicalSides.ts';
@@ -200,8 +201,13 @@ export function buildPublished(
   now: Date,
 ): PublishedData {
   const season = currentSeason(fixtures, now);
-  const seasonFixtures = sortFixtures(fixtures.filter((fixture) => fixture.season === season));
   const seasonMatches = matches.filter((match) => match.fixture.season === season);
+  const seasonFixtures = sortFixtures(
+    markForfeits(
+      fixtures.filter((fixture) => fixture.season === season),
+      seasonMatches,
+    ),
+  );
   // A summer 7s match counts for no one, so it gives no rows or gaps.
   const results = seasonFixtures.filter((fixture) => isResult(fixture, now) && !inExcludedMonth(fixture, rules));
   const participation = buildParticipationSnapshot(aggregatePlayerHistory(seasonMatches).values(), results, now);
@@ -221,8 +227,13 @@ export function buildLockedSeason(
   now: Date,
   rules: EligibilityRules = rulesForSeason(season),
 ): LockedSeasonData {
-  const seasonFixtures = sortFixtures(fixtures.filter((fixture) => fixture.season === season));
   const seasonMatches = matches.filter((match) => match.fixture.season === season);
+  const seasonFixtures = sortFixtures(
+    markForfeits(
+      fixtures.filter((fixture) => fixture.season === season),
+      seasonMatches,
+    ),
+  );
   const results = seasonFixtures.filter((fixture) => isResult(fixture, now) && !inExcludedMonth(fixture, rules));
   const participation = buildParticipationSnapshot(aggregatePlayerHistory(seasonMatches).values(), results, now);
   const { clubs: found, unplacedTeams } = historicalClubs(seasonFixtures, rules);

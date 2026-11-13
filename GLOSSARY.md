@@ -61,6 +61,9 @@ A team in a Locked Season that can't be assessed: a round or one-off entry, a te
 **Waiver Required**:
 A player in a Locked Season who played for more than one club that season. Shown only at the last club they played for, with their other clubs' games listed but not counted.
 
+**Forfeit**:
+A game one side didn't play: marked Forfeit in Rugby Xplorer, or entered as a result where one side scored nothing and every score was a penalty try, at least three of them. It counts for the winning side's rostered players and no one else (Reg 3.4(h)).
+
 **Unreported Game**:
 A current-season NCS Qualifying Match more than 14 days past kickoff with no result, a result with no lineup for a side, or a side that listed more than 15 players with no substitute recorded coming on. Listed on the unreported games page for chasing; the last is a flag to check, not a proven error.
 

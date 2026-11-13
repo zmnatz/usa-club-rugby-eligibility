@@ -1,3 +1,4 @@
+import { isForfeit } from './forfeit.ts';
 import { type FixtureSides, isClubSide, listClubs } from './clubFixtures.ts';
 import { computeBreakdown } from './eligibility.ts';
 import { isQualifying, isQualifyingMatch } from './qualifying.ts';
@@ -166,7 +167,7 @@ export function playerRounds({
     if (fixture.status === 'Postponed') return 'postponed';
     const code = rows.find((row) => row.teamName === teamName && row.competition === fixture.compName)
       ?.rounds[fixture.id];
-    if (fixture.status === 'Forfeit') return code && code !== 'R' ? 'forfeit-rostered' : 'forfeit';
+    if (isForfeit(fixture)) return code && code !== 'R' ? 'forfeit-rostered' : 'forfeit';
     if (code === 'Start') return 'started';
     if (code === 'Sub') return 'substitute';
     if (code === 'R') return 'unused';

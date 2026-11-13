@@ -1,3 +1,4 @@
+import { isForfeit } from './forfeit.ts';
 import { divisionOf, type FixtureSides } from './clubFixtures.ts';
 import { isQualifyingMatch } from './qualifying.ts';
 import type { Club, EligibilityRules, RemainingMatches } from './types.ts';
@@ -39,7 +40,7 @@ export function possibleFixtures(
   const upcoming = fixtures.filter((fixture) => {
     return (
       new Date(fixture.dateTime) > now &&
-      fixture.status !== 'Forfeit' &&
+      !isForfeit(fixture) &&
       fixture.status !== 'Postponed' &&
       fixture.homeTeam.score === '' &&
       fixture.awayTeam.score === '' &&

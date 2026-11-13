@@ -113,6 +113,10 @@ describe('unreportedGames', () => {
     ).toEqual([]);
   });
 
+  it('leaves out a forfeit even when a side has a gap', () => {
+    expect(run([fixture('f1', { status: 'Forfeit', homeTeam: { name: 'Rocky Gorge MD1', score: '28' }, awayTeam: { name: 'NOVA MD1', score: '0' } })], [gap('f1')])).toEqual([]);
+  });
+
   it("leaves out a game between teams that aren't any club's assessed side", () => {
     expect(
       run([unplayed('f1', { homeTeam: { name: 'Mad River MD4', score: '' }, awayTeam: { name: 'Boston MD4', score: '' } })]),

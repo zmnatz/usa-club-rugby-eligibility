@@ -1,4 +1,5 @@
 import { type FeedFixture, isResult } from './feeds.ts';
+import { isForfeit } from './forfeit.ts';
 import type { PublishedClub } from './published.ts';
 import { isQualifyingMatch } from './qualifying.ts';
 import type { ParticipationGap } from './snapshot.ts';
@@ -18,8 +19,8 @@ export const FULL_SIDE = 15;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Fixtures in these states aren't waiting on a result: the game won't be played as
- *  scheduled, or the forfeit is the result. */
-const SETTLED_STATUSES = new Set(['Cancelled', 'Postponed', 'Forfeit']);
+ *  scheduled. */
+const SETTLED_STATUSES = new Set(['Cancelled', 'Postponed']);
 
 export type UnreportedReason =
   | { kind: 'no-result' }
@@ -86,7 +87,8 @@ export function unreportedGames({ fixtures, gaps, clubs, rules, now }: Unreporte
   const games: UnreportedGame[] = [];
   for (const fixture of fixtures) {
     const { homeTeam, awayTeam } = fixture;
-    if (!homeTeam.name || !awayTeam.name) continue;
+    // A forfeit has nothing more to enter: its result is the forfeit.
+    if (!homeTeam.name || !awayTeam.name || isForfeit(fixture)) continue;
     if (!clubOf.has(homeTeam.name) && !clubOf.has(awayTeam.name)) continue;
     if (!isQualifyingMatch(fixture, rules)) continue;
     const overdueMs = now.getTime() - new Date(fixture.dateTime).getTime() - UNREPORTED_LEEWAY_DAYS * DAY_MS;
