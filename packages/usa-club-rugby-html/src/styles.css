@@ -234,15 +234,11 @@ textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; 
 .ec-dialog { max-width: min(960px, calc(100vw - 32px)); width: 100%; max-height: calc(100vh - 32px); overflow: auto; background: var(--ec-surface); color: inherit; border: 1px solid var(--ec-border); border-radius: var(--ec-radius); padding: var(--ec-gap); }
 .ec-dialog::backdrop { background: rgb(0 0 0 / 0.5); }
 
-/* Unreported games: filtering by division and reason, from the controls' own state. */
-.ec-unreported:has(input[name="unreported-division"][value="M1"]:checked) tbody tr:not([data-divisions~="M1"]),
-.ec-unreported:has(input[name="unreported-division"][value="M2"]:checked) tbody tr:not([data-divisions~="M2"]),
-.ec-unreported:has(input[name="unreported-division"][value="M3"]:checked) tbody tr:not([data-divisions~="M3"]),
-.ec-unreported:has(input[name="unreported-division"][value="W1"]:checked) tbody tr:not([data-divisions~="W1"]),
-.ec-unreported:has(input[name="unreported-division"][value="W2"]:checked) tbody tr:not([data-divisions~="W2"]),
-.ec-unreported:has(input[name="unreported-reason"][value="no-result"]:checked) tbody tr:not([data-reasons~="no-result"]),
-.ec-unreported:has(input[name="unreported-reason"][value="no-lineup"]:checked) tbody tr:not([data-reasons~="no-lineup"]),
-.ec-unreported:has(input[name="unreported-reason"][value="no-substitutions"]:checked) tbody tr:not([data-reasons~="no-substitutions"]) { display: none; }
+/* Unreported games: a collapsible group per division. */
+.ec-group + .ec-group { margin-top: 16px; }
+.ec-group-title { font-weight: 600; }
+.ec-inline { flex-direction: row; align-items: center; gap: 8px; }
+.ec-inline .ec-input { width: auto; padding: 4px 8px; }
 .ec-reasons { margin: 0; padding-left: 1.1em; }
 .ec-table td.ec-flagged { background: var(--ec-warning-bg); box-shadow: inset 3px 0 0 var(--ec-warning); }
 .ec-table td.ec-flagged > :first-child { font-weight: 600; }

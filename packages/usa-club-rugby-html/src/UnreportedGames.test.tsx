@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import type { UnreportedGame } from '@zmnatz/usa-club-rugby-data';
 import { EligibilityLinksProvider, type EligibilityRoutes } from './links.tsx';
-import { UnreportedGames } from './UnreportedGames.tsx';
+import { type UnreportedFilters, UnreportedGames } from './UnreportedGames.tsx';
 
 const routes: EligibilityRoutes = {
   club: (key) => `/teams/${key}.html`,
@@ -36,7 +36,6 @@ describe('UnreportedGames', () => {
     renderGames([game]);
     const [, row] = screen.getAllByRole('row');
     const cells = within(row).getAllByRole('cell');
-    expect(cells[0].textContent).toContain('6 days overdue');
     expect(within(cells[1]).getByRole('link', { name: 'Harbor City' }).getAttribute('href')).toBe(
       '/teams/harbor-city.html',
     );
@@ -61,20 +60,23 @@ describe('UnreportedGames', () => {
     expect(flagged(noResult)).toEqual([false, false, false, false, false]);
   });
 
-  it("marks each row with its divisions and reasons for the stylesheet's filters", () => {
-    renderGames([game]);
-    const [, row] = screen.getAllByRole('row');
-    expect(row.getAttribute('data-divisions')).toBe('M1 M2');
-    expect(row.getAttribute('data-reasons')).toBe('no-lineup no-substitutions');
+  it('groups games by division in collapsible sections, a cross-division game under the higher', () => {
+    renderGames([game, { ...game, fixtureId: 'f2', divisions: ['W2'] }, { ...game, fixtureId: 'f3', divisions: [] }]);
+    const groups = document.querySelectorAll('details');
+    expect([...groups].map((group) => group.querySelector('summary')?.textContent)).toEqual([
+      "Men's D1 (1 game)",
+      "Women's D2 (1 game)",
+      'Other (1 game)',
+    ]);
+    expect([...groups].every((group) => group.open)).toBe(true);
   });
 
   it('offers only the divisions and reasons the games have', () => {
     renderGames([game]);
-    const division = screen.getByRole('group', { name: 'Division' });
-    expect(within(division).getAllByRole('radio').map((radio) => (radio as HTMLInputElement).value)).toEqual([
+    const division = screen.getByRole('combobox', { name: 'Division' });
+    expect(within(division).getAllByRole('option').map((option) => (option as HTMLOptionElement).value)).toEqual([
       'all',
       'M1',
-      'M2',
     ]);
     const reason = screen.getByRole('group', { name: 'Reason' });
     expect(within(reason).getAllByRole('radio').map((radio) => (radio as HTMLInputElement).value)).toEqual([
@@ -84,7 +86,7 @@ describe('UnreportedGames', () => {
     ]);
   });
 
-  it('counts the games the filters leave showing', () => {
+  it('filters by division and reason, and counts the games left', () => {
     const noResult: UnreportedGame = {
       ...game,
       fixtureId: 'f2',
@@ -93,13 +95,34 @@ describe('UnreportedGames', () => {
     };
     renderGames([game, noResult]);
     const heading = () => screen.getByRole('heading', { level: 2 }).textContent;
+    const rows = () => screen.queryAllByRole('row').length;
+    const division = screen.getByRole('combobox', { name: 'Division' });
     expect(heading()).toBe('2 games');
-    fireEvent.click(within(screen.getByRole('group', { name: 'Division' })).getByLabelText("Women's D2"));
+    fireEvent.change(division, { target: { value: 'W2' } });
     expect(heading()).toBe('1 of 2 games');
+    expect(rows()).toBe(2);
     fireEvent.click(within(screen.getByRole('group', { name: 'Reason' })).getByLabelText('No lineup'));
     expect(heading()).toBe('0 of 2 games');
-    fireEvent.click(within(screen.getByRole('group', { name: 'Division' })).getByLabelText('All'));
+    expect(screen.getByText('No games match these filters.')).toBeTruthy();
+    fireEvent.change(division, { target: { value: 'all' } });
     expect(heading()).toBe('1 of 2 games');
+  });
+
+  it('takes its filters from the host, reads an unknown value as all, and reports changes', () => {
+    const changes: UnreportedFilters[] = [];
+    render(
+      <EligibilityLinksProvider Link="a" routes={routes}>
+        <UnreportedGames
+          games={[game, { ...game, fixtureId: 'f2', divisions: ['W2'] }]}
+          filters={{ division: 'W2', reason: 'nonsense' }}
+          onFiltersChange={(next) => changes.push(next)}
+        />
+      </EligibilityLinksProvider>,
+    );
+    expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('1 of 2 games');
+    expect((screen.getByLabelText('All') as HTMLInputElement).checked).toBe(true);
+    fireEvent.click(screen.getByLabelText('No lineup'));
+    expect(changes).toEqual([{ division: 'W2', reason: 'no-lineup' }]);
   });
 
   it('says so when no game is overdue', () => {

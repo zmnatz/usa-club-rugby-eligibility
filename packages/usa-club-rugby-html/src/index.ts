@@ -19,4 +19,9 @@ export { MatchParticipationReport, type MatchParticipationReportProps } from './
 export { ReportProblemNote, type ReportProblemNoteProps } from './ReportProblemNote.tsx';
 export { SeasonRules, type SeasonRulesProps } from './SeasonRules.tsx';
 export { SkipToFirstPlayer } from './SkipToFirstPlayer.tsx';
-export { UnreportedGames, type UnreportedGamesProps } from './UnreportedGames.tsx';
+export {
+  ALL_UNREPORTED,
+  type UnreportedFilters,
+  UnreportedGames,
+  type UnreportedGamesProps,
+} from './UnreportedGames.tsx';
