@@ -122,26 +122,21 @@ function requestedPlayer(path: string): string | undefined {
   return pathname.match(/^\/player\/([^/]+)/)?.[1];
 }
 
-// The clubs a PR's build needs: the defaults, each club a requested page shows,
-// and every club a requested player is listed for. Unknown clubs and players are
-// left out, so the build still runs and the comment shows their page as not found.
+// The clubs a PR's build needs: the defaults and every club a requested player is
+// listed for, since BUILD_CLUBS scopes the player pages. Club pages are generated on
+// request (ADR 013), so a requested club needs nothing. Unknown players are left out,
+// so the build still runs and the comment shows their page as not found.
 export function clubsToBuild({
   defaults,
   requested,
-  clubs,
   playerClubs,
 }: {
   defaults: string[];
   requested: PageSpec[];
-  clubs: string[];
   playerClubs: Map<string, string[]>;
 }): string[] {
   const wanted = new Set(defaults);
   for (const { path } of requested) {
-    const club = path.match(/^\/club\/([^/]+)/)?.[1];
-    if (club && clubs.includes(club)) {
-      wanted.add(club);
-    }
     const player = requestedPlayer(path);
     for (const key of player ? (playerClubs.get(player) ?? []) : []) {
       wanted.add(key);

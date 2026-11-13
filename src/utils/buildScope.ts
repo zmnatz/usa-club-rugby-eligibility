@@ -1,7 +1,8 @@
 /**
- * Which clubs a build generates pages for. Set `BUILD_CLUBS` for a quicker local
- * build: a number takes that many clubs from the start of the list, and a
- * comma-separated list names them by club key. Unset builds every club, and so does
+ * Which clubs' players a build generates pages for (club pages are generated on
+ * request, ADR 013). Set `BUILD_CLUBS` for a quicker local build: a number takes that
+ * many clubs from the start of the list, and a comma-separated list names them by
+ * club key. Unset builds every club, and so does
  * a Netlify build (which sets `NETLIFY`), so a deployed site is always complete.
  */
 export function selectClubs<Club extends { key: string }>(

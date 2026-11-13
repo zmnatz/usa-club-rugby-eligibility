@@ -8,7 +8,6 @@ import {
   type ParticipationSnapshot,
 } from '@zmnatz/usa-club-rugby-data';
 import { Crumbs } from '@/components/Crumbs';
-import { selectClubs } from '@/utils/buildScope';
 import { clubPath, clubPlayerPath, openPlayer } from '@/utils/paths';
 import { published, type PublishedClub } from '@/utils/published';
 
@@ -18,16 +17,16 @@ interface ClubPageProps {
   fixtures: FeedFixture[];
 }
 
-export const getStaticPaths: GetStaticPaths = async () => {
-  return {
-    paths: selectClubs(await published.clubs()).map((club) => ({ params: { club: club.key } })),
-    fallback: false,
-  };
-};
+// No club page is generated at build time. The first request for one renders it in
+// full (verdicts and match table in the HTML) and it is cached until the next deploy,
+// which is the only time the data changes; there is no revalidate (ADR 013). The
+// function reads only the files listed for this route in next.config.ts.
+export const getStaticPaths: GetStaticPaths = async () => ({ paths: [], fallback: 'blocking' });
 
 export const getStaticProps: GetStaticProps<ClubPageProps> = async ({ params }) => {
   const key = Array.isArray(params?.club) ? params?.club[0] : params?.club;
   const club = (await published.clubs()).find((candidate) => candidate.key === key);
+  // A key that isn't in the published index is the site's 404, cached like a page.
   if (!club) return { notFound: true };
   const [{ snapshot }, fixtures] = await Promise.all([published.club(club.key), published.fixtures()]);
 

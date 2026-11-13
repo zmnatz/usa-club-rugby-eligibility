@@ -145,14 +145,15 @@ jobs:
       # build-clubs.ts reads the club list from the generated data.
       - run: bun run data
 
-      # The default club, plus the clubs of any club or player pages the PR lists.
+      # The default club, plus the clubs of any player pages the PR lists. Club
+      # pages render on request, so they need nothing in the build.
       - name: Work out which clubs to build
         id: clubs
         run: node test/playwright/build-clubs.ts --default pittsburgh-forge --pr-body pr-body.md >> "$GITHUB_OUTPUT"
 
       # A partial build, never deployed. selectClubs ignores BUILD_CLUBS only on
       # Netlify, so a deployed site is always complete.
-      - name: Build those clubs
+      - name: Build those clubs' players
         env:
           BUILD_CLUBS: ${{ steps.clubs.outputs.clubs }}
         run: bun run build
