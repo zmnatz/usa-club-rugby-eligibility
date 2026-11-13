@@ -3,9 +3,10 @@ import type { NextConfig } from 'next';
 
 // Netlify's Next.js runtime builds and serves this app (ADR 012). Club and player pages
 // are generated on first request (ADRs 014, 015), and so are a Locked Season's pages and
-// its stats page (ADR 016); every other page at build time.
+// its stats page (ADR 016). The all-seasons stats page is rendered on request and cached
+// by the CDN until the next deploy (ADR 018); every other page at build time.
 
-// A Locked Season's page, its clubs' and its stats page read the list of seasons and that
+// A Locked Season's page, its clubs', its stats page and the all-seasons stats page read the list of seasons and that
 // season's file, and nothing of the current season's nor the seasons' player indexes. The
 // season files are matched by their slug (2024-25): `*.json` would also name the player
 // indexes, and an exclude doesn't remove a file an include names.
@@ -43,12 +44,14 @@ const nextConfig: NextConfig = {
     '/season/[[]season[]]': SEASON_PAGE_FILES,
     '/season/[[]season[]]/[[]club[]]': SEASON_PAGE_FILES,
     '/stats/[[]season[]]': SEASON_PAGE_FILES,
+    '/stats': SEASON_PAGE_FILES,
   },
   outputFileTracingExcludes: {
     '/club/[[]club[]]': ['./public/data/seasons/**', './public/data/seasons.json', './public/data/players.json'],
     '/season/[[]season[]]': SEASON_PAGE_EXCLUDES,
     '/season/[[]season[]]/[[]club[]]': SEASON_PAGE_EXCLUDES,
     '/stats/[[]season[]]': SEASON_PAGE_EXCLUDES,
+    '/stats': SEASON_PAGE_EXCLUDES,
   },
 };
 
