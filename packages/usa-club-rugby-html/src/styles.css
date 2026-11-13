@@ -244,3 +244,5 @@ textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; 
 .ec-unreported:has(input[name="unreported-reason"][value="no-lineup"]:checked) tbody tr:not([data-reasons~="no-lineup"]),
 .ec-unreported:has(input[name="unreported-reason"][value="no-substitutions"]:checked) tbody tr:not([data-reasons~="no-substitutions"]) { display: none; }
 .ec-reasons { margin: 0; padding-left: 1.1em; }
+.ec-table td.ec-flagged { background: var(--ec-warning-bg); box-shadow: inset 3px 0 0 var(--ec-warning); }
+.ec-table td.ec-flagged > :first-child { font-weight: 600; }

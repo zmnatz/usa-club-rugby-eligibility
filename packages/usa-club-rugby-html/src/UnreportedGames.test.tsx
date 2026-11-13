@@ -47,6 +47,20 @@ describe('UnreportedGames', () => {
     expect(cells[4].textContent).toContain('No substitutions: Bayside MD2');
   });
 
+  it('emphasizes each side a gap names, and neither side for a missing result', () => {
+    renderGames([
+      { ...game, reasons: [{ kind: 'no-lineup', teamName: 'Bayside MD2' }] },
+      { ...game, fixtureId: 'f2', reasons: [{ kind: 'no-result' }] },
+    ]);
+    const [, gap, noResult] = screen.getAllByRole('row');
+    const flagged = (row: HTMLElement) =>
+      within(row)
+        .getAllByRole('cell')
+        .map((cell) => cell.classList.contains('ec-flagged'));
+    expect(flagged(gap)).toEqual([false, false, true, false, false]);
+    expect(flagged(noResult)).toEqual([false, false, false, false, false]);
+  });
+
   it("marks each row with its divisions and reasons for the stylesheet's filters", () => {
     renderGames([game]);
     const [, row] = screen.getAllByRole('row');

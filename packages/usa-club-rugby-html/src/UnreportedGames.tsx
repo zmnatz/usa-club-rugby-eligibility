@@ -58,6 +58,11 @@ function Filter({ name, legend, options, onChange }: FilterProps) {
   );
 }
 
+/** Whether a side is the one a lineup or substitutions reason names. A missing result is
+ *  the game's, so it marks neither side. */
+const hasGap = (game: UnreportedGame, side: UnreportedSide) =>
+  game.reasons.some((reason) => reason.kind !== 'no-result' && reason.teamName === side.teamName);
+
 function Side({ side }: { side: UnreportedSide }) {
   const { Link, routes } = useEligibilityLinks();
   return (
@@ -129,12 +134,11 @@ export function UnreportedGames({ games }: UnreportedGamesProps) {
                     {game.daysOverdue === 1 ? '1 day overdue' : `${game.daysOverdue} days overdue`}
                   </div>
                 </td>
-                <td>
-                  <Side side={game.home} />
-                </td>
-                <td>
-                  <Side side={game.away} />
-                </td>
+                {[game.home, game.away].map((side) => (
+                  <td key={side.teamName} className={hasGap(game, side) ? 'ec-flagged' : undefined}>
+                    <Side side={side} />
+                  </td>
+                ))}
                 <td>
                   {game.divisions.map(divisionLabel).join(' / ') || '—'}
                   <div className="ec-muted ec-small">{game.competition}</div>
