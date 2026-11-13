@@ -233,6 +233,7 @@ textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; 
 
 /* Unreported games: a collapsible group per competition. */
 .ec-group + .ec-group { margin-top: 16px; }
+.ec-group-controls { gap: 8px 12px; margin-bottom: 12px; }
 .ec-group-title { font-weight: 600; }
 .ec-inline { flex-direction: row; align-items: center; gap: 8px; }
 .ec-inline .ec-input { width: auto; padding: 4px 8px; }

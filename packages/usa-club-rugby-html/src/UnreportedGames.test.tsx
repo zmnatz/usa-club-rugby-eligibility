@@ -187,6 +187,34 @@ describe('UnreportedGames', () => {
     expect(cols).toEqual(['ec-col-date', 'ec-col-club', 'ec-col-club', '']);
   });
 
+  it('expands and collapses every group at once', () => {
+    renderGames([game, { ...game, fixtureId: 'f2', competition: 'Capital Men D3' }]);
+    const open = () => [...document.querySelectorAll('details')].map((group) => group.open);
+    expect(open()).toEqual([true, true]);
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse all' }));
+    expect(open()).toEqual([false, false]);
+    fireEvent.click(screen.getByRole('button', { name: 'Expand all' }));
+    expect(open()).toEqual([true, true]);
+  });
+
+  it('lists every game in one table, naming its competition, without the grouping', () => {
+    renderGames([game, { ...game, fixtureId: 'f2', competition: '2027 Capital Men D3' }]);
+    fireEvent.click(screen.getByLabelText('Group by competition'));
+    expect(document.querySelectorAll('details')).toHaveLength(0);
+    expect(screen.queryByRole('button', { name: 'Expand all' })).toBeNull();
+    expect(screen.getAllByRole('table')).toHaveLength(1);
+    expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
+      'Date',
+      'Competition',
+      'Home',
+      'Away',
+      'Reason',
+    ]);
+    const [, first, second] = screen.getAllByRole('row');
+    expect(within(first).getAllByRole('cell')[1].textContent).toBe('MAC Men D1');
+    expect(within(second).getAllByRole('cell')[1].textContent).toBe('Capital Men D3');
+  });
+
   it('says so when no game is overdue', () => {
     renderGames([]);
     expect(screen.getByText('No games are overdue.')).toBeTruthy();

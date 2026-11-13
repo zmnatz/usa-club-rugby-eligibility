@@ -73,7 +73,7 @@ function Side({ side }: { side: UnreportedSide }) {
   );
 }
 
-function GameRow({ game }: { game: UnreportedGame }) {
+function GameRow({ game, showCompetition }: { game: UnreportedGame; showCompetition: boolean }) {
   return (
     <tr>
       <td>
@@ -81,6 +81,7 @@ function GameRow({ game }: { game: UnreportedGame }) {
           {formatDate(game.dateTime)}
         </a>
       </td>
+      {showCompetition && <td>{competitionLabel(game.competition)}</td>}
       {[game.home, game.away].map((side) => (
         <td key={side.teamName} className={hasGap(game, side) ? 'ec-flagged' : undefined}>
           <Side side={side} />
@@ -97,10 +98,54 @@ function GameRow({ game }: { game: UnreportedGame }) {
   );
 }
 
+/** One table of games. Every table in the list shares its column widths. Without the
+ *  grouping, it names each game's competition. */
+function GamesTable({ games, showCompetition }: { games: UnreportedGame[]; showCompetition: boolean }) {
+  return (
+    <div className="ec-table-wrap">
+      <table className="ec-table ec-unreported-table">
+        <colgroup>
+          <col className="ec-col-date" />
+          {showCompetition && <col />}
+          <col className="ec-col-club" />
+          <col className="ec-col-club" />
+          <col />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Date</th>
+            {showCompetition && <th>Competition</th>}
+            <th>Home</th>
+            <th>Away</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          {games.map((game) => (
+            <GameRow key={game.fixtureId} game={game} showCompetition={showCompetition} />
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /** Current-season games whose record still needs entering, in a collapsible group per
- *  competition, filterable by division, competition and reasons. */
+ *  competition or one list, filterable by division, competition and reasons. */
 export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedGamesProps) {
   const [own, setOwn] = useState(DEFAULT_UNREPORTED);
+  const [grouped, setGrouped] = useState(true);
+  // The groups closed, by competition, so Expand all and Collapse all and a group's own
+  // summary all work on one state.
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+  const setOpen = (name: string, open: boolean) =>
+    setCollapsed((current) => {
+      if (open !== current.has(name)) return current;
+      const next = new Set(current);
+      if (open) next.delete(name);
+      else next.add(name);
+      return next;
+    });
   const current = filters ?? own;
   const change = (next: Partial<UnreportedFilters>) => (onFiltersChange ?? setOwn)({ ...current, ...next });
 
@@ -205,37 +250,42 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
           </fieldset>
         </div>
       </div>
-      {groups.length === 0 && <p className="ec-muted">No games match these filters.</p>}
-      {groups.map((group) => (
-        <details key={group.name} className="ec-details ec-group" open>
-          <summary className="ec-group-title">
-            {group.label} <span className="ec-muted ec-small">({gameCount(group.games.length)})</span>
-          </summary>
-          <div className="ec-table-wrap">
-            <table className="ec-table ec-unreported-table">
-              <colgroup>
-                <col className="ec-col-date" />
-                <col className="ec-col-club" />
-                <col className="ec-col-club" />
-                <col />
-              </colgroup>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Home</th>
-                  <th>Away</th>
-                  <th>Reason</th>
-                </tr>
-              </thead>
-              <tbody>
-                {group.games.map((game) => (
-                  <GameRow key={game.fixtureId} game={game} />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </details>
-      ))}
+      <div className="ec-row ec-group-controls">
+        <label className="ec-small">
+          <input type="checkbox" checked={grouped} onChange={(event) => setGrouped(event.target.checked)} /> Group by
+          competition
+        </label>
+        {grouped && (
+          <>
+            <button type="button" className="ec-btn" onClick={() => setCollapsed(new Set())}>
+              Expand all
+            </button>
+            <button
+              type="button"
+              className="ec-btn"
+              onClick={() => setCollapsed(new Set(competitions.map(({ name }) => name)))}
+            >
+              Collapse all
+            </button>
+          </>
+        )}
+      </div>
+      {shown.length === 0 && <p className="ec-muted">No games match these filters.</p>}
+      {!grouped && shown.length > 0 && <GamesTable games={shown} showCompetition />}
+      {grouped &&
+        groups.map((group) => (
+          <details
+            key={group.name}
+            className="ec-details ec-group"
+            open={!collapsed.has(group.name)}
+            onToggle={(event) => setOpen(group.name, event.currentTarget.open)}
+          >
+            <summary className="ec-group-title">
+              {group.label} <span className="ec-muted ec-small">({gameCount(group.games.length)})</span>
+            </summary>
+            <GamesTable games={group.games} showCompetition={false} />
+          </details>
+        ))}
     </section>
   );
 }
