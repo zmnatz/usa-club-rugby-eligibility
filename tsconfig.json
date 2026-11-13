@@ -17,6 +17,7 @@
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "moduleResolution": "bundler",
     "resolveJsonModule": true,

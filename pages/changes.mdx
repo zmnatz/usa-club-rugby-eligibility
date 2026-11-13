@@ -1,0 +1,47 @@
+import { MDXProvider } from '@mdx-js/react';
+import { useEffect } from 'react';
+import { PageLink } from '@/components/Crumbs';
+
+export const elements = {
+  a: ({ href, ...props }) => {
+    if (/^(https?:|mailto:|\/\/)/.test(href)) {
+      return <a href={href} target="_blank" rel="noopener noreferrer" {...props} />;
+    }
+    if (href.startsWith('#')) return <a href={href} {...props} />;
+    return <PageLink href={href} {...props} />;
+  },
+};
+
+export const openLinkedEntry = () => {
+  // A browser won't expand a closed <details> to reveal its anchor, so an entry's
+  // permalink opens it.
+  const id = decodeURIComponent(window.location.hash.slice(1));
+  if (!id) return;
+  const entry = document.getElementById(id);
+  if (entry instanceof HTMLDetailsElement) entry.open = true;
+};
+
+export default function Layout({ children }) {
+  useEffect(() => {
+    openLinkedEntry();
+    window.addEventListener('hashchange', openLinkedEntry);
+    return () => window.removeEventListener('hashchange', openLinkedEntry);
+  }, []);
+
+  return (
+    <div className="prose">
+      <MDXProvider components={elements}>{children}</MDXProvider>
+    </div>
+  );
+}
+
+# Data changes
+
+Each nightly update is compared with the one before it. The last 14 are kept here,
+newest first. The newest is open; choose another to see what changed in it. Verdicts
+are counted with the rules in force when the page was built, so a later rules change
+isn't reflected in older entries.
+
+{/* changes:start */}
+
+{/* changes:end */}

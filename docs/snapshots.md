@@ -22,7 +22,8 @@ Each club's file becomes that club's page at `/club/<club-key>/` at build time, 
 1. Reads the council and union feeds from the current season (ADR 001).
 2. Fetches the record of every played match this season, finds clubs from their crests, reads those clubs' feeds, and repeats for any new results.
 3. Writes the archive. Season files are written only when their content changes, but the manifest's `pulledAt` moves on every read, so a night that reaches the CMS commits a new manifest even when no record changed.
-4. Commits `archive` to `main` if anything changed, then builds (which calculates `public/data` from it) and deploys Pages.
+4. Compares the data built from the previous archive with the data built from the new one (`test/ci/data-diff.ts`). If they differ, adds the report as the newest entry on `pages/changes.mdx`, keeping the last 14.
+5. Commits `archive` and the changes page to `main` if anything changed, then builds (which calculates `public/data` from it) and deploys Pages.
 
 Every request has to succeed or nothing is written, so a failed night leaves the previous data in place. The log ends with the number of requests, rate-limit waits and total time.
 

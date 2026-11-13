@@ -17,6 +17,7 @@ rules:
       - path: /player/{player}/
       - path: /csv/
       - path: /methodology/
+      - path: /changes/
   - files:
       - pages/club/**
       - packages/usa-club-rugby-html/src/ClubEligibilityReport.tsx
@@ -39,3 +40,8 @@ rules:
       - pages/methodology.mdx
     routes:
       - path: /methodology/
+  - files:
+      - pages/changes.mdx
+      - test/ci/**
+    routes:
+      - path: /changes/

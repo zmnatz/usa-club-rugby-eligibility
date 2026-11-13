@@ -36,6 +36,20 @@ bun run data           # recalculate public/data from the archive; no CMS reques
 
 Rules are data: the thresholds and excluded competitions are `DEFAULT_RULES` in `packages/usa-club-rugby-data/src/rules.ts`, and every function takes the rules it applies, so a different season's rules can be tried without touching the code.
 
+## See what a change does
+
+A rules change is no longer a data diff in the pull request. CI builds `public/data` from the branch's base and head, compares the two (`test/ci/data-diff.ts`) and comments the result. To do the same locally:
+
+```bash
+git switch --detach <base-commit>
+bun install && bun run data && mv public/data /tmp/data-base
+git switch <branch>
+bun install && bun run data
+node test/ci/data-diff.ts --base /tmp/data-base --head public/data --out report.md
+```
+
+The nightly job runs the same comparison and adds its result to `pages/changes.mdx`, which keeps the last 14 nights.
+
 ## Locked Seasons
 
 Each Locked Season from 2022-23 is published under its own regulations; see "Locked Seasons" in [snapshots.md](snapshots.md) and ADR 006. To recount one, read it with `readSeason(archiveDir, season)` (from `/node`) and pass it to `buildLockedSeason`, which uses `rulesForSeason(season)` unless given other rules.
