@@ -33,7 +33,7 @@ import { fsReader } from '@zmnatz/usa-club-rugby-data/node';
 const local = createPublishedClient({ read: fsReader('public/data') });
 ```
 
-`playerIndex` and `player` work out every club's verdicts on the first lookup. Later lookups with the same options object, or with none, reuse them, so pass a new options object to count from a new `now`.
+`playerIndex()` is the published `players.json`, and `player(id)` with no options finds the player there and reads only the clubs it names. Pass options (custom `rules` or a `now`) and both work out every club's verdicts under them on the first lookup instead; later lookups with the same options object reuse them, so pass a new options object to count from a new `now`.
 
 A player record carries `participation` (Match Participation: matches started plus matches entered as a substitute), `eligible`, `reasons` for a failure, `pending` for the matches an eligible player still needs, `cautions` when one more upper-side match would end an eligible player's eligibility for the rest of the season, and per-round detail in `rows[].rounds`.
 
@@ -52,6 +52,7 @@ import type { PublishedClubFile, PublishedFixturesFile, PublishedIndexFile } fro
 | `index.json` | `PublishedIndexFile` |
 | `fixtures.json` | `PublishedFixturesFile` (`FeedFixture[]`) |
 | `clubs/<key>.json` | `PublishedClubFile` (`PlayerRow[]`, `ParticipationGap[]`) |
+| `players.json` | `PublishedPlayersFile` |
 | `archive/manifest.json` | `ArchiveManifest` |
 | `archive/fixtures/<season>.json` | `ArchiveFixturesFile` |
 | `archive/matches/<season>.json` | `ArchiveMatchesFile` (the raw CMS record, `MatchCentreData`) |

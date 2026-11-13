@@ -19,7 +19,7 @@ interface ClubPageProps {
 
 // No club page is generated at build time. The first request for one renders it in
 // full (verdicts and match table in the HTML) and it is cached until the next deploy,
-// which is the only time the data changes; there is no revalidate (ADR 013). The
+// which is the only time the data changes; there is no revalidate (ADR 014). The
 // function reads only the files listed for this route in next.config.ts.
 export const getStaticPaths: GetStaticPaths = async () => ({ paths: [], fallback: 'blocking' });
 
