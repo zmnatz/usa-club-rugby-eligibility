@@ -41,7 +41,7 @@ function BySeason({
 }) {
   return (
     <div className="ec-table-wrap ec-table-outlined">
-      <table className="ec-table" aria-label={label}>
+      <table className="ec-table ec-table-sticky" aria-label={label}>
         <thead>
           <tr>
             <th>{label}</th>

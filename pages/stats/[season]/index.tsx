@@ -41,7 +41,7 @@ function SeasonStatsBody({ summary }: { summary: SeasonSummary }) {
         {count(summary.sides, 'side')} in all), with {count(summary.transfers, 'transfer')} between clubs.
       </p>
       <div className="ec-table-wrap ec-table-outlined">
-        <table className="ec-table" aria-label="Eligibility by division">
+        <table className="ec-table ec-table-sticky" aria-label="Eligibility by division">
           <thead>
             <tr>
               <th>Division</th>

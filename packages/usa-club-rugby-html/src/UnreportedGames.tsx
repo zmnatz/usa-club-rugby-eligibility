@@ -92,22 +92,24 @@ function GameRow({ game, showCompetition }: { game: UnreportedGame; showCompetit
     <tr>
       {/* A missing result is the game's, not a side's, so it marks the date. */}
       <td
+        data-label="Date"
         className={game.reasons.some((reason) => reason.kind === 'no-result') ? 'ec-flagged ec-flagged--info' : undefined}
       >
         <a href={matchUrl(game.fixtureId)} target="_blank" rel="noopener noreferrer">
           {formatDate(game.dateTime)}
         </a>
       </td>
-      {showCompetition && <td>{competitionLabel(game.competition)}</td>}
-      {[game.home, game.away].map((side) => (
+      {showCompetition && <td data-label="Competition">{competitionLabel(game.competition)}</td>}
+      {[game.home, game.away].map((side, index) => (
         <td
           key={side.teamName}
+          data-label={index === 0 ? 'Home' : 'Away'}
           className={sideTone(game, side) ? `ec-flagged ec-flagged--${sideTone(game, side)}` : undefined}
         >
           <Side side={side} />
         </td>
       ))}
-      <td>
+      <td data-label="Reason">
         <ul className="ec-reasons">
           {game.reasons.map((reason) => (
             <li key={reasonText(reason)} className={`ec-tone-${toneOf(reason.kind)}`}>
@@ -121,11 +123,12 @@ function GameRow({ game, showCompetition }: { game: UnreportedGame; showCompetit
 }
 
 /** One table of games. Every table in the list shares its column widths. Without the
- *  grouping, it names each game's competition. */
+ *  grouping, it names each game's competition. On a narrow screen each game stacks into a
+ *  card, its cells labelled from `data-label` (`ec-table-stack`). */
 function GamesTable({ games, showCompetition }: { games: UnreportedGame[]; showCompetition: boolean }) {
   return (
     <div className="ec-table-wrap">
-      <table className="ec-table ec-unreported-table">
+      <table className="ec-table ec-table-stack ec-unreported-table">
         <colgroup>
           <col className="ec-col-date" />
           {showCompetition && <col />}

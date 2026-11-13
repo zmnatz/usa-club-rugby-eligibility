@@ -106,9 +106,12 @@ function cellContent(
   }
 }
 
+// An optional column's class hides it. The reasons' keeps their text readable on a narrow
+// screen, where the table scrolls sideways.
 const columnClass = (column: ReportColumn) =>
   [
     OPTIONAL_COLUMNS.includes(column.key) ? `col-${column.key}` : '',
+    column.key === 'reasons' ? 'ec-text-cell' : '',
     column.numeric ? 'ec-num' : '',
   ]
     .filter(Boolean)
@@ -175,7 +178,9 @@ function SideTable({ index, breakdown, source, locked, playerHref, transfers }: 
         </div>
       </div>
       <div className="ec-table-wrap">
-        <table className="ec-table">
+        {/* Sorted by its headers, so it stays a table on a narrow screen, the player's name
+            held at the left as the rest scrolls. */}
+        <table className="ec-table ec-table-sticky">
           <thead>
             <tr>
               {columns.map((column) => (

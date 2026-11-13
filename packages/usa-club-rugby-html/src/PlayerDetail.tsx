@@ -78,7 +78,7 @@ function TeamRounds({
         {unused > 0 && `, ${unused} didn't come on`}
       </h3>
       <div className="ec-table-wrap ec-table-outlined">
-        <table className="ec-table">
+        <table className="ec-table ec-table-stack">
           <thead>
             <tr>
               <th>Round</th>
@@ -93,13 +93,13 @@ function TeamRounds({
           <tbody>
             {rostered.map((round) => (
               <tr key={round.fixtureId}>
-                <td>{round.round}</td>
-                <td>{formatDate(round.dateTime)}</td>
-                <td>{round.opponent || 'To be decided'}</td>
-                <td style={{ whiteSpace: 'nowrap' }}>
+                <td data-label="Round">{round.round}</td>
+                <td data-label="Date">{formatDate(round.dateTime)}</td>
+                <td data-label="Opponent">{round.opponent || 'To be decided'}</td>
+                <td data-label="Score" style={{ whiteSpace: 'nowrap' }}>
                   {round.scoreFor || round.scoreAgainst ? `${round.scoreFor} - ${round.scoreAgainst}` : '—'}
                 </td>
-                <td>
+                <td data-label="This player">
                   {ROUND_STATUS[round.status]}
                   {round.substitutionsMissing && (
                     <div className="ec-caption" style={{ color: 'var(--ec-warning)' }}>
@@ -107,8 +107,8 @@ function TeamRounds({
                     </div>
                   )}
                 </td>
-                <td className="ec-center">{round.counted ? 'Yes' : 'No'}</td>
-                <td>{reportLink(round.fixtureId, clubSlug)}</td>
+                <td data-label="Counted" className="ec-center">{round.counted ? 'Yes' : 'No'}</td>
+                <td data-label="Report">{reportLink(round.fixtureId, clubSlug)}</td>
               </tr>
             ))}
           </tbody>
@@ -154,7 +154,7 @@ function PossibleFixtures({ possible, clubSlug }: { possible: PossibleFixture[];
         future playoff matches aren&apos;t always entered in Rugby Xplorer, so this list may be incomplete.
       </span>
       <div className="ec-table-wrap ec-table-outlined">
-        <table className="ec-table">
+        <table className="ec-table ec-table-stack">
           <thead>
             <tr>
               <th>Date</th>
@@ -167,11 +167,11 @@ function PossibleFixtures({ possible, clubSlug }: { possible: PossibleFixture[];
           <tbody>
             {possible.map((fixture) => (
               <tr key={`${fixture.teamName}-${fixture.fixtureId ?? fixture.dateTime}`}>
-                <td>{formatDate(fixture.dateTime)}</td>
-                <td>{fixture.teamName}</td>
-                <td>{fixture.open ? 'Playoff, teams not decided' : fixture.opponent || 'To be decided'}</td>
-                <td>{fixture.competition}</td>
-                <td>{fixture.fixtureId && reportLink(fixture.fixtureId, clubSlug)}</td>
+                <td data-label="Date">{formatDate(fixture.dateTime)}</td>
+                <td data-label="Side">{fixture.teamName}</td>
+                <td data-label="Opponent">{fixture.open ? 'Playoff, teams not decided' : fixture.opponent || 'To be decided'}</td>
+                <td data-label="Competition">{fixture.competition}</td>
+                <td data-label="Report">{fixture.fixtureId && reportLink(fixture.fixtureId, clubSlug)}</td>
               </tr>
             ))}
           </tbody>

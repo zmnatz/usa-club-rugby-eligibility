@@ -265,3 +265,46 @@ textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; 
 .ec-table td.ec-flagged--warning { background: var(--ec-warning-bg); box-shadow: inset 3px 0 0 var(--ec-warning); }
 .ec-table td.ec-flagged--info { background: var(--ec-info-bg); box-shadow: inset 3px 0 0 var(--ec-info); }
 .ec-table td.ec-flagged > :first-child { font-weight: 600; }
+
+/* Tables on a narrow screen (under 600px, as the club directory's columns). Cells pad less.
+ * A table of records (`ec-table-stack`) turns each row into a card, each cell labelled from
+ * its `data-label`, so nothing sits off screen. Its headers stay for screen readers, out of
+ * sight. A sortable or by-column table (`ec-table-sticky`) stays a table and scrolls sideways,
+ * its first column held at the left so every row keeps its name. */
+@media (max-width: 599.98px) {
+  .ec-table th, .ec-table td { padding: 6px 8px; }
+  .ec-table-sticky :is(th, td):first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--ec-surface);
+    box-shadow: inset -1px 0 0 var(--ec-border);
+  }
+  .ec-table-sticky .ec-text-cell { min-width: 14rem; }
+  .ec-table-stack, .ec-table-stack tbody, .ec-table-stack tr, .ec-table-stack td { display: block; }
+  .ec-table-stack { min-width: 0; table-layout: auto; }
+  .ec-table-stack colgroup { display: none; }
+  .ec-table-stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .ec-table-stack tr { padding: 6px 0; border-bottom: 1px solid var(--ec-border); }
+  .ec-table-stack tbody tr:last-child { border-bottom: 0; }
+  /* Doubled class to win over .ec-num and .ec-center. */
+  .ec-table.ec-table-stack td {
+    position: relative;
+    min-height: 1.5em;
+    padding: 4px 8px 4px calc(7.5rem + 8px);
+    border-bottom: 0;
+    text-align: left;
+  }
+  .ec-table-stack td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 8px;
+    width: 7rem;
+    color: var(--ec-muted);
+    font-weight: 600;
+  }
+  .ec-table-stack td:empty { display: none; }
+  /* The filters wrap rather than run off the card. */
+  .ec-segmented { flex-wrap: wrap; row-gap: 4px; }
+  .ec-segmented label { white-space: nowrap; }
+}
