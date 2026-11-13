@@ -41,11 +41,11 @@ export default function UnreportedPage({ games, season, builtAt }: UnreportedPro
   // has no query, so it shows every game until the router reads it.
   const router = useRouter();
   const filters: UnreportedFilters = router.isReady
-    ? { division: queryValue(router.query.division), reason: queryValue(router.query.reason) }
+    ? { competition: queryValue(router.query.competition), reason: queryValue(router.query.reason) }
     : ALL_UNREPORTED;
-  const setFilters = ({ division, reason }: UnreportedFilters) => {
+  const setFilters = ({ competition, reason }: UnreportedFilters) => {
     const query = {
-      ...(division !== 'all' && { division }),
+      ...(competition !== 'all' && { competition }),
       ...(reason !== 'all' && { reason }),
     };
     router.replace({ pathname: router.pathname, query }, undefined, { shallow: true, scroll: false });

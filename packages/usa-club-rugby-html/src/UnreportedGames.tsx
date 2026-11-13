@@ -8,13 +8,13 @@ import {
 import { useState } from 'react';
 import { useEligibilityLinks } from './links.tsx';
 
-/** What the list is filtered to: a division code or reason kind, or `all`. */
+/** What the list is filtered to: a competition name or reason kind, or `all`. */
 export interface UnreportedFilters {
-  division: string;
+  competition: string;
   reason: string;
 }
 
-export const ALL_UNREPORTED: UnreportedFilters = { division: 'all', reason: 'all' };
+export const ALL_UNREPORTED: UnreportedFilters = { competition: 'all', reason: 'all' };
 
 export interface UnreportedGamesProps {
   games: UnreportedGame[];
@@ -24,14 +24,13 @@ export interface UnreportedGamesProps {
   onFiltersChange?: (filters: UnreportedFilters) => void;
 }
 
-/** The divisions games are grouped by, in order, with a group for a game with none. */
+/** How a side's division reads in its row. */
 const DIVISIONS: [string, string][] = [
   ['M1', "Men's D1"],
   ['M2', "Men's D2"],
   ['M3', "Men's D3"],
   ['W1', "Women's D1"],
   ['W2', "Women's D2"],
-  ['other', 'Other'],
 ];
 
 const REASONS: [UnreportedReason['kind'], string][] = [
@@ -41,9 +40,6 @@ const REASONS: [UnreportedReason['kind'], string][] = [
 ];
 
 const divisionLabel = (code: string) => DIVISIONS.find(([value]) => value === code)?.[1] ?? code;
-
-/** The group a game is listed under: its higher division when its sides' differ. */
-const groupOf = (game: UnreportedGame) => game.divisions[0] ?? 'other';
 
 const gameCount = (count: number) => (count === 1 ? '1 game' : `${count} games`);
 
@@ -83,7 +79,6 @@ function GameRow({ game }: { game: UnreportedGame }) {
       ))}
       <td>
         {game.divisions.map(divisionLabel).join(' / ') || '—'}
-        <div className="ec-muted ec-small">{game.competition}</div>
       </td>
       <td>
         <ul className="ec-reasons">
@@ -97,7 +92,7 @@ function GameRow({ game }: { game: UnreportedGame }) {
 }
 
 /** Current-season games whose record still needs entering, in a collapsible group per
- *  division, filterable by division and reason. */
+ *  competition, filterable by competition and reason. */
 export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedGamesProps) {
   const [own, setOwn] = useState(ALL_UNREPORTED);
   const current = filters ?? own;
@@ -111,19 +106,21 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
     );
   }
 
-  const divisions = DIVISIONS.filter(([code]) => games.some((game) => groupOf(game) === code));
+  const competitions = [...new Set(games.map((game) => game.competition))]
+    .sort((a, b) => a.localeCompare(b))
+    .map((name): [string, string] => [name, name]);
   const reasons = REASONS.filter(([kind]) => games.some((game) => game.reasons.some((entry) => entry.kind === kind)));
   const offered = (value: string, options: [string, string][]) =>
     options.some(([option]) => option === value) ? value : 'all';
-  const division = offered(current.division, divisions);
+  const competition = offered(current.competition, competitions);
   const reason = offered(current.reason, reasons);
   const shown = games.filter(
     (game) =>
-      (division === 'all' || groupOf(game) === division) &&
+      (competition === 'all' || game.competition === competition) &&
       (reason === 'all' || game.reasons.some((entry) => entry.kind === reason)),
   );
-  const groups = divisions
-    .map(([code, label]) => ({ code, label, games: shown.filter((game) => groupOf(game) === code) }))
+  const groups = competitions
+    .map(([name]) => ({ name, games: shown.filter((game) => game.competition === name) }))
     .filter((group) => group.games.length > 0);
 
   return (
@@ -134,12 +131,16 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
         </h2>
         <div className="ec-controls">
           <label className="ec-field ec-inline">
-            Division
-            <select className="ec-input" value={division} onChange={(event) => change({ division: event.target.value })}>
-              <option value="all">All divisions</option>
-              {divisions.map(([code, label]) => (
-                <option key={code} value={code}>
-                  {label}
+            Competition
+            <select
+              className="ec-input"
+              value={competition}
+              onChange={(event) => change({ competition: event.target.value })}
+            >
+              <option value="all">All competitions</option>
+              {competitions.map(([name]) => (
+                <option key={name} value={name}>
+                  {name}
                 </option>
               ))}
             </select>
@@ -163,9 +164,9 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
       </div>
       {groups.length === 0 && <p className="ec-muted">No games match these filters.</p>}
       {groups.map((group) => (
-        <details key={group.code} className="ec-details ec-group" open>
+        <details key={group.name} className="ec-details ec-group" open>
           <summary className="ec-group-title">
-            {group.label} <span className="ec-muted ec-small">({gameCount(group.games.length)})</span>
+            {group.name} <span className="ec-muted ec-small">({gameCount(group.games.length)})</span>
           </summary>
           <div className="ec-table-wrap">
             <table className="ec-table">

@@ -234,7 +234,7 @@ textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; 
 .ec-dialog { max-width: min(960px, calc(100vw - 32px)); width: 100%; max-height: calc(100vh - 32px); overflow: auto; background: var(--ec-surface); color: inherit; border: 1px solid var(--ec-border); border-radius: var(--ec-radius); padding: var(--ec-gap); }
 .ec-dialog::backdrop { background: rgb(0 0 0 / 0.5); }
 
-/* Unreported games: a collapsible group per division. */
+/* Unreported games: a collapsible group per competition. */
 .ec-group + .ec-group { margin-top: 16px; }
 .ec-group-title { font-weight: 600; }
 .ec-inline { flex-direction: row; align-items: center; gap: 8px; }

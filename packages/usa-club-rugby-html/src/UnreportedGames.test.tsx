@@ -60,23 +60,27 @@ describe('UnreportedGames', () => {
     expect(flagged(noResult)).toEqual([false, false, false, false, false]);
   });
 
-  it('groups games by division in collapsible sections, a cross-division game under the higher', () => {
-    renderGames([game, { ...game, fixtureId: 'f2', divisions: ['W2'] }, { ...game, fixtureId: 'f3', divisions: [] }]);
+  it('groups games by competition in collapsible sections, in name order', () => {
+    renderGames([
+      { ...game, competition: 'NERFU Men D2' },
+      { ...game, fixtureId: 'f2' },
+      { ...game, fixtureId: 'f3' },
+    ]);
     const groups = document.querySelectorAll('details');
     expect([...groups].map((group) => group.querySelector('summary')?.textContent)).toEqual([
-      "Men's D1 (1 game)",
-      "Women's D2 (1 game)",
-      'Other (1 game)',
+      'MAC Men D1 (2 games)',
+      'NERFU Men D2 (1 game)',
     ]);
     expect([...groups].every((group) => group.open)).toBe(true);
   });
 
-  it('offers only the divisions and reasons the games have', () => {
-    renderGames([game]);
-    const division = screen.getByRole('combobox', { name: 'Division' });
-    expect(within(division).getAllByRole('option').map((option) => (option as HTMLOptionElement).value)).toEqual([
+  it('offers only the competitions and reasons the games have', () => {
+    renderGames([game, { ...game, fixtureId: 'f2', competition: 'Capital Men D3' }]);
+    const competition = screen.getByRole('combobox', { name: 'Competition' });
+    expect(within(competition).getAllByRole('option').map((option) => (option as HTMLOptionElement).value)).toEqual([
       'all',
-      'M1',
+      'Capital Men D3',
+      'MAC Men D1',
     ]);
     const reason = screen.getByRole('group', { name: 'Reason' });
     expect(within(reason).getAllByRole('radio').map((radio) => (radio as HTMLInputElement).value)).toEqual([
@@ -86,25 +90,25 @@ describe('UnreportedGames', () => {
     ]);
   });
 
-  it('filters by division and reason, and counts the games left', () => {
+  it('filters by competition and reason, and counts the games left', () => {
     const noResult: UnreportedGame = {
       ...game,
       fixtureId: 'f2',
-      divisions: ['W2'],
+      competition: 'Capital Women D2',
       reasons: [{ kind: 'no-result' }],
     };
     renderGames([game, noResult]);
     const heading = () => screen.getByRole('heading', { level: 2 }).textContent;
     const rows = () => screen.queryAllByRole('row').length;
-    const division = screen.getByRole('combobox', { name: 'Division' });
+    const competition = screen.getByRole('combobox', { name: 'Competition' });
     expect(heading()).toBe('2 games');
-    fireEvent.change(division, { target: { value: 'W2' } });
+    fireEvent.change(competition, { target: { value: 'Capital Women D2' } });
     expect(heading()).toBe('1 of 2 games');
     expect(rows()).toBe(2);
     fireEvent.click(within(screen.getByRole('group', { name: 'Reason' })).getByLabelText('No lineup'));
     expect(heading()).toBe('0 of 2 games');
     expect(screen.getByText('No games match these filters.')).toBeTruthy();
-    fireEvent.change(division, { target: { value: 'all' } });
+    fireEvent.change(competition, { target: { value: 'all' } });
     expect(heading()).toBe('1 of 2 games');
   });
 
@@ -113,8 +117,8 @@ describe('UnreportedGames', () => {
     render(
       <EligibilityLinksProvider Link="a" routes={routes}>
         <UnreportedGames
-          games={[game, { ...game, fixtureId: 'f2', divisions: ['W2'] }]}
-          filters={{ division: 'W2', reason: 'nonsense' }}
+          games={[game, { ...game, fixtureId: 'f2', competition: 'Capital Women D2' }]}
+          filters={{ competition: 'Capital Women D2', reason: 'nonsense' }}
           onFiltersChange={(next) => changes.push(next)}
         />
       </EligibilityLinksProvider>,
@@ -122,7 +126,7 @@ describe('UnreportedGames', () => {
     expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('1 of 2 games');
     expect((screen.getByLabelText('All') as HTMLInputElement).checked).toBe(true);
     fireEvent.click(screen.getByLabelText('No lineup'));
-    expect(changes).toEqual([{ division: 'W2', reason: 'no-lineup' }]);
+    expect(changes).toEqual([{ competition: 'Capital Women D2', reason: 'no-lineup' }]);
   });
 
   it('says so when no game is overdue', () => {
