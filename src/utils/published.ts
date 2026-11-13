@@ -12,12 +12,18 @@ export type { PublishedClub, PublishedIndex, PublishedSeason } from '@zmnatz/usa
 
 export const published = createPublishedClient({ read: fsReader(path.join(process.cwd(), 'public', 'data')) });
 
-/** The players with a page in this build: those in any club it covers. Name Withheld
- *  players aren't in the index, so have none. */
+/** The players with a page in this build: those in any club it covers, and, in a full
+ *  build, those only in a past season's record. Name Withheld players aren't in the
+ *  index, so have none. */
 export async function listPlayerIds(): Promise<string[]> {
   const [{ clubs }, { players }] = await Promise.all([published.index(), published.playerIndex()]);
   const built = new Set(selectClubs(clubs).map((club) => club.key));
-  return Object.entries(players)
-    .filter(([, player]) => player.clubs.some((key) => built.has(key)))
-    .map(([id]) => id);
+  const ids = new Set(
+    Object.entries(players)
+      .filter(([, player]) => player.clubs.some((key) => built.has(key)))
+      .map(([id]) => id),
+  );
+  // A partial build leaves the past out: finding who's in a built club means reading every season.
+  if (built.size === clubs.length) for (const id of Object.keys(await published.pastPlayerIds())) ids.add(id);
+  return [...ids];
 }

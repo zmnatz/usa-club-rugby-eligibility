@@ -15,6 +15,7 @@ import {
   type ClubContext,
   type PlayerClubEntry,
   type PlayerProfile,
+  type PlayerSeasonProfile,
   playerEntries,
   sortEntries,
 } from './players.ts';
@@ -203,6 +204,36 @@ export function createPublishedClient({ read, ...http }: PublishedClientOptions 
     return memo.index;
   }
 
+  // A Locked Season's players: which clubs each is in the record of. Worked out once per
+  // season and kept as ids only, since a player's own club is worked out again when asked for.
+  const seasonPlayers = new Map<string, Promise<PublishedPlayersFile>>();
+  function seasonIndex(slug: string): Promise<PublishedPlayersFile> {
+    let pending = seasonPlayers.get(slug);
+    if (!pending) {
+      pending = getJson<PublishedSeasonFile>(`seasons/${slug}.json`).then((file) =>
+        buildPlayerIndex(
+          file.season,
+          file.clubs.map((club) => ({
+            club,
+            breakdown: clubSeason(file.clubFiles[club.key], file.fixtures, club).breakdown,
+          })),
+        ),
+      );
+      pending.catch(() => seasonPlayers.delete(slug));
+      seasonPlayers.set(slug, pending);
+    }
+    return pending;
+  }
+
+  async function seasons(): Promise<PublishedSeason[]> {
+    try {
+      return (await getJson<PublishedSeasonsFile>('seasons.json')).seasons;
+    } catch (error) {
+      if (error instanceof MissingPublishedFile) return [];
+      throw error;
+    }
+  }
+
   const index = () => getJson<PublishedIndex>('index.json');
   const fixtures = async () => (await getJson<PublishedFixturesFile>('fixtures.json')).fixtures;
 
@@ -217,14 +248,7 @@ export function createPublishedClient({ read, ...http }: PublishedClientOptions 
     fixtures,
     club,
     /** The Locked Seasons published, newest first. None until the archive holds one. */
-    async seasons(): Promise<PublishedSeason[]> {
-      try {
-        return (await getJson<PublishedSeasonsFile>('seasons.json')).seasons;
-      } catch (error) {
-        if (error instanceof MissingPublishedFile) return [];
-        throw error;
-      }
-    },
+    seasons,
     /** Everything published for one Locked Season, by its slug, e.g. "2024-25". */
     season: (slug: string) => getJson<PublishedSeasonFile>(`seasons/${slug}.json`),
     /** Every club published for the current season. */
@@ -265,6 +289,33 @@ export function createPublishedClient({ read, ...http }: PublishedClientOptions 
         entries.push(...playerEntries(id, await contextFor(published, options), options));
       }
       return { id, name: found.name, clubs: sortEntries(entries) };
+    },
+    /** The CMS ids of every player in the record of a Locked Season, with the name it gives
+     *  them, by season slug. Reads and works out every club of every season the first time. */
+    async pastPlayerIds(): Promise<Record<string, { name: string }>> {
+      const found: Record<string, { name: string }> = {};
+      // Oldest first, so a player's latest name is the one kept.
+      for (const { slug } of [...(await seasons())].reverse()) {
+        for (const [id, { name }] of Object.entries((await seasonIndex(slug)).players)) found[id] = { name };
+      }
+      return found;
+    },
+    /** A player's verdicts in each Locked Season they're in the record of, newest season
+     *  first: what `player` gives for the current one. Empty when they're in none. */
+    async playerSeasons(id: string): Promise<PlayerSeasonProfile[]> {
+      const profiles: PlayerSeasonProfile[] = [];
+      for (const { slug } of await seasons()) {
+        const found = (await seasonIndex(slug)).players[id];
+        if (!found) continue;
+        const file = await getJson<PublishedSeasonFile>(`seasons/${slug}.json`);
+        const entries = found.clubs.flatMap((key) => {
+          const club = file.clubs.find((item) => item.key === key);
+          if (!club) throw new Error(`No club "${key}" in the ${file.season} season.`);
+          return playerEntries(id, clubContext(club, file.clubFiles[key], file.fixtures));
+        });
+        profiles.push({ season: file.season, slug, name: found.name, clubs: sortEntries(entries) });
+      }
+      return profiles;
     },
     /** Every player with a verdict on each of a club's sides, one record per side. */
     async players(key: string, options: EligibilityOptions = {}): Promise<PlayerRecord[]> {

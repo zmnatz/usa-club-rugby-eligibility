@@ -149,6 +149,47 @@ describe('a Locked Season', () => {
   });
 });
 
+describe('a player across Locked Seasons', () => {
+  const past = (season: string, slug: string, ids: string[]) => ({
+    season,
+    slug,
+    clubs: index.clubs,
+    fixtures: [] as FeedFixture[],
+    clubFiles: {
+      nova: { ...snapshot, season, rows: ids.map((id, i) => row(id, id === 'p1' ? 'Ann' : 'Bob', 'NOVA MD1', i + 1)) },
+    },
+    unplacedTeams: [],
+  });
+  const seasons = [
+    { season: '2025/2026', slug: '2025-26', clubs: 1, unplacedTeams: 0 },
+    { season: '2024/2025', slug: '2024-25', clubs: 1, unplacedTeams: 0 },
+  ];
+  const client = () =>
+    createPublishedClient({
+      read: memoryReader({
+        'seasons.json': { generatedAt: '', seasons },
+        'seasons/2025-26.json': past('2025/2026', '2025-26', ['p1', 'p2']),
+        'seasons/2024-25.json': past('2024/2025', '2024-25', ['p1']),
+      }),
+    });
+
+  it("gives a player's verdicts in each season they're in, newest first", async () => {
+    const found = await client().playerSeasons('p1');
+    expect(found.map(({ slug }) => slug)).toEqual(['2025-26', '2024-25']);
+    expect(found.every(({ clubs }) => clubs.every((entry) => entry.clubKey === 'nova'))).toBe(true);
+    expect(found[0].name).toBe('Ann Test');
+  });
+
+  it('skips seasons the player is not in, and gives none for an unknown id', async () => {
+    expect((await client().playerSeasons('p2')).map(({ slug }) => slug)).toEqual(['2025-26']);
+    expect(await client().playerSeasons('nobody')).toEqual([]);
+  });
+
+  it('lists every player in any past season', async () => {
+    expect(Object.keys(await client().pastPlayerIds()).sort()).toEqual(['p1', 'p2']);
+  });
+});
+
 describe('player lookups', () => {
   it('work out each club once for every player looked up with the same options', async () => {
     const client = createPublishedClient({ read: memoryReader(files) });
