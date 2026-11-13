@@ -12,4 +12,4 @@ Decisions, so they are not "fixed" later:
 - **~~Reproducibility is a check, not a promise~~** (superseded by [ADR 011](011-build-data-at-build-time.md)): `usa-club-rugby-data verify` recalculates `public/data/` from `archive/` at the published index's `generatedAt` and fails on any difference. CI and the nightly job run it. That timestamp only moves when the data changes, so a quiet night still verifies.
 - **The nightly job is a library function**: `runSnapshot` and `discoverFixtures` hold what `scripts/snapshot.ts` used to, so a fork runs the same pipeline with `usa-club-rugby-data snapshot`.
 - **The app builds the package first**: `dist/` is not committed; `dev`, `build` and `typecheck` run `bun run lib`.
-- **Published data is a stable interface**: the client reads `index.json`, `fixtures.json` and `clubs/<key>.json` from GitHub Pages. A change to their shape is a breaking change to the package.
+- **Published data is a stable interface**: the client reads `index.json`, `fixtures.json`, `players.json` (from [ADR 013](013-published-player-index.md)) and `clubs/<key>.json` from GitHub Pages. A change to their shape is a breaking change to the package.

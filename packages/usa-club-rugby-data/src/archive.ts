@@ -1,4 +1,4 @@
-import type { ArchiveFixturesFile, ArchiveMatchesFile } from './data.ts';
+import type { ArchiveFixturesFile, ArchiveMatchesFile, PublishedPlayersFile } from './data.ts';
 import { markForfeits } from './forfeit.ts';
 import type { Club, EligibilityRules } from './types.ts';
 import { currentSeason, type FeedFixture, isResult, sortFixtures } from './feeds.ts';
@@ -6,7 +6,7 @@ import { historicalClubs, type HistoricalClub } from './historicalSides.ts';
 import { clubSnapshot, listClubs } from './clubFixtures.ts';
 import { inExcludedMonth } from './qualifying.ts';
 import { buildParticipationSnapshot, type ParticipationSnapshot } from './snapshot.ts';
-import { assignTransfers } from './players.ts';
+import { assignTransfers, buildPlayerIndex, clubContext } from './players.ts';
 import {
   aggregatePlayerHistory,
   fetchMatchCentre,
@@ -169,6 +169,8 @@ export interface PublishedData {
   fixtures: FeedFixture[];
   clubs: (Club & { key: string })[];
   clubFiles: Record<string, ParticipationSnapshot>;
+  /** Which clubs each player is in the record of, by CMS id, under the same rules and time. */
+  players: PublishedPlayersFile;
   /** The Locked Seasons published beside it, newest first. */
   history?: LockedSeasonData[];
 }
@@ -219,7 +221,15 @@ export function buildPublished(
   const clubFiles = Object.fromEntries(
     clubs.map((club) => [club.key, clubSnapshot(participation, club, results)]),
   );
-  return { season, fixtures: seasonFixtures, clubs, clubFiles };
+  // Published so a player can be found from their id without working out every club.
+  const players = buildPlayerIndex(
+    season,
+    clubs.map((club) => ({
+      club,
+      breakdown: clubContext(club, clubFiles[club.key], seasonFixtures, { rules, now }).breakdown,
+    })),
+  );
+  return { season, fixtures: seasonFixtures, clubs, clubFiles, players };
 }
 
 /** Calculates one Locked Season's published data from its archive. Its clubs come

@@ -191,6 +191,50 @@ describe('a player across Locked Seasons', () => {
 });
 
 describe('player lookups', () => {
+  const potomac = { key: 'potomac', name: 'Potomac', sides: [{ teamName: 'Potomac MD1', label: 'D1' }] };
+  const twoClubs = {
+    ...files,
+    'index.json': { ...index, clubs: [...index.clubs, potomac] },
+    'clubs/potomac.json': { ...snapshot, rows: [row('p3', 'Cy', 'Potomac MD1', 2)] },
+    'players.json': {
+      season: index.season,
+      players: {
+        p1: { name: 'Ann Test', clubs: ['nova'] },
+        p2: { name: 'Bob Test', clubs: ['nova'] },
+        p3: { name: 'Cy Test', clubs: ['potomac'] },
+      },
+    },
+  };
+
+  it('find a player from the published index and read only the clubs it names', async () => {
+    const { read, requested } = reader(twoClubs);
+    const client = createPublishedClient({ read });
+    expect(await client.playerIndex()).toBe(twoClubs['players.json']);
+    const profile = await client.player('p1');
+    expect(profile?.clubs.map((entry) => [entry.clubKey, entry.sideLabel])).toEqual([
+      ['nova', 'D1'],
+      ['nova', 'D2'],
+    ]);
+    expect(requested.sort()).toEqual(['clubs/nova.json', 'fixtures.json', 'index.json', 'players.json']);
+  });
+
+  it('give the same profile from the published index as from working it out', async () => {
+    const withIndex = createPublishedClient({ read: memoryReader(twoClubs) });
+    const { 'players.json': _, ...withoutIndex } = twoClubs;
+    const workedOut = createPublishedClient({ read: memoryReader(withoutIndex) });
+    expect(await workedOut.playerIndex()).toEqual(twoClubs['players.json']);
+    for (const id of ['p1', 'p2', 'p3', 'nobody']) expect(await withIndex.player(id)).toEqual(await workedOut.player(id));
+  });
+
+  it('work out the index under custom options instead of reading the published one', async () => {
+    const { read, requested } = reader(twoClubs);
+    const client = createPublishedClient({ read });
+    const found = await client.playerIndex({ now: new Date('2026-11-07T00:00:00Z') });
+    expect(Object.keys(found.players).sort()).toEqual(['p1', 'p2', 'p3']);
+    expect(requested).not.toContain('players.json');
+    expect(requested).toContain('clubs/potomac.json');
+  });
+
   it('work out each club once for every player looked up with the same options', async () => {
     const client = createPublishedClient({ read: memoryReader(files) });
     const options = { now: new Date('2026-11-07T00:00:00Z') };

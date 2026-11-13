@@ -22,7 +22,7 @@ import {
 import { parseTeamSide, type TeamSide } from './teamSide.ts';
 
 // The client for the data the nightly job publishes: public/data/index.json,
-// fixtures.json, clubs/<key>.json, seasons.json and seasons/<slug>.json. It reads them
+// fixtures.json, players.json, clubs/<key>.json, seasons.json and seasons/<slug>.json. It reads them
 // through a PublishedReader: over HTTPS by default (static files, so no rate limit and
 // no key), from a directory with `fsReader` from "./node", or from memory in tests.
 
@@ -94,7 +94,7 @@ export class MissingPublishedFile extends Error {
 }
 
 export interface HttpReaderOptions {
-  /** Directory URL holding index.json, fixtures.json and clubs/. */
+  /** Directory URL holding index.json, fixtures.json, players.json and clubs/. */
   baseUrl?: string;
   fetch?: typeof globalThis.fetch;
 }
@@ -161,8 +161,8 @@ export function createPublishedClient({ read, ...http }: PublishedClientOptions 
     return pending;
   };
 
-  // Every club's verdicts for the player lookups, worked out once per options object, since
-  // finding which clubs a player is in needs all of them.
+  // Clubs' verdicts for the player lookups, worked out once per options object. With custom
+  // options, finding which clubs a player is in needs all of them.
   interface Worked {
     contexts: Map<string, Promise<ClubContext>>;
     index?: Promise<PublishedPlayersFile>;
@@ -193,6 +193,15 @@ export function createPublishedClient({ read, ...http }: PublishedClientOptions 
     const memo = workedFor(options);
     if (!memo.index) {
       memo.index = (async () => {
+        // With no options the nightly job's own index answers, so no club is read to build
+        // it. Data published before players.json existed has none, so it's worked out.
+        if (options === NO_OPTIONS) {
+          try {
+            return await getJson<PublishedPlayersFile>('players.json');
+          } catch (error) {
+            if (!(error instanceof MissingPublishedFile)) throw error;
+          }
+        }
         const { clubs, season } = await index();
         const contexts = await Promise.all(clubs.map((published) => contextFor(published, options)));
         return buildPlayerIndex(season, contexts.map(({ club, breakdown }) => ({ club, breakdown })));
@@ -270,14 +279,16 @@ export function createPublishedClient({ read, ...http }: PublishedClientOptions 
       const [{ club: found, snapshot }, all] = await Promise.all([club(key), fixtures()]);
       return clubEligibility(snapshot, all, found, options);
     },
-    /** Which clubs each player is in the record of, by CMS id. Not a published file: worked
-     *  out from every club's file, so it reads them all. Worked out once per options object:
-     *  calls with the same one (or none) share it, so pass a new one to count from a new `now`. */
+    /** Which clubs each player is in the record of, by CMS id. With no options it is the
+     *  published `players.json`, so no club file is read. With options (custom rules or a
+     *  `now`) it is worked out from every club's file under them, once per options object:
+     *  calls with the same one share it, so pass a new one to count from a new `now`. */
     playerIndex,
     /** A player from their CMS id: their verdict on every club side they're listed on, with
      *  the fixtures behind each. Null when the id isn't in the published record (players
-     *  whose profile isn't public aren't). The first lookup reads every club to find them;
-     *  later ones with the same options object (or none) reuse what it worked out. */
+     *  whose profile isn't public aren't). With no options it finds them in `players.json`
+     *  and reads only the clubs named there. With options the first lookup reads every club
+     *  to find them; later ones with the same options object reuse what it worked out. */
     async player(id: string, options: EligibilityOptions = NO_OPTIONS): Promise<PlayerProfile | null> {
       const found = (await playerIndex(options)).players[id];
       if (!found) return null;
