@@ -174,6 +174,19 @@ describe('UnreportedGames', () => {
     expect(screen.getByRole('heading', { level: 2 }).textContent).toBe('2 games');
   });
 
+  it("sizes every group's club columns to the longest club name in the list, filtered or not", () => {
+    renderGames([
+      game,
+      { ...game, fixtureId: 'f2', competition: 'Capital Men D3', away: { ...game.away, clubName: 'Washington Renegades' } },
+    ]);
+    const section = screen.getByRole('region');
+    expect(section.style.getPropertyValue('--ec-club-chars')).toBe('20');
+    fireEvent.change(screen.getByRole('combobox', { name: 'Competition' }), { target: { value: 'MAC' } });
+    expect(section.style.getPropertyValue('--ec-club-chars')).toBe('20');
+    const cols = [...document.querySelectorAll('table col')].map((col) => col.className);
+    expect(cols).toEqual(['ec-col-date', 'ec-col-club', 'ec-col-club', '']);
+  });
+
   it('says so when no game is overdue', () => {
     renderGames([]);
     expect(screen.getByText('No games are overdue.')).toBeTruthy();

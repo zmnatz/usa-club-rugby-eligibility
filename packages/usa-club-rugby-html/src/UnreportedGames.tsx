@@ -6,7 +6,7 @@ import {
   type UnreportedReason,
   type UnreportedSide,
 } from '@zmnatz/usa-club-rugby-data';
-import { useState } from 'react';
+import { type CSSProperties, useState } from 'react';
 import { useEligibilityLinks } from './links.tsx';
 
 export type UnreportedReasonKind = UnreportedReason['kind'];
@@ -128,12 +128,19 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
       competitionLabel(game.competition).toLowerCase().includes(competition) &&
       (current.reasons.length === 0 || game.reasons.some((entry) => current.reasons.includes(entry.kind))),
   );
+  const clubChars = Math.max(...games.flatMap((game) => [game.home.clubName.length, game.away.clubName.length]));
   const groups = competitions
     .map(({ name, label }) => ({ name, label, games: shown.filter((game) => game.competition === name) }))
     .filter((group) => group.games.length > 0);
 
   return (
-    <section className="ec-card ec-unreported" aria-labelledby="unreported-title">
+    <section
+      className="ec-card ec-unreported"
+      aria-labelledby="unreported-title"
+      // Every group's table shares its column widths: the clubs' fit the longest club name
+      // in the list, filtered or not, so they don't move as the filters change.
+      style={{ '--ec-club-chars': clubChars } as CSSProperties}
+    >
       <div className="ec-toolbar">
         <h2 id="unreported-title" aria-live="polite">
           {shown.length === games.length ? gameCount(games.length) : `${shown.length} of ${gameCount(games.length)}`}
@@ -205,7 +212,13 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
             {group.label} <span className="ec-muted ec-small">({gameCount(group.games.length)})</span>
           </summary>
           <div className="ec-table-wrap">
-            <table className="ec-table">
+            <table className="ec-table ec-unreported-table">
+              <colgroup>
+                <col className="ec-col-date" />
+                <col className="ec-col-club" />
+                <col className="ec-col-club" />
+                <col />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Date</th>

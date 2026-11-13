@@ -236,6 +236,15 @@ textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; 
 .ec-group-title { font-weight: 600; }
 .ec-inline { flex-direction: row; align-items: center; gap: 8px; }
 .ec-inline .ec-input { width: auto; padding: 4px 8px; }
+.ec-unreported-table {
+  /* The cells' side padding, which each fixed width includes. */
+  --ec-cell-pad: 24px;
+  table-layout: fixed;
+  min-width: calc(10ch + 2 * var(--ec-club-chars, 20) * 1ch + 4 * var(--ec-cell-pad) + 16ch);
+}
+/* A date is always "MM/DD/YYYY". Bold club names on a flagged side are a little wider. */
+.ec-col-date { width: calc(10ch + var(--ec-cell-pad)); }
+.ec-col-club { width: calc(var(--ec-club-chars, 20) * 1.05ch + var(--ec-cell-pad)); }
 .ec-reasons { margin: 0; padding-left: 1.1em; }
 .ec-table td.ec-flagged { background: var(--ec-warning-bg); box-shadow: inset 3px 0 0 var(--ec-warning); }
 .ec-table td.ec-flagged > :first-child { font-weight: 600; }
