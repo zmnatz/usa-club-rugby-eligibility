@@ -47,11 +47,6 @@ describe('UnreportedGames', () => {
     expect(cells[4].textContent).toContain('No substitutions: Bayside MD2');
   });
 
-  it('shows a fallback for each club without contact details', () => {
-    renderGames([game]);
-    expect(screen.getAllByText('No contact on file')).toHaveLength(2);
-  });
-
   it("marks each row with its divisions and reasons for the stylesheet's filters", () => {
     renderGames([game]);
     const [, row] = screen.getAllByRole('row');

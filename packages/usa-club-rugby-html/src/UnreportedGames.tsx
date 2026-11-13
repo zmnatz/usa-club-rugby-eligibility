@@ -54,7 +54,6 @@ function Side({ side }: { side: UnreportedSide }) {
     <>
       {side.clubKey ? <Link href={routes.club(side.clubKey)}>{side.clubName}</Link> : side.clubName}
       <div className="ec-muted ec-small">{side.teamName}</div>
-      <div className="ec-muted ec-small">No contact on file</div>
     </>
   );
 }
