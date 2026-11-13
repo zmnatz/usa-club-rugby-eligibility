@@ -9,7 +9,13 @@ import {
   type UnreportedGame,
   unreportedGames,
 } from '@zmnatz/usa-club-rugby-data';
-import { DEFAULT_UNREPORTED, type UnreportedFilters, UnreportedGames } from '@zmnatz/usa-club-rugby-html';
+import {
+  DEFAULT_UNREPORTED,
+  UNREPORTED_REASONS,
+  type UnreportedFilters,
+  UnreportedGames,
+  type UnreportedReasonKind,
+} from '@zmnatz/usa-club-rugby-html';
 import { Crumbs, PageLink } from '@/components/Crumbs';
 import { published } from '@/utils/published';
 
@@ -37,6 +43,15 @@ export const getStaticProps: GetStaticProps<UnreportedProps> = async () => {
 const queryValue = (value: string | string[] | undefined, none: string) =>
   typeof value === 'string' && value ? value : none;
 
+/** The reasons turned on, written as `no-lineup,no-result`, or `none` when every one is off. */
+const NO_REASONS = 'none';
+const readReasons = (value: string | string[] | undefined): UnreportedReasonKind[] => {
+  if (typeof value !== 'string' || !value) return DEFAULT_UNREPORTED.reasons;
+  const named = value.split(',');
+  return UNREPORTED_REASONS.map(([kind]) => kind).filter((kind) => named.includes(kind));
+};
+const writeReasons = (reasons: UnreportedReasonKind[]) => (reasons.length ? reasons.join(',') : NO_REASONS);
+
 export default function UnreportedPage({ games, season, builtAt }: UnreportedProps) {
   // The filters live in the URL, so a refresh or a shared link keeps them; a filter left at
   // its default isn't written. The static HTML has no query, so it shows the defaults until
@@ -46,14 +61,15 @@ export default function UnreportedPage({ games, season, builtAt }: UnreportedPro
     ? {
         division: queryValue(router.query.division, DEFAULT_UNREPORTED.division),
         competition: queryValue(router.query.competition, DEFAULT_UNREPORTED.competition),
-        reason: queryValue(router.query.reason, DEFAULT_UNREPORTED.reason),
+        reasons: readReasons(router.query.reasons),
       }
     : DEFAULT_UNREPORTED;
-  const setFilters = ({ division, competition, reason }: UnreportedFilters) => {
+  const setFilters = ({ division, competition, reasons }: UnreportedFilters) => {
+    const written = writeReasons(reasons);
     const query = {
       ...(division !== DEFAULT_UNREPORTED.division && { division }),
       ...(competition !== DEFAULT_UNREPORTED.competition && { competition }),
-      ...(reason !== DEFAULT_UNREPORTED.reason && { reason }),
+      ...(written !== writeReasons(DEFAULT_UNREPORTED.reasons) && { reasons: written }),
     };
     router.replace({ pathname: router.pathname, query }, undefined, { shallow: true, scroll: false });
   };

@@ -9,22 +9,25 @@ import {
 import { useState } from 'react';
 import { useEligibilityLinks } from './links.tsx';
 
-/** What the list is filtered to: a division code and reason kind, or `all`, and text a
- *  competition's name must contain, or none. */
+export type UnreportedReasonKind = UnreportedReason['kind'];
+
+/** What the list is filtered to: a division code, or `all`; text a competition's name must
+ *  contain, or none; and the reasons shown, each turned on or off on its own. A game shows
+ *  when any of its reasons is on. */
 export interface UnreportedFilters {
   division: string;
   competition: string;
-  reason: string;
+  reasons: UnreportedReasonKind[];
 }
 
 /** Where the list starts: games with no lineup, the gap that most affects eligibility. */
-export const DEFAULT_UNREPORTED: UnreportedFilters = { division: 'all', competition: '', reason: 'no-lineup' };
+export const DEFAULT_UNREPORTED: UnreportedFilters = { division: 'all', competition: '', reasons: ['no-lineup'] };
 
 export interface UnreportedGamesProps {
   games: UnreportedGame[];
   /** The filters, for a host that keeps them, e.g. in the URL. Without them the list keeps
-   *  its own, starting from `DEFAULT_UNREPORTED`. A division or reason the games don't offer
-   *  reads as `all`. */
+   *  its own, starting from `DEFAULT_UNREPORTED`. A division the games don't offer reads
+   *  as `all`. */
   filters?: UnreportedFilters;
   onFiltersChange?: (filters: UnreportedFilters) => void;
 }
@@ -38,7 +41,8 @@ const DIVISIONS: [string, string][] = [
   ['W2', "Women's D2"],
 ];
 
-const REASONS: [UnreportedReason['kind'], string][] = [
+/** Every reason, in the order the toggles show them. */
+export const UNREPORTED_REASONS: [UnreportedReasonKind, string][] = [
   ['no-result', 'No result'],
   ['no-lineup', 'No lineup'],
   ['no-substitutions', 'No substitutions'],
@@ -50,7 +54,7 @@ const gameCount = (count: number) => (count === 1 ? '1 game' : `${count} games`)
 
 function reasonText(reason: UnreportedReason): string {
   if (reason.kind === 'no-result') return 'No result entered';
-  const label = REASONS.find(([kind]) => kind === reason.kind)?.[1];
+  const label = UNREPORTED_REASONS.find(([kind]) => kind === reason.kind)?.[1];
   return `${label}: ${reason.teamName}`;
 }
 
@@ -97,7 +101,7 @@ function GameRow({ game }: { game: UnreportedGame }) {
 }
 
 /** Current-season games whose record still needs entering, in a collapsible group per
- *  competition, filterable by division, competition and reason. */
+ *  competition, filterable by division, competition and reasons. */
 export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedGamesProps) {
   const [own, setOwn] = useState(DEFAULT_UNREPORTED);
   const current = filters ?? own;
@@ -116,17 +120,16 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
     .map((name) => ({ name, label: competitionLabel(name) }))
     .sort((a, b) => a.label.localeCompare(b.label));
   const divisions = DIVISIONS.filter(([code]) => games.some((game) => game.divisions.includes(code)));
-  const reasons = REASONS.filter(([kind]) => games.some((game) => game.reasons.some((entry) => entry.kind === kind)));
-  const offered = (value: string, options: [string, string][]) =>
-    options.some(([option]) => option === value) ? value : 'all';
-  const division = offered(current.division, divisions);
+  const reasons = UNREPORTED_REASONS.filter(([kind]) =>
+    games.some((game) => game.reasons.some((entry) => entry.kind === kind)),
+  );
+  const division = divisions.some(([code]) => code === current.division) ? current.division : 'all';
   const competition = current.competition.trim().toLowerCase();
-  const reason = offered(current.reason, reasons);
   const shown = games.filter(
     (game) =>
       (division === 'all' || game.divisions.includes(division)) &&
       competitionLabel(game.competition).toLowerCase().includes(competition) &&
-      (reason === 'all' || game.reasons.some((entry) => entry.kind === reason)),
+      game.reasons.some((entry) => current.reasons.includes(entry.kind)),
   );
   const groups = competitions
     .map(({ name, label }) => ({ name, label, games: shown.filter((game) => game.competition === name) }))
@@ -167,16 +170,21 @@ export function UnreportedGames({ games, filters, onFiltersChange }: UnreportedG
               ))}
             </datalist>
           </label>
-          <fieldset className="ec-segmented">
-            <legend className="ec-sr">Reason</legend>
-            {[['all', 'All'], ...reasons].map(([value, label]) => (
-              <label key={value}>
+          <fieldset className="ec-segmented ec-toggles">
+            <legend className="ec-sr">Reasons</legend>
+            {reasons.map(([kind, label]) => (
+              <label key={kind}>
                 <input
-                  type="radio"
-                  name="unreported-reason"
-                  value={value}
-                  checked={reason === value}
-                  onChange={() => change({ reason: value })}
+                  type="checkbox"
+                  value={kind}
+                  checked={current.reasons.includes(kind)}
+                  onChange={(event) =>
+                    change({
+                      reasons: UNREPORTED_REASONS.map(([option]) => option).filter((option) =>
+                        option === kind ? event.target.checked : current.reasons.includes(option),
+                      ),
+                    })
+                  }
                 />
                 {label}
               </label>
