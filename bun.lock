@@ -50,7 +50,7 @@
     },
     "packages/usa-club-rugby-data": {
       "name": "@zmnatz/usa-club-rugby-data",
-      "version": "0.7.0",
+      "version": "0.6.0",
       "bin": {
         "usa-club-rugby-data": "dist/cli.js",
       },

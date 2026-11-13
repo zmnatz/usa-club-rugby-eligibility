@@ -16,7 +16,7 @@ A tag named for a package must match the `version` in its `package.json`, or the
 2. Publish a GitHub release with the tag above.
 3. The job stages the version. Approve it with 2FA on npmjs.com (Staged Packages), or with `npm stage approve <stage-id>`, and it goes public.
 
-Release the data package first when a component package's peer range needs a version that isn't on npm yet. The MUI package's first release needed `@zmnatz/usa-club-rugby-data` 0.4.0; the HTML package's needs 0.7.0.
+Release the data package first when a component package's peer range needs a version that isn't on npm yet. The MUI package's first release needed `@zmnatz/usa-club-rugby-data` 0.4.0; the HTML package's needs 0.6.0.
 
 ## One-time npm setup for a component package
 

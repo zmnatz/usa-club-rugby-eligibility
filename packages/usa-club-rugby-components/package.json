@@ -1,6 +1,6 @@
 {
   "name": "@zmnatz/usa-club-rugby-components",
-  "version": "0.9.0",
+  "version": "0.8.0",
   "description": "React and MUI components for USA Club Rugby NCS eligibility: the club directory, eligibility report and player detail, for any app using @zmnatz/usa-club-rugby-data.",
   "keywords": [
     "rugby",
@@ -45,7 +45,7 @@
     "@mui/material": "^9.3.1",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-    "@zmnatz/usa-club-rugby-data": "^0.7.0"
+    "@zmnatz/usa-club-rugby-data": "^0.6.0"
   },
   "devDependencies": {
     "react": "^19.2.8",
