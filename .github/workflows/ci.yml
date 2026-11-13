@@ -96,34 +96,8 @@ jobs:
             gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body-file comment.md
           fi
 
-  # A build of the branch to look at before it merges, and the PR's full build.
-  # GitHub Pages serves one site per repository, so a preview can't be hosted beside
-  # it; this one is built for the root path, so unzip it and serve the folder with
-  # any static server (for example `bunx serve dist`). Checks stay in the job above.
-  preview:
-    name: Preview build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-      - run: bun install --frozen-lockfile
-      - name: Build for the root path
-        env:
-          BASE_PATH: ""
-        run: bun run build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: site-preview-${{ github.event.pull_request.number }}
-          path: dist
-          retention-days: 7
-          compression-level: 9
-
-  # Builds a few clubs in the Playwright container, screenshots it, stores the images
+  # Builds a few clubs in the Playwright container, serves the build with `next start`
+  # and screenshots it (Netlify's deploy preview has the full build), stores the images
   # on the orphan `pr-screenshots` branch so they can be embedded inline, and keeps
   # one sticky comment on the PR up to date. Pages come from the PR description's
   # `## Screenshots` section plus routes mapped from changed files
@@ -176,13 +150,12 @@ jobs:
         id: clubs
         run: node test/playwright/build-clubs.ts --default pittsburgh-forge --pr-body pr-body.md >> "$GITHUB_OUTPUT"
 
-      # The quick build. selectClubs ignores BUILD_CLUBS under CI so a deployed site
-      # is always complete, and this build is never deployed, so GITHUB_ACTIONS is
-      # cleared for this command only. That also builds for the root path.
+      # A partial build, never deployed. selectClubs ignores BUILD_CLUBS only on
+      # Netlify, so a deployed site is always complete.
       - name: Build those clubs
         env:
           BUILD_CLUBS: ${{ steps.clubs.outputs.clubs }}
-        run: GITHUB_ACTIONS= bun run build
+        run: bun run build
 
       # Only the screenshot tooling's own dependencies, not the site's.
       - name: Install the screenshot tooling
@@ -195,8 +168,9 @@ jobs:
         working-directory: test/playwright
         run: npx playwright-core install chromium
 
+      # Starts the build with `next start` and captures it.
       - name: Take screenshots
-        run: node test/playwright/screenshots.ts --site dist --changed-files changed-files.txt --pr-body pr-body.md --out screenshots
+        run: node test/playwright/screenshots.ts --app . --changed-files changed-files.txt --pr-body pr-body.md --out screenshots
 
       - name: Publish images to the pr-screenshots branch
         if: always() && hashFiles('screenshots/report.json') != ''

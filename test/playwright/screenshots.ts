@@ -15,10 +15,11 @@ import {
   type PageSpec,
   type RouteRule,
 } from './lib/plan.ts';
-import { serveSite } from './lib/serve.ts';
+import { builtPlayerIds, serveSite } from './lib/serve.ts';
 
-// Serves a built copy of the site and screenshots its pages for a PR. Usage:
-//   node test/playwright/screenshots.ts --site dist \
+// Starts the site's Next build with `next start` and screenshots its pages for a PR.
+// Run `bun run build` (or a partial build with BUILD_CLUBS) first. Usage:
+//   node test/playwright/screenshots.ts [--app .] \
 //     [--out screenshots] [--base-ref origin/main | --changed-files list.txt] \
 //     [--pr-body body.md] [--page "/csv/ wait: [data-testid=x]"]...
 // Writes <out>/<page>-<viewport>.png and <out>/report.json. Exits non-zero
@@ -65,7 +66,7 @@ function slug(pagePath: string): string {
 async function main() {
   const { values } = parseArgs({
     options: {
-      site: { type: 'string' },
+      app: { type: 'string', default: '.' },
       out: { type: 'string', default: 'screenshots' },
       'base-ref': { type: 'string' },
       'changed-files': { type: 'string' },
@@ -73,10 +74,6 @@ async function main() {
       page: { type: 'string', multiple: true, default: [] },
     },
   });
-  if (!values.site) {
-    throw new Error('--site is required');
-  }
-  const server = await serveSite(values.site);
   const outDir = path.resolve(values.out as string);
   fs.mkdirSync(outDir, { recursive: true });
 
@@ -91,9 +88,8 @@ async function main() {
       .map(parsePageSpec)
       .filter((spec): spec is PageSpec => spec !== null),
   ];
-  // The players in the build: one page each under player/.
-  const playerDir = path.join(path.resolve(values.site), 'player');
-  const playerIds = fs.existsSync(playerDir) ? fs.readdirSync(playerDir) : [];
+  // The players in the build, each prerendered at /player/<cms-id>/.
+  const playerIds = builtPlayerIds(values.app as string);
   const pages = fillSamplePlayer(
     planPages({
       changedFiles: changedFiles(values['base-ref'], values['changed-files']),
@@ -103,7 +99,11 @@ async function main() {
     playerIds
   );
 
-  const browser = await chromium.launch();
+  const server = await serveSite(values.app as string);
+  const browser = await chromium.launch().catch((err) => {
+    server.close();
+    throw err;
+  });
   const reports: PageReport[] = [];
   let failed = false;
   try {

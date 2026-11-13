@@ -1,13 +1,11 @@
-# The site is the Next.js app at the repo root, a static export to dist/.
+# The site is the Next.js app at the repo root, built and served by Netlify's
+# Next.js runtime, which Netlify adds and which keeps Next's build cache (ADR 012).
 # The packages in packages/ are libraries it builds first (`bun run lib`), not sites.
+# A push to main deploys production; a pull request gets a deploy preview.
 [build]
   base = ""
   command = "bun run build"
-  publish = "dist"
+  publish = ".next"
 
 [build.environment]
   BUN_VERSION = "1.4.4"
-
-# Next's build cache, which the export leaves in .next/cache.
-[[plugins]]
-  package = "./netlify/plugins/next-cache"

@@ -10,7 +10,7 @@ import { published, type PublishedSeason } from '@/utils/published';
 
 // One page for every Locked Season, so past seasons add nothing to the build. The
 // query says which season and club; the season's file is loaded in the browser.
-const client = createPublishedClient({ baseUrl: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/data` });
+const client = createPublishedClient({ baseUrl: '/data' });
 
 export const getStaticProps: GetStaticProps<{ seasons: PublishedSeason[] }> = async () => ({
   props: { seasons: await published.seasons() },

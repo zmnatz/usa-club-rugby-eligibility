@@ -7,17 +7,13 @@ import { playerPath, queryPlayerId } from '@/utils/paths';
 // player's own page, so the page needs no React runtime.
 export const config = { unstable_runtimeJS: false };
 
-const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
-
-// The base path is the site's own, set at build time, so it is safe in a script. The
-// functions are `queryPlayerId` and `playerPath`, which are tested, written out.
+// The functions are `queryPlayerId` and `playerPath`, which are tested, written out.
 const LEGACY_PLAYER_REDIRECT = `(() => {
-  const base = ${JSON.stringify(BASE_PATH)};
   const { pathname, search, hash } = window.location;
-  const id = (${queryPlayerId.toString()})(pathname.startsWith(base) ? pathname.slice(base.length) : pathname, search);
+  const id = (${queryPlayerId.toString()})(pathname, search);
   if (id === null) return;
   document.documentElement.hidden = true;
-  window.location.replace(base + (${playerPath.toString()})(id) + '/' + hash);
+  window.location.replace((${playerPath.toString()})(id) + '/' + hash);
 })();`;
 
 export default function NotFoundPage() {

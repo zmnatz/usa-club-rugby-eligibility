@@ -25,7 +25,7 @@ bun install
 bun run data           # calculates public/data from archive/
 ```
 
-To check a directory of published data against the archive, run `usa-club-rugby-data verify --published <dir>`: it fails if a file differs from the recalculation (at the index's `generatedAt`), is missing, or has no source in the archive.
+The site serves the same files at `https://usa-club-rugby-eligibility.netlify.app/data/`, built by Netlify from `main` (ADR 012). To check a directory of published data against the archive, run `usa-club-rugby-data verify --published <dir>`: it fails if a file differs from the recalculation (at the index's `generatedAt`), is missing, or has no source in the archive.
 
 ## Rebuild after changing a rule
 

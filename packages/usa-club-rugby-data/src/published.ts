@@ -27,7 +27,7 @@ import { parseTeamSide, type TeamSide } from './teamSide.ts';
 // no key), from a directory with `fsReader` from "./node", or from memory in tests.
 
 /** Where the reference deployment publishes its nightly data. */
-export const DEFAULT_PUBLISHED_URL = 'https://zmnatz.github.io/usa-club-rugby-eligibility/data';
+export const DEFAULT_PUBLISHED_URL = 'https://usa-club-rugby-eligibility.netlify.app/data';
 
 export interface PublishedClub extends Club {
   /** The club's page path and file name, e.g. "rocky-gorge". */
