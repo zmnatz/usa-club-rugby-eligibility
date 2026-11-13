@@ -15,7 +15,7 @@ Rugby Xplorer CMS ──snapshot──▶ archive/ (raw) ──build──▶ pu
 | 3. Count participation | `archive/` + `DEFAULT_RULES` + a time | `public/data/clubs/<club>.json`, `fixtures.json`, `index.json` | **Yes** |
 | 4. Verdicts | A published club file + fixtures + rules + a time | Eligible / not, reasons, matches still needed | **Yes** |
 
-Stages 1 and 2 are frozen into the archive by committing it, which is what makes the rest reproducible: everything after is a pure function of the archive, the rules and a timestamp. `public/data/` is not committed. Every `dev` and `build` calculates it from the archive (`bun run data`), so a rule change shows up with no regeneration step to forget.
+Stages 1 and 2 are frozen into the archive by committing it, which is what makes the rest reproducible: everything after is a pure function of the archive and the rules, calculated as of the manifest's `pulledAt`. `public/data/` is not committed. Every `dev` and `build` calculates it from the archive (`bun run data`), so a rule change shows up with no regeneration step to forget.
 
 ## Calculate the published data
 

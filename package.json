@@ -6,7 +6,7 @@
   "packageManager": "bun@1.4.4",
   "scripts": {
     "lib": "bun run --cwd packages/usa-club-rugby-data build && bun run --cwd packages/usa-club-rugby-components build && bun run --cwd packages/usa-club-rugby-html build",
-    "data": "bun run lib && node packages/usa-club-rugby-data/dist/cli.js build",
+    "data": "bun run lib && rm -rf public/data && node packages/usa-club-rugby-data/dist/cli.js build",
     "dev": "bun run data && next dev",
     "build": "bun run data && next build",
     "build:quick": "BUILD_CLUBS=5 bun run build",

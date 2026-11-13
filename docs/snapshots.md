@@ -1,10 +1,10 @@
 # Nightly snapshot
 
-The page is static. Each night `usa-club-rugby-data snapshot` (`runSnapshot` in `packages/usa-club-rugby-data/src/node/snapshot.ts`) refreshes the raw match archive, which is committed, then GitHub Pages is rebuilt. Every build calculates `public/data` from the archive (`bun run data`); that directory is gitignored, never committed.
+The page is static. The data is calculated as of the archive's `pulledAt`, not the build time, so the site's "as of" date is the last pull and the same archive always gives the same files. Each night `usa-club-rugby-data snapshot` (`runSnapshot` in `packages/usa-club-rugby-data/src/node/snapshot.ts`) refreshes the raw match archive, which is committed, then GitHub Pages is rebuilt. Every build calculates `public/data` from the archive (`bun run data`); that directory is gitignored, never committed.
 
 | Path | What | Published |
 | --- | --- | --- |
-| `archive/manifest.json` | Seasons archived, the current season, a hash of the queries, and the club ids whose feeds are read | No |
+| `archive/manifest.json` | Seasons archived, the current season, a hash of the queries, the club ids whose feeds are read, and when the archive was last pulled (`pulledAt`) | No |
 | `archive/fixtures/<season>.json` | Every senior club fixture that season, from all feeds, one per line | No |
 | `archive/matches/<season>.json` | Every played match's full CMS record, one per line, `null` when the CMS has none | No |
 | `public/data/index.json` | The current season's clubs and their sides, and when the data last changed | Yes |
