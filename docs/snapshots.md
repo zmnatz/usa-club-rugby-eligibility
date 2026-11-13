@@ -38,6 +38,7 @@ Netlify builds a push to `main` through its GitHub integration, not a workflow, 
 ```bash
 bun run snapshot                      # what the nightly job does
 bun run data                          # calculate public/data from the archive, no CMS requests
+                                      # (reuses the Locked Seasons in .next/cache/locked-seasons, ADR 019)
 bun run snapshot --full-history   # also read every past season the feeds list
 SNAPSHOT_CONCURRENCY=8 bun run snapshot
 ```

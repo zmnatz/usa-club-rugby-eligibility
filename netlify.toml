@@ -1,11 +1,16 @@
 # The site is the Next.js app at the repo root, built and served by Netlify's
 # Next.js runtime, which Netlify adds and which keeps Next's build cache (ADR 012).
-# The packages in packages/ are libraries it builds first (`bun run lib`), not sites.
+# The packages in packages/ are libraries it builds first (`bun run lib:site`), not sites.
 # A push to main deploys production; a pull request gets a deploy preview.
 [build]
   base = ""
   command = "bun run build"
   publish = ".next"
+  # Skips the build (exit 0) when nothing since the last one can change the site: the docs,
+  # the tests and CI, Markdown (pages are .mdx), and the MUI package, which the site doesn't
+  # use (ADR 009). A build without cache has CACHED_COMMIT_REF equal to COMMIT_REF, which
+  # would look like no change, so it always builds; so does any git error (exit 128).
+  ignore = '''test "$CACHED_COMMIT_REF" != "$COMMIT_REF" && git diff --quiet "$CACHED_COMMIT_REF" "$COMMIT_REF" -- . ':!docs' ':!test' ':!.github' ':!packages/usa-club-rugby-components' ':!*.md' '''
 
 [build.environment]
   BUN_VERSION = "1.4.4"

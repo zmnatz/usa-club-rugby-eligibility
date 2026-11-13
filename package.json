@@ -6,7 +6,8 @@
   "packageManager": "bun@1.4.4",
   "scripts": {
     "lib": "bun run --cwd packages/usa-club-rugby-data build && bun run --cwd packages/usa-club-rugby-components build && bun run --cwd packages/usa-club-rugby-html build",
-    "data": "bun run lib && rm -rf public/data && node packages/usa-club-rugby-data/dist/cli.js build",
+    "lib:site": "bun run --cwd packages/usa-club-rugby-data build && bun run --cwd packages/usa-club-rugby-html build",
+    "data": "bun run lib:site && rm -rf public/data && node packages/usa-club-rugby-data/dist/cli.js build --cache .next/cache/locked-seasons",
     "dev": "bun run data && next dev",
     "build": "bun run data && next build",
     "snapshot": "bun run lib && node packages/usa-club-rugby-data/dist/cli.js snapshot",

@@ -5,6 +5,7 @@ import {
   type ArchiveManifest,
   buildLockedSeason,
   buildPublished,
+  type LockedSeasonData,
   lockedSeasons,
   parseSeasonFixtures,
   parseSeasonMatches,
@@ -12,6 +13,7 @@ import {
   refreshFrom,
   type SeasonMatches,
   seasonFile,
+  seasonSlug,
   serializeSeasonFixtures,
   serializeSeasonMatches,
 } from '../archive.ts';
@@ -23,6 +25,13 @@ import { lockedSeasonPlayerIndex } from '../players.ts';
 import { DEFAULT_SOURCES, type SourcesConfig } from '../sources.ts';
 import type { EligibilityRules } from '../types.ts';
 import { listJson, prune, readJson, readText, withoutStamp, writeIfChanged } from './files.ts';
+import {
+  type LockedSeasonFiles,
+  lockedSeasonKey,
+  pruneCache,
+  readCachedSeason,
+  writeCachedSeason,
+} from './lockedSeasonCache.ts';
 
 // The nightly job as a library: refresh the raw archive from the CMS, calculate the
 // published files from it, and check that the published files can be recalculated.
@@ -45,6 +54,9 @@ export interface SnapshotOptions extends SnapshotPaths {
   /** The time the run is for. Defaults to the archive's `pulledAt`; an archive
    *  that records none falls back to the build's own time. */
   now?: Date;
+  /** A directory to keep each Locked Season's published files in between runs, reused
+   *  while the season's archive and this package's code are unchanged. */
+  cacheDir?: string;
   log?: (message: string) => void;
 }
 
@@ -56,10 +68,20 @@ export function readManifest(archiveDir: string): ArchiveManifest | null {
   return readJson<ArchiveManifest>(manifestFile(archiveDir));
 }
 
+const readSeasonText = (archiveDir: string, season: string) => ({
+  fixturesText: readText(path.join(fixturesDir(archiveDir), seasonFile(season))),
+  matchesText: readText(path.join(matchesDir(archiveDir), seasonFile(season))),
+});
+
 /** A season's archived fixtures and match records (those the CMS had). */
 export function readSeason(archiveDir: string, season: string): { fixtures: FeedFixture[]; matches: MatchCentreData[] } {
-  const fixturesText = readText(path.join(fixturesDir(archiveDir), seasonFile(season)));
-  const matchesText = readText(path.join(matchesDir(archiveDir), seasonFile(season)));
+  return parseSeason(readSeasonText(archiveDir, season));
+}
+
+function parseSeason({ fixturesText, matchesText }: ReturnType<typeof readSeasonText>): {
+  fixtures: FeedFixture[];
+  matches: MatchCentreData[];
+} {
   return {
     fixtures: fixturesText ? parseSeasonFixtures(fixturesText) : [],
     matches: matchesText
@@ -68,9 +90,20 @@ export function readSeason(archiveDir: string, season: string): { fixtures: Feed
   };
 }
 
+/** A Locked Season's two published files. */
+const renderLockedSeason = (locked: LockedSeasonData): LockedSeasonFiles => ({
+  file: JSON.stringify(locked),
+  players: JSON.stringify(lockedSeasonPlayerIndex(locked)),
+});
+
 /** The files the nightly job publishes, by path under the published directory.
- *  `generatedAt` is the one field that differs between two runs over the same data. */
-export function renderPublished(data: PublishedData, generatedAt: string): Map<string, string> {
+ *  `generatedAt` is the one field that differs between two runs over the same data.
+ *  `lockedFiles` holds Locked Seasons' files already rendered, by slug. */
+export function renderPublished(
+  data: PublishedData,
+  generatedAt: string,
+  lockedFiles: ReadonlyMap<string, LockedSeasonFiles> = new Map(),
+): Map<string, string> {
   const files = new Map<string, string>();
   files.set('fixtures.json', JSON.stringify({ season: data.season, fixtures: data.fixtures }));
   files.set('players.json', JSON.stringify(data.players));
@@ -95,8 +128,9 @@ export function renderPublished(data: PublishedData, generatedAt: string): Map<s
   // One file a season, and its player index. A Locked Season doesn't change, so neither
   // carries a time.
   for (const locked of history) {
-    files.set(`seasons/${locked.slug}.json`, JSON.stringify(locked));
-    files.set(`seasons/${locked.slug}.players.json`, JSON.stringify(lockedSeasonPlayerIndex(locked)));
+    const { file, players } = lockedFiles.get(locked.slug) ?? renderLockedSeason(locked);
+    files.set(`seasons/${locked.slug}.json`, file);
+    files.set(`seasons/${locked.slug}.players.json`, players);
   }
   return files;
 }
@@ -107,14 +141,51 @@ export function publishFromArchive(
   rules: EligibilityRules,
   now: Date,
 ): PublishedData {
+  return publishWithCache(archiveDir, rules, now).data;
+}
+
+/** `publishFromArchive`, reusing and refreshing the Locked Seasons kept in `cacheDir`, if
+ *  given. Returns the Locked Seasons' files too, rendered, so they aren't rendered twice. */
+function publishWithCache(
+  archiveDir: string,
+  rules: EligibilityRules,
+  now: Date,
+  cacheDir?: string,
+  log: (message: string) => void = () => {},
+): { data: PublishedData; lockedFiles: Map<string, LockedSeasonFiles> } {
   const manifest = readManifest(archiveDir);
   if (!manifest) throw new Error(`No archive at ${archiveDir}: run without --offline first.`);
   const { fixtures, matches } = readSeason(archiveDir, manifest.currentSeason);
+  const lockedFiles = new Map<string, LockedSeasonFiles>();
+  const keys: { slug: string; key: string }[] = [];
+  const reused: string[] = [];
   const history = lockedSeasons(manifest).map((season) => {
-    const locked = readSeason(archiveDir, season);
-    return buildLockedSeason(locked.fixtures, locked.matches, season, now);
+    const text = readSeasonText(archiveDir, season);
+    if (!cacheDir) {
+      const locked = parseSeason(text);
+      return buildLockedSeason(locked.fixtures, locked.matches, season, now);
+    }
+    const slug = seasonSlug(season);
+    const key = lockedSeasonKey(season, text.fixturesText ?? '', text.matchesText ?? '');
+    keys.push({ slug, key });
+    const cached = readCachedSeason(cacheDir, slug, key);
+    if (cached) {
+      reused.push(season);
+      lockedFiles.set(slug, cached);
+      return JSON.parse(cached.file) as LockedSeasonData;
+    }
+    const parsed = parseSeason(text);
+    const locked = buildLockedSeason(parsed.fixtures, parsed.matches, season, now);
+    const files = renderLockedSeason(locked);
+    writeCachedSeason(cacheDir, slug, key, files);
+    lockedFiles.set(slug, files);
+    return locked;
   });
-  return { ...buildPublished(fixtures, matches, rules, now), history };
+  if (cacheDir) {
+    pruneCache(cacheDir, keys);
+    log(`Locked Seasons: ${reused.length} of ${history.length} reused from ${cacheDir}`);
+  }
+  return { data: { ...buildPublished(fixtures, matches, rules, now), history }, lockedFiles };
 }
 
 /** Writes the published files, changing only those whose content changed: a
@@ -210,8 +281,8 @@ export async function runSnapshot(options: SnapshotOptions): Promise<{ changed: 
     log('No pulledAt in the archive: building as of now, so this build is not reproducible. Run a snapshot to record it.');
   }
   const now = options.now ?? (manifest.pulledAt ? new Date(manifest.pulledAt) : new Date());
-  const data = publishFromArchive(archiveDir, rules, now);
-  const changed = writePublished(publishedDir, renderPublished(data, now.toISOString()));
+  const { data, lockedFiles } = publishWithCache(archiveDir, rules, now, options.cacheDir, log);
+  const changed = writePublished(publishedDir, renderPublished(data, now.toISOString(), lockedFiles));
   log(
     `Published ${data.season}: ${data.clubs.length} clubs, ${data.fixtures.length} fixtures${changed ? '' : ' (unchanged)'}` +
       ` (requests ${requestStats.requests}, rate-limit pauses ${rateLimitState.pauses})`,
