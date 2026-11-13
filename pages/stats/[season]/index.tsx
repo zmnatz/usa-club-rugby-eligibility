@@ -4,11 +4,10 @@ import { ReportProblemNote, SeasonRules } from '@zmnatz/usa-club-rugby-html';
 import { type SeasonSummary, seasonSummary } from '@zmnatz/usa-club-rugby-data';
 import { Crumbs, PageLink } from '@/components/Crumbs';
 import { seasonPath, statsPath } from '@/utils/paths';
-import { published } from '@/utils/published';
+import { lockedSeason } from '@/utils/published';
 
-// One page per Locked Season, worked out at build time from its file, so it opens at
-// once and can be linked to. There are only a few seasons, so they cost the build
-// little, unlike a page per club.
+// One page per Locked Season, worked out from its file. Generated on first request and
+// cached until the next deploy, like the season's own pages (ADR 016).
 
 interface StatsProps {
   season: string;
@@ -16,14 +15,11 @@ interface StatsProps {
   summary: SeasonSummary;
 }
 
-export const getStaticPaths: GetStaticPaths = async () => ({
-  paths: (await published.seasons()).map(({ slug }) => ({ params: { season: slug } })),
-  fallback: false,
-});
+export const getStaticPaths: GetStaticPaths = async () => ({ paths: [], fallback: 'blocking' });
 
 export const getStaticProps: GetStaticProps<StatsProps> = async ({ params }) => {
-  if (typeof params?.season !== 'string') return { notFound: true };
-  const file = await published.season(params.season);
+  const file = await lockedSeason(params?.season);
+  if (!file) return { notFound: true };
   return { props: { season: file.season, slug: file.slug, summary: seasonSummary(file) } };
 };
 

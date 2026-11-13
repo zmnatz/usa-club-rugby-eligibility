@@ -2,20 +2,23 @@ import createMDX from '@next/mdx';
 import type { NextConfig } from 'next';
 
 // Netlify's Next.js runtime builds and serves this app (ADR 012). Club and player pages
-// are generated on first request (ADRs 014, 015), and so are a Locked Season's pages
-// (ADR 016); every other page at build time.
+// are generated on first request (ADRs 014, 015), and so are a Locked Season's pages and
+// its stats page (ADR 016); every other page at build time.
 
-// A Locked Season's page and its clubs' read the list of seasons and that season's file,
-// and nothing of the current season's nor the seasons' player indexes.
-const SEASON_PAGE_FILES = ['./public/data/seasons.json', './public/data/seasons/*.json'];
+// A Locked Season's page, its clubs' and its stats page read the list of seasons and that
+// season's file, and nothing of the current season's nor the seasons' player indexes. The
+// season files are matched by their slug (2024-25): `*.json` would also name the player
+// indexes, and an exclude doesn't remove a file an include names.
+const SEASON_PAGE_FILES = ['./public/data/seasons.json', './public/data/seasons/[0-9][0-9][0-9][0-9]-[0-9][0-9].json'];
 // A player's pages read the player indexes to find the seasons and clubs they're in, then
-// those clubs' files and Locked Seasons.
+// those clubs' files and Locked Seasons, and the seasons' player indexes.
 const PLAYER_PAGE_FILES = [
   './public/data/index.json',
   './public/data/fixtures.json',
   './public/data/players.json',
   './public/data/clubs/*.json',
   ...SEASON_PAGE_FILES,
+  './public/data/seasons/*.players.json',
 ];
 const SEASON_PAGE_EXCLUDES = [
   './public/data/index.json',
@@ -39,11 +42,13 @@ const nextConfig: NextConfig = {
     '/player/[[]player[]]/[[]season[]]': PLAYER_PAGE_FILES,
     '/season/[[]season[]]': SEASON_PAGE_FILES,
     '/season/[[]season[]]/[[]club[]]': SEASON_PAGE_FILES,
+    '/stats/[[]season[]]': SEASON_PAGE_FILES,
   },
   outputFileTracingExcludes: {
     '/club/[[]club[]]': ['./public/data/seasons/**', './public/data/seasons.json', './public/data/players.json'],
     '/season/[[]season[]]': SEASON_PAGE_EXCLUDES,
     '/season/[[]season[]]/[[]club[]]': SEASON_PAGE_EXCLUDES,
+    '/stats/[[]season[]]': SEASON_PAGE_EXCLUDES,
   },
 };
 

@@ -42,6 +42,11 @@ rules:
       - path: /season/2024-25/
       - path: /season/2024-25/akron/
   - files:
+      - pages/stats/**
+    routes:
+      - path: /stats/
+      - path: /stats/2024-25/
+  - files:
       - pages/csv.tsx
       - packages/usa-club-rugby-html/src/MatchParticipationReport.tsx
     routes:
