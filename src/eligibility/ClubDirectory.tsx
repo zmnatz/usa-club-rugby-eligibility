@@ -8,6 +8,9 @@ export interface ClubDirectoryProps {
   autoFocus?: boolean;
   /** Where each club links, when not the host's club route: a past season's pages. */
   clubHref?: (clubKey: string) => string;
+  /** Clubs from an earlier season with no games on record yet this season, listed among
+   *  the others and marked as such. Each links to `href`, e.g. that season's report. */
+  withoutGames?: { clubs: PublishedClub[]; href: (clubKey: string) => string };
 }
 
 /** Everything the filter matches. */
@@ -17,9 +20,13 @@ const searchText = (club: PublishedClub) =>
 /** Every club, as links. Typing in the filter hides the clubs that don't match; that is
  *  done by the one script the host includes (`ENHANCEMENT_SCRIPT`), so the list is
  *  complete HTML without it. */
-export function ClubDirectory({ clubs, autoFocus = false, clubHref }: ClubDirectoryProps) {
+export function ClubDirectory({ clubs, autoFocus = false, clubHref, withoutGames }: ClubDirectoryProps) {
   const { Link, routes } = useEligibilityLinks();
-  const sorted = [...clubs].sort((a, b) => a.name.localeCompare(b.name));
+  const listed = [
+    ...clubs.map((club) => ({ club, href: (clubHref ?? routes.club)(club.key), noGames: false })),
+    ...(withoutGames?.clubs ?? []).map((club) => ({ club, href: withoutGames?.href(club.key) ?? '', noGames: true })),
+  ];
+  const sorted = listed.sort((a, b) => a.club.name.localeCompare(b.club.name));
 
   return (
     <section className="ec-card" data-club-directory>
@@ -41,11 +48,12 @@ export function ClubDirectory({ clubs, autoFocus = false, clubHref }: ClubDirect
         </span>
       </div>
       <ul className="ec-clubs">
-        {sorted.map((club) => (
-          <li key={club.key} data-search={searchText(club)}>
-            <Link href={(clubHref ?? routes.club)(club.key)}>
+        {sorted.map(({ club, href, noGames }) => (
+          <li key={`${noGames ? 'no-games:' : ''}${club.key}`} data-search={searchText(club)} data-no-games={noGames || undefined}>
+            <Link href={href}>
               {club.name}
               <span>{club.sides.map((side) => side.label).join(' · ')}</span>
+              {noGames && <span className="ec-no-games">No games on record yet</span>}
             </Link>
           </li>
         ))}

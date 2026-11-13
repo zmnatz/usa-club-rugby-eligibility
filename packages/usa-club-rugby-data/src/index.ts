@@ -7,6 +7,7 @@ export { clubFixtures, clubSnapshot, listClubs } from './clubFixtures.ts';
 export * from './clubReport.ts';
 export * from './clubSeason.ts';
 export * from './csv.ts';
+export * from './directory.ts';
 export type {
   ArchiveFixturesFile,
   ArchiveMatchesFile,
