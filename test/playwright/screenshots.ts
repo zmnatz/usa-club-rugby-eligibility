@@ -15,15 +15,20 @@ import {
   type PageSpec,
   type RouteRule,
 } from './lib/plan.ts';
-import { builtPlayerIds, serveSite } from './lib/serve.ts';
+import { serveSite } from './lib/serve.ts';
 
 // Starts the site's Next build with `next start` and screenshots its pages for a PR.
-// Run `bun run build` (or a partial build with BUILD_CLUBS) first. Usage:
+// Run `bun run build` first. Usage:
 //   node test/playwright/screenshots.ts [--app .] \
 //     [--out screenshots] [--base-ref origin/main | --changed-files list.txt] \
 //     [--pr-body body.md] [--page "/csv/ wait: [data-testid=x]"]...
 // Writes <out>/<page>-<viewport>.png and <out>/report.json. Exits non-zero
 // when a page cannot be loaded or answers with a non-200 status.
+
+function publishedPlayerIds(app: string): string[] {
+  const file = path.join(path.resolve(app), 'public', 'data', 'players.json');
+  return fs.existsSync(file) ? Object.keys(JSON.parse(fs.readFileSync(file, 'utf-8')).players ?? {}) : [];
+}
 
 const VIEWPORTS = [
   { name: 'desktop', width: 1280, height: 800 },
@@ -88,8 +93,8 @@ async function main() {
       .map(parsePageSpec)
       .filter((spec): spec is PageSpec => spec !== null),
   ];
-  // The players in the build, each prerendered at /player/<cms-id>/.
-  const playerIds = builtPlayerIds(values.app as string);
+  // Every player in the published index has a page, generated on request at /player/<cms-id>/.
+  const playerIds = publishedPlayerIds(values.app as string);
   const pages = fillSamplePlayer(
     planPages({
       changedFiles: changedFiles(values['base-ref'], values['changed-files']),

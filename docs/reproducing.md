@@ -52,7 +52,7 @@ The nightly job runs the same comparison and adds its result to `pages/changes.m
 
 ## Locked Seasons
 
-Each Locked Season from 2022-23 is published under its own regulations; see "Locked Seasons" in [snapshots.md](snapshots.md) and ADR 006. To recount one, read it with `readSeason(archiveDir, season)` (from `/node`) and pass it to `buildLockedSeason`, which uses `rulesForSeason(season)` unless given other rules.
+Each Locked Season from 2022-23 is published under its own regulations; see "Locked Seasons" in [snapshots.md](snapshots.md) and ADR 006. Its file, `seasons/<slug>.json`, has a player index beside it, `seasons/<slug>.players.json` (`lockedSeasonPlayerIndex`), which `verify` checks too. To recount one, read it with `readSeason(archiveDir, season)` (from `/node`) and pass it to `buildLockedSeason`, which uses `rulesForSeason(season)` unless given other rules.
 
 ## Rebuild from scratch
 

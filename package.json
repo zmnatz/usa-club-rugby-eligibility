@@ -9,7 +9,6 @@
     "data": "bun run lib && rm -rf public/data && node packages/usa-club-rugby-data/dist/cli.js build",
     "dev": "bun run data && next dev",
     "build": "bun run data && next build",
-    "build:quick": "BUILD_CLUBS=5 bun run build",
     "snapshot": "bun run lib && node packages/usa-club-rugby-data/dist/cli.js snapshot",
     "lint": "biome check .",
     "typecheck": "bun run lib && tsc --noEmit && bun run --cwd packages/usa-club-rugby-data typecheck && bun run --cwd packages/usa-club-rugby-components typecheck && bun run --cwd packages/usa-club-rugby-html typecheck",

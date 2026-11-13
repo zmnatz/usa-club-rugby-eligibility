@@ -56,7 +56,7 @@ export function buildComment(input: CommentInput): string {
   const parts = [
     COMMENT_MARKER,
     '## Screenshots',
-    `Captured from a partial build at \`${sha.slice(0, 7)}\` ([run](${runUrl})).`,
+    `Captured from a build at \`${sha.slice(0, 7)}\` ([run](${runUrl})).`,
   ];
   if (pages.length === 1 && pages[0].path === '/') {
     parts.push(

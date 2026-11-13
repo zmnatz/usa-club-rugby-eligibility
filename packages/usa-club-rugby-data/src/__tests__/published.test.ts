@@ -9,6 +9,7 @@ import {
   MissingPublishedFile,
   type PublishedIndex,
 } from '../published.ts';
+import { lockedSeasonPlayerIndex } from '../players.ts';
 import type { ParticipationSnapshot } from '../snapshot.ts';
 
 const index: PublishedIndex = {
@@ -187,6 +188,27 @@ describe('a player across Locked Seasons', () => {
 
   it('lists every player in any past season', async () => {
     expect(Object.keys(await client().pastPlayerIds()).sort()).toEqual(['p1', 'p2']);
+  });
+
+  it("reads each season's published player index, then only the seasons the player is in", async () => {
+    const seasonFiles = {
+      'seasons/2025-26.json': past('2025/2026', '2025-26', ['p1', 'p2']),
+      'seasons/2024-25.json': past('2024/2025', '2024-25', ['p1']),
+    };
+    const { read, requested } = reader({
+      'seasons.json': { generatedAt: '', seasons },
+      ...seasonFiles,
+      'seasons/2025-26.players.json': lockedSeasonPlayerIndex(seasonFiles['seasons/2025-26.json']),
+      'seasons/2024-25.players.json': lockedSeasonPlayerIndex(seasonFiles['seasons/2024-25.json']),
+    });
+    const found = await createPublishedClient({ read }).playerSeasons('p2');
+    expect(found).toEqual(await client().playerSeasons('p2'));
+    expect(requested.sort()).toEqual([
+      'seasons.json',
+      'seasons/2024-25.players.json',
+      'seasons/2025-26.json',
+      'seasons/2025-26.players.json',
+    ]);
   });
 });
 

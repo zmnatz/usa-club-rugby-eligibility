@@ -19,6 +19,7 @@ import { currentSeason, hashFeedQueries, type FeedFixture, type FeedSource, fetc
 import { discoverFixtures } from '../live.ts';
 import { hashMatchCentreQueries, type MatchCentreData } from '../playerHistory.ts';
 import { DEFAULT_RULES } from '../rules.ts';
+import { lockedSeasonPlayerIndex } from '../players.ts';
 import { DEFAULT_SOURCES, type SourcesConfig } from '../sources.ts';
 import type { EligibilityRules } from '../types.ts';
 import { listJson, prune, readJson, readText, withoutStamp, writeIfChanged } from './files.ts';
@@ -30,7 +31,7 @@ import { listJson, prune, readJson, readText, withoutStamp, writeIfChanged } fro
 export interface SnapshotPaths {
   /** The raw match archive: manifest.json, fixtures/ and matches/. */
   archiveDir: string;
-  /** The published data: index.json, fixtures.json, players.json, clubs/ and seasons/. */
+  /** The published data: index.json, fixtures.json, players.json, clubs/, seasons.json and seasons/. */
   publishedDir: string;
 }
 
@@ -91,8 +92,12 @@ export function renderPublished(data: PublishedData, generatedAt: string): Map<s
       }),
     );
   }
-  // One file a season. A Locked Season doesn't change, so it carries no time.
-  for (const locked of history) files.set(`seasons/${locked.slug}.json`, JSON.stringify(locked));
+  // One file a season, and its player index. A Locked Season doesn't change, so neither
+  // carries a time.
+  for (const locked of history) {
+    files.set(`seasons/${locked.slug}.json`, JSON.stringify(locked));
+    files.set(`seasons/${locked.slug}.players.json`, JSON.stringify(lockedSeasonPlayerIndex(locked)));
+  }
   return files;
 }
 

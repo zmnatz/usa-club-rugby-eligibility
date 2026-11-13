@@ -7,6 +7,7 @@
 //   public/data/players.json         PublishedPlayersFile
 //   public/data/seasons.json         PublishedSeasonsFile
 //   public/data/seasons/<slug>.json  PublishedSeasonFile
+//   public/data/seasons/<slug>.players.json  PublishedPlayersFile
 //   archive/manifest.json            ArchiveManifest
 //   archive/fixtures/<season>.json   ArchiveFixturesFile
 //   archive/matches/<season>.json    ArchiveMatchesFile
@@ -47,7 +48,8 @@ export type PublishedSeasonFile = LockedSeasonData;
 /** `players.json`: which clubs each player is in the current season's record of, by CMS
  *  id, for finding a player from their id without reading every club. Worked out from the
  *  club files by `buildPlayerIndex`, which leaves out players whose profile isn't public.
- *  The client also works out one for a Locked Season, and for custom eligibility options. */
+ *  `seasons/<slug>.players.json` is the same for one Locked Season. The client works one
+ *  out itself for custom eligibility options, and when a file is missing. */
 export interface PublishedPlayersFile {
   season: string;
   players: Record<string, { name: string; clubs: string[] }>;

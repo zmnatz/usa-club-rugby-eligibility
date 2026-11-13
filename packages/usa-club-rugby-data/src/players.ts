@@ -195,6 +195,20 @@ export function buildPlayerIndex(
   return { season, players };
 }
 
+/** A Locked Season's player index, worked out from its one published file under the
+ *  rules of that season. Published beside it as `seasons/<slug>.players.json`. */
+export function lockedSeasonPlayerIndex(file: {
+  season: string;
+  fixtures: FeedFixture[];
+  clubs: PublishedClub[];
+  clubFiles: Record<string, ParticipationSnapshot>;
+}): PublishedPlayersFile {
+  return buildPlayerIndex(
+    file.season,
+    file.clubs.map((club) => ({ club, breakdown: clubSeason(file.clubFiles[club.key], file.fixtures, club).breakdown })),
+  );
+}
+
 /** A club's published file and the fixtures its players' games are read from. */
 export interface SeasonClubRecord {
   club: PublishedClub;
