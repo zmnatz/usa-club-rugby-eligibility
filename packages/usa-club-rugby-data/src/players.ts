@@ -138,6 +138,18 @@ export interface PlayerProfile {
   clubs: PlayerClubEntry[];
 }
 
+/** A player's verdicts in one Locked Season: the same as a profile, under that season's
+ *  regulations and from that season's record. */
+export interface PlayerSeasonProfile {
+  /** As the CMS names it, e.g. "2025/2026". */
+  season: string;
+  /** The season's page path and file name, e.g. "2025-26". */
+  slug: string;
+  /** The name the record gave the player that season. */
+  name: string;
+  clubs: PlayerClubEntry[];
+}
+
 /** A player's verdicts in one club: one per side they're listed on. */
 export function playerEntries(playerId: string, context: ClubContext, options: PlayerOptions = {}): PlayerClubEntry[] {
   const { club, breakdown } = context;

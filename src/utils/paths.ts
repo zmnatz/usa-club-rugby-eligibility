@@ -11,6 +11,15 @@ export const clubPlayerPath = (clubKey: string, playerId: string): string =>
 /** A player's page is not under a club: they can play for several over time. */
 export const playerPath = (playerId: string): string => `/player/${encodeURIComponent(playerId)}`;
 
+/** A player's page with one season's tab open: `season` is a Locked Season's slug, or
+ *  "current". With none, the newest season they're in. */
+export const playerSeasonPath = (playerId: string, season: string): string =>
+  `${playerPath(playerId)}?season=${encodeURIComponent(season)}`;
+
+/** The season a page's URL has open, from its `season` query parameter. */
+export const openSeason = (query: Record<string, string | string[] | undefined>): string | null =>
+  typeof query.season === 'string' && query.season ? query.season : null;
+
 /** The player a `/player/?id=<cms-id>` URL names, from while player pages were loaded
  *  in the browser (ADR 007), so it can be sent on. `pathname` is without the base path. */
 export const queryPlayerId = (pathname: string, search: string): string | null =>

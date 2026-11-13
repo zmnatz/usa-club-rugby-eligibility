@@ -34,6 +34,12 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 - `test/ci/`: the CI helpers for the published data: `data-diff.ts` compares two builds for the PR comment, and `changes-page.ts` adds one night's entry to `pages/changes.mdx`. Their logic is in `test/ci/lib/` with tests.
 - `archive/`: the raw match record, refreshed and committed nightly. Never hand-edit; regenerate. `public/data/`: calculated from it at build time, gitignored.
 
+## State is in the URL
+
+- Everything a visitor can change that affects what a page shows lives in the URL, so Back and Forward step through it and a link shares it: the open player, the open season tab, a filter or sort, a chosen season or club. Use a query parameter on the static page (`?player=<cms-id>`, `?season=<slug>`), read it from the router, and change it by link or `router.push(..., { shallow: true, scroll: false })`. Don't hold it in `useState`, `localStorage` or a hidden variable.
+- The page's default (no parameter) is what the static HTML shows, so prerender and first hydration match. An unknown value falls back to the default.
+- Parameter names and the helpers that build and read them are in `src/utils/paths.ts`. The component packages take the value and a way to change it as props, and keep no state of their own for it (ADR 010). Existing filters, sorts and toggles in `packages/usa-club-rugby-html/` still use React state; move them to the URL when you change them.
+
 ## Docs
 
 - `GLOSSARY.md`: domain terms. Use them.
