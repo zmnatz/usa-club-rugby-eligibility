@@ -76,6 +76,20 @@ describe('build and verify', () => {
     expect(result).toMatchObject({ ok: true, asOf: NOW.toISOString(), different: [], missing: [], extra: [] });
   });
 
+  it("calculates as of the archive's last pull, which the manifest records", async () => {
+    const pulledAt = '2026-11-09T18:30:00.000Z';
+    writeFileSync(
+      path.join(archiveDir, 'manifest.json'),
+      JSON.stringify({ fields: 'x', currentSeason: '2026/2027', seasons: ['2026/2027'], clubIds: [], pulledAt }),
+    );
+    await runSnapshot({ archiveDir, publishedDir, offline: true });
+    const index = JSON.parse(readFileSync(path.join(publishedDir, 'index.json'), 'utf8'));
+    const club = JSON.parse(readFileSync(path.join(publishedDir, 'clubs', 'nova.json'), 'utf8'));
+    expect(index.generatedAt).toBe(pulledAt);
+    expect(club.generatedAt).toBe(pulledAt);
+    expect(verifyPublished({ archiveDir, publishedDir }).ok).toBe(true);
+  });
+
   it('does not publish a player index, which each consumer works out for itself', async () => {
     await runSnapshot({ archiveDir, publishedDir, offline: true, now: NOW });
     expect(existsSync(path.join(publishedDir, 'players.json'))).toBe(false);

@@ -41,7 +41,8 @@ export interface SnapshotOptions extends SnapshotPaths {
   offline?: boolean;
   /** Also read every past season the feeds list. */
   fullHistory?: boolean;
-  /** The time the run is for. Defaults to now. */
+  /** The time the run is for. Defaults to the archive's `pulledAt`; an archive
+   *  that records none falls back to the build's own time. */
   now?: Date;
   log?: (message: string) => void;
 }
@@ -110,9 +111,9 @@ export function publishFromArchive(
   return { ...buildPublished(fixtures, matches, rules, now), history };
 }
 
-/** Writes the published files, changing only those whose content changed. The
- *  index's time is when the published data last changed, not when it was checked. */
-export function writePublished(publishedDir: string, files: Map<string, string>, generatedAt: string): boolean {
+/** Writes the published files, changing only those whose content changed: a
+ *  differing `generatedAt` alone doesn't count as a change. */
+export function writePublished(publishedDir: string, files: Map<string, string>): boolean {
   let changed = false;
   const keep = new Map<string, Set<string>>([
     ['clubs', new Set()],
@@ -126,13 +127,7 @@ export function writePublished(publishedDir: string, files: Map<string, string>,
   for (const [dir, names] of keep) {
     changed = prune(path.join(publishedDir, dir), names) > 0 || changed;
   }
-  const indexFile = path.join(publishedDir, 'index.json');
-  const saved = readJson<{ generatedAt?: string }>(indexFile);
-  const index = (files.get('index.json') as string).replace(
-    `"generatedAt":"${generatedAt}"`,
-    `"generatedAt":"${changed || !saved?.generatedAt ? generatedAt : saved.generatedAt}"`,
-  );
-  writeIfChanged(indexFile, index);
+  changed = writeIfChanged(path.join(publishedDir, 'index.json'), files.get('index.json') as string) || changed;
   return changed;
 }
 
@@ -188,6 +183,7 @@ async function refreshArchive(
     currentSeason: currentSeason(fixtures, now) || manifest?.currentSeason || latest,
     seasons: [...new Set([...(manifest?.seasons ?? []), ...refreshed])].sort(),
     clubIds,
+    pulledAt: now.toISOString(),
   };
 }
 
@@ -195,15 +191,21 @@ async function refreshArchive(
  *  calculate the published files from it. Nothing is written until every request
  *  has succeeded, so a failed run leaves the previous data in place. */
 export async function runSnapshot(options: SnapshotOptions): Promise<{ changed: boolean; season: string; clubs: number }> {
-  const { archiveDir, publishedDir, rules = DEFAULT_RULES, offline = false, now = new Date(), log = () => {} } = options;
+  const { archiveDir, publishedDir, rules = DEFAULT_RULES, offline = false, log = () => {} } = options;
   let manifest = readManifest(archiveDir);
   if (!offline) {
     manifest = await refreshArchive(archiveDir, manifest, options);
     writeIfChanged(manifestFile(archiveDir), `${JSON.stringify(manifest, null, 2)}\n`);
   }
   if (!manifest) throw new Error('No archive yet: run without --offline first.');
+  // Calculated as of the last pull, so the same archive always gives the same data
+  // once it records one. An archive from before `pulledAt` falls back to now.
+  if (!options.now && !manifest.pulledAt) {
+    log('No pulledAt in the archive: building as of now, so this build is not reproducible. Run a snapshot to record it.');
+  }
+  const now = options.now ?? (manifest.pulledAt ? new Date(manifest.pulledAt) : new Date());
   const data = publishFromArchive(archiveDir, rules, now);
-  const changed = writePublished(publishedDir, renderPublished(data, now.toISOString()), now.toISOString());
+  const changed = writePublished(publishedDir, renderPublished(data, now.toISOString()));
   log(
     `Published ${data.season}: ${data.clubs.length} clubs, ${data.fixtures.length} fixtures${changed ? '' : ' (unchanged)'}` +
       ` (requests ${requestStats.requests}, rate-limit pauses ${rateLimitState.pauses})`,

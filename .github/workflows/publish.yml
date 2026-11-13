@@ -30,7 +30,6 @@ jobs:
         run: .github/scripts/resolve-release.sh "$TAG"
       - run: bun install --frozen-lockfile
       - run: bun run test
-      - run: bun run verify
       # The tag is the version of every package: no package.json in the repo has
       # one. Set after install, so the lockfile still matches, and with each
       # component package needing this same data package. Data goes first, as the

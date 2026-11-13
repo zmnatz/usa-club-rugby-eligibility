@@ -48,6 +48,11 @@ main.narrow { max-width: 900px; }
 .prose table { border-collapse: collapse; margin-bottom: 16px; }
 .prose th, .prose td { padding: 6px 12px; border-bottom: 1px solid var(--ec-border); text-align: left; }
 .prose code { font-size: 0.9em; }
+.prose details { margin: 0 0 12px; }
+.prose summary { cursor: pointer; font-weight: 500; }
+.prose details[open] > summary { margin-bottom: 8px; }
+.prose summary a { text-decoration: none; }
+.prose summary a:hover { text-decoration: underline; }
 
 .section-gap { margin-top: 32px; }
 .loading { display: inline-block; padding: 4px 0; color: var(--ec-muted); }

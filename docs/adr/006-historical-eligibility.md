@@ -34,7 +34,7 @@ Decisions, so they aren't "fixed" later:
 - **A wrong ranking is worse than a missing club.** A club with two names at one division ("Bay Men", "Bay Men Senior") could be one team renamed, and ranking one above the other would judge a player against their own side, so the club is left out. A team with no division that looks like a published club's is named on that club's page, because its absence can make lower-side players look eligible.
 - **Unplaced Teams are listed by name** at the foot of the season's page, as a record. Many are championship rounds and one-off entries rather than sides, so they aren't presented as a problem.
 - **One page, chosen by query params.** `/season?season=<slug>&club=<key>` loads the season's file in the browser, so past seasons add no static pages to any build. A first visit is a little slower, needs JavaScript and has no club-specific title in its static HTML. The player detail opens in the report's dialog.
-- **Each Locked Season is one file**, `public/data/seasons/<slug>.json`, as in the Archive, where each has a fixtures and a matches file. It has no timestamp, so it doesn't change on later nights.
+- **Each Locked Season is one file**, `public/data/seasons/<slug>.json`, as in the Archive, where each has a fixtures and a matches file. It has no timestamp, so a later build produces the same file.
 - **Not covered:** WPL and RSL participation limits (earlier seasons than the record), the 2019-20 and earlier division tables (no match records), and the rule against moving between 28-player rosters during the NCS.
 
 Assumptions, each open to correction by someone who knows that season's regulations in full. The source covers divisional eligibility only, so anything else is carried from today's regulations (ADR 000):

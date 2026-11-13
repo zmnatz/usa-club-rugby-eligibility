@@ -34,6 +34,10 @@ export interface ArchiveManifest {
   seasons: string[];
   /** Clubs whose own feeds are read, found from the crests in match records. */
   clubIds: number[];
+  /** When the archive was last read from the CMS. The published data is calculated
+   *  as of this time, so it is a function of the archive alone. Absent in an archive
+   *  from before it was recorded. */
+  pulledAt?: string;
 }
 
 /** A season's match records by fixture id. null records a match the CMS has no

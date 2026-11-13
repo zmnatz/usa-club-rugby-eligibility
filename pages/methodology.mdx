@@ -174,14 +174,14 @@ Forfeits aren't listed at all, as the forfeit is the result. When both sides of 
 
 1. It collects the current season's fixture lists.
 2. It re-reads every match with a score this season, including earlier ones, so corrections made in Rugby Xplorer are picked up by the next run.
-3. It saves each match's full record in an archive, then works out each club's participation and gaps from the archive.
-4. It publishes the result with the page.
+3. It saves each match's full record in an archive and commits it, with the time it was last pulled.
+4. The build then works out each club's participation and gaps from the archive, and publishes the result with the page.
 
 **Results before the current season are locked.** A season gets a last read as the next one begins, and is then kept as archived, so a later change to it in Rugby Xplorer doesn't appear here. Past seasons don't affect the current verdicts, and their own verdicts don't change once published.
 
 Each update is all or nothing. If any request fails, the previous night's data stays in place, because a partial count could wrongly pass or fail a player. If the CMS answers but holds no details for a match, that isn't a failure, and the match shows as "No lineup recorded".
 
-**Between nightly runs** the report doesn't change. Matches played, corrections made and fixtures added or rescheduled since the last run appear after the next one. The report shows when its data was last updated.
+**Between nightly runs** the report doesn't change. Matches played, corrections made and fixtures added or rescheduled since the last run appear after the next one. The report shows when its data was last updated, and the [data changes](/changes) page lists what each of the last 14 nights changed.
 
 ## The CSV report
 
@@ -189,7 +189,7 @@ The report can also read a Rugby Xplorer Match Participation Report for any club
 
 ## Reproducing a result
 
-Every published number is a function of the archived Rugby Xplorer match records, the rules above and a timestamp. `bun run verify` recalculates all of the published data from the archive and fails on any difference, and the engine is published as the npm package `@zmnatz/usa-club-rugby-data` for use in other tools. The [step-by-step guide](https://github.com/zmnatz/usa-club-rugby-eligibility/blob/main/docs/reproducing.md) covers each stage from the CMS to a verdict.
+Every published number is a function of the archived Rugby Xplorer match records, the rules above and the archive's last pull. `bun run data` calculates all of the published data from the archive, and `usa-club-rugby-data verify` checks a published copy against it and fails on any difference. The engine is published as the npm package `@zmnatz/usa-club-rugby-data` for use in other tools. The [step-by-step guide](https://github.com/zmnatz/usa-club-rugby-eligibility/blob/main/docs/reproducing.md) covers each stage from the CMS to a verdict.
 
 ## Source
 

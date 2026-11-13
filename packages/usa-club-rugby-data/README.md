@@ -25,7 +25,7 @@ const ann = await client.player('12345');          // one player's verdict on ev
 const past = await client.seasons();               // the Locked Seasons published
 ```
 
-The client reads each file once and keeps it. It reads through a `PublishedReader`, `(file) => Promise<unknown>`, given a path such as `clubs/rocky-gorge.json`. By default that is `httpReader({ baseUrl, fetch })`. Pass `read` for anything else: `fsReader(dir)` from `@zmnatz/usa-club-rugby-data/node` reads a checkout's `public/data`, and `memoryReader(files)` reads from an object, which is handy in tests. A reader rejects with `MissingPublishedFile` when a file isn't there.
+The client reads each file once and keeps it. It reads through a `PublishedReader`, `(file) => Promise<unknown>`, given a path such as `clubs/rocky-gorge.json`. By default that is `httpReader({ baseUrl, fetch })`. Pass `read` for anything else: `fsReader(dir)` from `@zmnatz/usa-club-rugby-data/node` reads a checkout's generated `public/data` (see [Reproduce the published data](#reproduce-the-published-data)), and `memoryReader(files)` reads from an object, which is handy in tests. A reader rejects with `MissingPublishedFile` when a file isn't there.
 
 ```ts
 import { fsReader } from '@zmnatz/usa-club-rugby-data/node';
@@ -111,11 +111,21 @@ Requests share one rate-limit gate (the CMS allows about 500 requests at once, t
 
 ## Reproduce the published data
 
+The site's published data is built from the raw match archive in the repository, not committed (issue #80). From a checkout:
+
 ```bash
+bun install
+bun run data        # calculates public/data from archive/, with no CMS requests
+```
+
+`bun run data` wraps the `build` command: it reads `archive/` and writes `public/data/` as of the archive manifest's `pulledAt`, so the same archive gives the same files. `verify` then checks an existing published directory against the archive at its index's `generatedAt`:
+
+```bash
+npx @zmnatz/usa-club-rugby-data build --archive archive
 npx @zmnatz/usa-club-rugby-data verify --archive archive --published public/data
 ```
 
-`verify` recalculates every published file from the raw match archive, at the time recorded in the published index, and fails on any difference. Other commands:
+It fails if a file differs from the recalculation, is missing, or has no source in the archive. Other commands:
 
 | Command | What |
 | --- | --- |

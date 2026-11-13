@@ -49,7 +49,7 @@ export interface PublishedSeason {
 }
 
 export interface PublishedIndex {
-  /** When the published data last changed. */
+  /** When the archive was last pulled, which is when the data was calculated. */
   generatedAt: string;
   season: string;
   clubs: PublishedClub[];

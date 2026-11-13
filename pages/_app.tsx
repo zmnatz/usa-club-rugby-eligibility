@@ -45,6 +45,7 @@ export default function App({ Component, pageProps }: AppProps) {
               USA Club Rugby Eligibility
             </PageLink>
             <PageLink href="/unreported">Unreported games</PageLink>
+            <PageLink href="/changes">Data changes</PageLink>
             <PageLink href="/methodology">Methodology</PageLink>
             <a href={ISSUES_URL} target="_blank" rel="noopener noreferrer">
               Report a problem

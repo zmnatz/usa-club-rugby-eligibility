@@ -18,7 +18,83 @@ jobs:
       - run: bun run lint
       - run: bun run typecheck
       - run: bun run test
-      - run: bun run verify
+
+  # Builds `public/data` from the PR's base and head and keeps one sticky comment on
+  # the PR with what changed, in place of the old committed-data diff (ADR 011). The
+  # data is derived, so it is never committed: the comparison is the review.
+  data-diff:
+    name: Published data change
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # A fork's token can't comment; its run still writes the job summary.
+      pull-requests: write
+    concurrency:
+      group: data-diff-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR: ${{ github.event.pull_request.number }}
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      # The base SHA is not in a shallow clone.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: bun install --frozen-lockfile
+
+      # Base first, so the head's generated data never leaks into it. A base from
+      # before #80 has committed data and no `data` script, so its copy is used.
+      - name: Build the base's data
+        run: |
+          git checkout --force "$BASE_SHA"
+          bun install --frozen-lockfile
+          if grep -q '"data"[[:space:]]*:' package.json; then
+            bun run data
+          elif [ -d public/data ]; then
+            echo "The base predates the build-time data; using its committed copy."
+          else
+            bun run lib
+            node packages/usa-club-rugby-data/dist/cli.js build
+          fi
+          mv public/data /tmp/data-base
+
+      - name: Build the head's data
+        run: |
+          git checkout --force "$HEAD_SHA"
+          bun install --frozen-lockfile
+          bun run data
+
+      - name: Compare the two builds
+        run: >-
+          node test/ci/data-diff.ts
+          --base /tmp/data-base
+          --head public/data
+          --base-sha "$BASE_SHA"
+          --head-sha "$HEAD_SHA"
+          --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          --out comment.md
+
+      - name: Add the summary to the job
+        run: cat comment.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create or update the PR comment
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate \
+            --jq '[.[] | select(.body | startswith("<!-- pr-data-diff -->"))][0].id // empty')
+          if [ -n "$id" ]; then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -F body=@comment.md >/dev/null
+          else
+            gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body-file comment.md
+          fi
 
   # A build of the branch to look at before it merges, and the PR's full build.
   # GitHub Pages serves one site per repository, so a preview can't be hosted beside
@@ -91,6 +167,9 @@ jobs:
           gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json body -q .body > pr-body.md
           # Not `gh pr diff`, which fails above 300 files.
           gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename' > changed-files.txt
+
+      # build-clubs.ts reads the club list from the generated data.
+      - run: bun run data
 
       # The default club, plus the clubs of any club or player pages the PR lists.
       - name: Work out which clubs to build

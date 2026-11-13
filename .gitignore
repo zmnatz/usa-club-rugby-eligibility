@@ -2,6 +2,7 @@ node_modules
 .next
 out
 dist
+/public/data
 next-env.d.ts
 *.tsbuildinfo
 .DS_Store
