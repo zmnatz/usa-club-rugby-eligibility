@@ -1,5 +1,4 @@
 import { Head, Html, Main, NextScript } from 'next/document';
-import { ENHANCEMENT_SCRIPT } from '@/eligibility';
 
 export default function SiteDocument() {
   return (
@@ -13,10 +12,6 @@ export default function SiteDocument() {
       <body>
         <Main />
         <NextScript />
-        {/* The report tables' sort, the directory's filter and the export download: one small
-            script, on every page, listening on the document. A fixed string, no data in it. */}
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed string */}
-        <script dangerouslySetInnerHTML={{ __html: ENHANCEMENT_SCRIPT }} />
       </body>
     </Html>
   );

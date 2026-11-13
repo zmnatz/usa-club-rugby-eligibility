@@ -15,6 +15,8 @@ import {
   Typography,
 } from '@mui/material';
 import {
+  CAUTION_ADVICE,
+  formatDate,
   matchUrl,
   type OtherClubGames,
   playerFixtures,
@@ -26,16 +28,12 @@ import {
   type PlayerRoundStatus,
   type PlayerRow,
   type PossibleFixture,
+  type ReportSource,
 } from '@zmnatz/usa-club-rugby-data';
 
-import { formatDate } from './dates.ts';
 import { EligibilityStatusChip, WaiverChip } from './EligibilityStatusChip.tsx';
 import { wrapRow } from './layout.ts';
 import { useEligibilityLinks } from './links.tsx';
-
-import { CAUTION_ADVICE, type ReportSource } from './reportModel.ts';
-
-export { CAUTION_ADVICE, type ReportSource };
 
 /** One labeled fact row in the player detail dialog. */
 function Fact({ label, value }: { label: string; value: ReactNode }) {

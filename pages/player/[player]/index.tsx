@@ -2,14 +2,9 @@ import type { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
 import type { PlayerClubEntry, PlayerProfile } from '@zmnatz/usa-club-rugby-data';
 import { Crumbs, PageLink } from '@/components/Crumbs';
-import { EligibilityStatusChip, PlayerDetailBody } from '@/eligibility';
-import { HISTORY_RELOAD_SCRIPT } from '@/utils/historyReload';
+import { EligibilityStatusChip, PlayerDetailBody } from '@zmnatz/usa-club-rugby-html';
 import { clubPath } from '@/utils/paths';
 import { listPlayerIds, published } from '@/utils/published';
-
-// The page is only text and links, so it ships no Next runtime and links out of it
-// are full page loads. The inline script only reloads it on history navigation.
-export const config = { unstable_runtimeJS: false };
 
 /** Every player in the nightly data. Players can change clubs, so a player's page
  *  is under no club. Name Withheld players have no page. */
@@ -48,8 +43,6 @@ function PlayerInClub({ entry }: { entry: PlayerClubEntry }) {
 export default function PlayerPage({ data }: { data: PlayerProfile }) {
   return (
     <>
-      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a fixed string, with no data in it */}
-      <script dangerouslySetInnerHTML={{ __html: HISTORY_RELOAD_SCRIPT }} />
       <Head>
         <title>{`${data.name} · USA Club Rugby Eligibility`}</title>
         <meta

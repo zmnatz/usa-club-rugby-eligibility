@@ -1,0 +1,235 @@
+/* The eligibility screens' styles: plain CSS, no framework. Import this once.
+ * Retheme by overriding the --ec-* variables on :root (or any ancestor). Both colour
+ * schemes follow the visitor's prefers-color-scheme. Class names all start with `ec-`. */
+
+:root {
+  --ec-primary: #1f4e8c;
+  --ec-on-primary: #fff;
+  --ec-fg: #1b1f24;
+  --ec-muted: #555d68;
+  --ec-bg: #fafbfc;
+  --ec-surface: #fff;
+  --ec-border: #d4d9df;
+  --ec-hover: #f0f3f7;
+  --ec-error: #b3261e;
+  --ec-error-bg: #fdecea;
+  --ec-warning: #8a5300;
+  --ec-warning-bg: #fff4e0;
+  --ec-success: #1b6e2f;
+  --ec-success-bg: #e6f4ea;
+  --ec-info: #0b5a8a;
+  --ec-info-bg: #e5f2fa;
+  --ec-radius: 6px;
+  --ec-gap: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ec-primary: #8fb4ec;
+    --ec-on-primary: #0b1a30;
+    --ec-fg: #e6e9ed;
+    --ec-muted: #a3acb8;
+    --ec-bg: #12161b;
+    --ec-surface: #1a1f26;
+    --ec-border: #343c46;
+    --ec-hover: #232a33;
+    --ec-error: #ffb4ab;
+    --ec-error-bg: #3a1a18;
+    --ec-warning: #ffcf8a;
+    --ec-warning-bg: #3a2b0f;
+    --ec-success: #8fd9a0;
+    --ec-success-bg: #14301b;
+    --ec-info: #9ccbec;
+    --ec-info-bg: #12293a;
+  }
+}
+
+.ec-stack { display: flex; flex-direction: column; gap: var(--ec-gap); }
+.ec-stack-sm { display: flex; flex-direction: column; gap: 8px; }
+.ec-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.ec-spread { justify-content: space-between; }
+.ec-muted { color: var(--ec-muted); }
+.ec-small { font-size: 0.875rem; }
+.ec-caption { font-size: 0.75rem; }
+.ec-list { margin: 0; padding-left: 1.5rem; }
+.ec-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.ec-hidden { display: none; }
+
+.ec-card {
+  background: var(--ec-surface);
+  border: 1px solid var(--ec-border);
+  border-radius: var(--ec-radius);
+  padding: var(--ec-gap);
+}
+
+.ec-alert { border-radius: var(--ec-radius); padding: 12px 16px; font-size: 0.9375rem; }
+.ec-alert > p { margin: 0 0 4px; }
+.ec-alert ul { margin: 0; padding-left: 1.25rem; }
+.ec-alert--info { background: var(--ec-info-bg); color: var(--ec-info); }
+.ec-alert--warning { background: var(--ec-warning-bg); color: var(--ec-warning); }
+.ec-alert--error { background: var(--ec-error-bg); color: var(--ec-error); }
+
+.ec-chip {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+.ec-chip--success { background: var(--ec-success-bg); color: var(--ec-success); }
+.ec-chip--warning { background: var(--ec-warning-bg); color: var(--ec-warning); }
+.ec-chip--error { background: var(--ec-error-bg); color: var(--ec-error); }
+.ec-chip--default { background: var(--ec-hover); color: var(--ec-muted); }
+.ec-chip--outlined { background: transparent; border-color: currentColor; }
+
+.ec-btn {
+  display: inline-block;
+  padding: 6px 14px;
+  border: 1px solid var(--ec-primary);
+  border-radius: var(--ec-radius);
+  background: transparent;
+  color: var(--ec-primary);
+  font: inherit;
+  font-size: 0.875rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+.ec-btn:hover { background: var(--ec-hover); }
+.ec-btn--filled { background: var(--ec-primary); color: var(--ec-on-primary); }
+.ec-btn--filled:hover { background: var(--ec-primary); opacity: 0.9; }
+.ec-btn:disabled { opacity: 0.5; cursor: default; }
+.ec-btn:focus-visible, .ec-input:focus-visible, .ec-segmented label:has(:focus-visible),
+.ec-table a:focus-visible, .ec-skip:focus-visible, .ec-clubs a:focus-visible, .ec-table th button:focus-visible {
+  outline: 2px solid var(--ec-primary);
+  outline-offset: 2px;
+}
+
+.ec-field { display: flex; flex-direction: column; gap: 4px; font-size: 0.875rem; color: var(--ec-muted); }
+.ec-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--ec-border);
+  border-radius: var(--ec-radius);
+  background: var(--ec-surface);
+  color: var(--ec-fg);
+  font: inherit;
+}
+textarea.ec-input { font-family: ui-monospace, monospace; font-size: 0.8125rem; }
+
+/* The club directory. */
+.ec-clubs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: 24px;
+}
+@media (min-width: 600px) { .ec-clubs { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 900px) { .ec-clubs { grid-template-columns: 1fr 1fr 1fr; } }
+.ec-clubs > li { border-bottom: 1px solid var(--ec-border); }
+.ec-clubs a { display: block; padding: 8px 0; color: var(--ec-primary); text-decoration: none; }
+.ec-clubs a:hover { text-decoration: underline; }
+.ec-clubs a > span { margin-left: 8px; font-size: 0.75rem; color: var(--ec-muted); }
+.ec-search { flex: 1 1 260px; max-width: 420px; }
+
+/* Takes a keyboard user past the controls; off screen until focused. */
+.ec-skip {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 10;
+  padding: 8px 16px;
+  border-radius: var(--ec-radius);
+  background: var(--ec-surface);
+  color: var(--ec-primary);
+  transform: translateY(-200%);
+}
+.ec-skip:focus-visible { transform: none; }
+
+/* A club's sides: the tables, and filters and columns that need no JavaScript. */
+.ec-sidenav { display: flex; flex-wrap: wrap; gap: 8px; }
+.ec-sidenav a {
+  padding: 6px 14px;
+  border: 1px solid var(--ec-border);
+  border-radius: 999px;
+  color: var(--ec-primary);
+  text-decoration: none;
+}
+.ec-sidenav a:hover { background: var(--ec-hover); }
+.ec-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 16px; }
+.ec-toolbar h2 { margin: 0; font-size: 1.25rem; font-weight: 500; }
+.ec-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+
+.ec-segmented { display: inline-flex; margin: 0; padding: 0; border: 0; }
+.ec-segmented label {
+  padding: 4px 12px;
+  border: 1px solid var(--ec-border);
+  margin-left: -1px;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.ec-segmented label:first-of-type { margin-left: 0; border-radius: var(--ec-radius) 0 0 var(--ec-radius); }
+.ec-segmented label:last-of-type { border-radius: 0 var(--ec-radius) var(--ec-radius) 0; }
+.ec-segmented input { position: absolute; opacity: 0; pointer-events: none; }
+.ec-segmented label:has(:checked) { background: var(--ec-primary); border-color: var(--ec-primary); color: var(--ec-on-primary); }
+
+.ec-columns { position: relative; }
+.ec-columns summary { cursor: pointer; padding: 4px 12px; border: 1px solid var(--ec-border); border-radius: var(--ec-radius); font-size: 0.875rem; }
+.ec-columns > div {
+  position: absolute;
+  right: 0;
+  z-index: 5;
+  min-width: 160px;
+  margin-top: 4px;
+  padding: 8px 12px;
+  border: 1px solid var(--ec-border);
+  border-radius: var(--ec-radius);
+  background: var(--ec-surface);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+}
+.ec-columns label { display: block; padding: 2px 0; font-size: 0.875rem; white-space: nowrap; }
+
+/* Filtering by status and hiding optional columns, from the controls' own state. */
+.ec-side:has(input[value="eligible"]:checked) tbody tr:not([data-groups~="eligible"]),
+.ec-side:has(input[value="caution"]:checked) tbody tr:not([data-groups~="caution"]),
+.ec-side:has(input[value="ineligible"]:checked) tbody tr:not([data-groups~="ineligible"]) { display: none; }
+.ec-side:not(:has(input[data-col="lastRegistered"]:checked)) .col-lastRegistered,
+.ec-side:not(:has(input[data-col="played"]:checked)) .col-played,
+.ec-side:not(:has(input[data-col="sub"]:checked)) .col-sub { display: none; }
+
+.ec-table-wrap { overflow-x: auto; }
+.ec-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.ec-table th, .ec-table td { padding: 8px 12px; border-bottom: 1px solid var(--ec-border); text-align: left; vertical-align: top; }
+.ec-table th { font-weight: 600; white-space: nowrap; }
+.ec-table .ec-num { text-align: right; }
+.ec-table .ec-center { text-align: center; }
+.ec-table tbody tr:hover { background: var(--ec-hover); }
+.ec-table th button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.ec-table th[aria-sort="ascending"] button::after { content: " ▲"; font-size: 0.7em; }
+.ec-table th[aria-sort="descending"] button::after { content: " ▼"; font-size: 0.7em; }
+.ec-table a { color: var(--ec-primary); }
+.ec-table-outlined { border: 1px solid var(--ec-border); border-radius: var(--ec-radius); }
+.ec-facts { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; margin: 0; max-width: 420px; font-size: 0.875rem; }
+.ec-facts dt { color: var(--ec-muted); }
+.ec-facts dd { margin: 0; font-weight: 600; text-align: right; }
+
+.ec-details > summary { cursor: pointer; color: var(--ec-primary); }
+.ec-details[open] > summary { margin-bottom: 12px; }
+
+/* A Locked Season's player detail, a native modal <dialog>. */
+.ec-table a.ec-player { color: inherit; font-weight: 600; text-decoration: none; }
+.ec-table a.ec-player:hover { text-decoration: underline; }
+.ec-dialog { max-width: min(960px, calc(100vw - 32px)); width: 100%; max-height: calc(100vh - 32px); overflow: auto; background: var(--ec-surface); color: inherit; border: 1px solid var(--ec-border); border-radius: var(--ec-radius); padding: var(--ec-gap); }
+.ec-dialog::backdrop { background: rgb(0 0 0 / 0.5); }

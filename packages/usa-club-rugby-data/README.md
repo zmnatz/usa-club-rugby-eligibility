@@ -58,6 +58,30 @@ import type { PublishedClubFile, PublishedFixturesFile, PublishedIndexFile } fro
 
 The verdict types (`PlayerEligibility`, `EligibilityRules`, `Side`, `Club`) are there too. They are also exported from the main entry point.
 
+## Show a report in your own UI
+
+The component packages render these; an app with its own UI can use them directly.
+
+```ts
+import { buildReport, filterPlayers, getColumns, sortPlayers } from '@zmnatz/usa-club-rugby-data';
+
+const side = breakdown.sides[0];
+const columns = getColumns(['D1'], 'record');                       // the table's columns, with each other side's count
+const rows = sortPlayers(filterPlayers(side.players, 'caution'), 'participation', 'desc');
+const text = buildReport(breakdown, { title: club.name, source: 'record', season, gaps, recordsUpdated }, new Date());
+```
+
+| Export | What |
+| --- | --- |
+| `getColumns`, `sortValue`, `sortsNumerically`, `otherSideCount` | A report table's columns and each cell's value |
+| `sortPlayers`, `compareValues` | Sorting rows by a column; missing values sort last |
+| `filterPlayers`, `matchesFilters`, `statusGroups` | The status filter (`all`, `eligible`, `caution`, `ineligible`) |
+| `buildReport`, `gapText` | The exported text report, and a record gap as a sentence |
+| `CAUTION_ADVICE` | What to tell a player under Caution |
+| `formatDate`, `formatDateTime` | Dates in en-US and UTC, so a page reads the same on the server and in the browser |
+
+`ReportSource` (`record` or `csv`) says where a report's rows came from: only a CSV report has USA IDs and registration dates.
+
 ## Pull live from the CMS
 
 ```ts
