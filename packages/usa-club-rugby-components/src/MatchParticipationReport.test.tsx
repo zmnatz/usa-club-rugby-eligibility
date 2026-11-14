@@ -26,7 +26,7 @@ const REPORT = `${HEADER}
 `;
 
 const pasteReport = async (csv: string) => {
-  await user.click(screen.getByRole('textbox', { name: /paste the CSV/ }));
+  await user.click(screen.getByLabelText(/paste the CSV/));
   await user.paste(csv);
 };
 
@@ -42,7 +42,7 @@ describe('a Match Participation Report', () => {
   it("shows the error when a report can't be read", async () => {
     await runReport('Not,The,Right,Columns\n1,2,3,4\n');
     expect(await screen.findByText('The CSV is missing an expected column: "USA ID"')).toBeTruthy();
-    expect(screen.queryByRole('tab')).toBeNull();
+    expect(screen.queryByRole('table')).toBeNull();
   });
 
   it('shows the error when a report has no players', async () => {
@@ -72,9 +72,7 @@ describe('a Match Participation Report', () => {
     await user.click(await screen.findByRole('button', { name: 'Clear' }));
     await waitFor(() => expect(screen.queryByText('Eli Clear')).toBeNull());
     expect(screen.getByText(/Upload a report and run the breakdown/)).toBeTruthy();
-    // The closing dialog's form can still be on the page, so check every copy.
-    const fields = screen.getAllByLabelText(/paste the CSV/) as HTMLTextAreaElement[];
-    expect(fields.every((field) => field.value === '')).toBe(true);
+    expect((screen.getByLabelText(/paste the CSV/) as HTMLTextAreaElement).value).toBe('');
   });
 
   const upcoming = fixture('b9', 'Harbor City MD1', '2099-05-01T17:00:00Z', {

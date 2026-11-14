@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Alert, Link as MuiLink, Stack, Typography } from '@mui/material';
 import {
   clubSeason,
@@ -6,7 +6,6 @@ import {
   mergedClubNotes,
   type FeedFixture,
   type ParticipationSnapshot,
-  type PlayerRecordInput,
   type PublishedClub,
 } from '@zmnatz/usa-club-rugby-data';
 import { EligibilityReportView } from './EligibilityReportView.tsx';
@@ -20,20 +19,18 @@ export interface ClubEligibilityReportProps {
   saved: ParticipationSnapshot;
   /** The fixtures in the club's divisions, including those still to play. */
   fixtures: FeedFixture[];
-  /** Rugby Xplorer's own club slug. Match links use the council's path without one. */
-  clubSlug?: string | null;
+  /** The host's page for a player in this report's season, which each name links to. */
+  playerHref?: (playerId: string) => string;
 }
 
 /** One club's eligibility report from its saved Match Record. */
-export function ClubEligibilityReport({ club, saved, fixtures, clubSlug = null }: ClubEligibilityReportProps) {
+export function ClubEligibilityReport({ club, saved, fixtures, playerHref }: ClubEligibilityReportProps) {
   const { Link, routes } = useEligibilityLinks();
-  const [activeSide, setActiveSide] = useState(0);
 
   const locked = saved.locked === true;
   // A Locked Season's notes come with its file; this season's are worked out here.
   const notes = locked ? club.notes : mergedClubNotes(club);
   const { breakdown, gaps } = useMemo(() => clubSeason(saved, fixtures, club), [club, saved, fixtures]);
-  const playerRecord: PlayerRecordInput = { club, snapshot: saved, fixtures };
 
   return (
     <>
@@ -48,9 +45,9 @@ export function ClubEligibilityReport({ club, saved, fixtures, clubSlug = null }
              senior club league and local playoff match. Fixtures still to play before Super
              Regionals count towards the two-match minimums, shown as on track (experimental).
              A player one upper-side match from losing a side for the season is shown as caution
-             (experimental). Click a player to check their count round by round against the Rugby Xplorer match
-             reports. This is a guide: the Rugby Xplorer Match Participation Report is the
-             official count, and registration isn't checked.`}{' '}
+             (experimental). Open a player's page to check their count round by round against the
+             Rugby Xplorer match reports. This is a guide: the Rugby Xplorer Match Participation
+             Report is the official count, and registration isn't checked.`}{' '}
         <MuiLink component={Link} href={routes.methodology()}>
           How this report is worked out
         </MuiLink>
@@ -99,14 +96,11 @@ export function ClubEligibilityReport({ club, saved, fixtures, clubSlug = null }
           club={club}
           breakdown={breakdown}
           gaps={gaps}
-          record={playerRecord}
           season={saved.season}
-          playerPages={!locked}
+          recordsUpdated={saved.generatedAt || undefined}
+          playerHref={playerHref}
           locked={locked}
           transfers={saved.transfers}
-          clubSlug={clubSlug}
-          activeSide={activeSide}
-          onActiveSideChange={setActiveSide}
         />
       </Stack>
     </>

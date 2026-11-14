@@ -39,4 +39,5 @@ export * from './sort.ts';
 export * from './sources.ts';
 export * from './teamSide.ts';
 export * from './unreported.ts';
+export * from './unreportedFilters.ts';
 export type * from './types.ts';

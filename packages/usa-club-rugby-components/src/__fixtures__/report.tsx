@@ -104,6 +104,9 @@ export const routes: EligibilityRoutes = {
   methodology: () => '/methodology',
 };
 
+/** The host's page for a player. */
+export const playerHref = (id: string) => `/player/${id}`;
+
 /** Wraps a report in what a host supplies. */
 export const inHost = (ui: ReactElement, hostRoutes: EligibilityRoutes = routes) => (
   <EligibilityLinksProvider Link="a" routes={hostRoutes}>
@@ -124,7 +127,6 @@ export async function renderInHost(ui: ReactElement, hostRoutes: EligibilityRout
 
 export const renderClubReport = ({
   extraFixtures = [] as FeedFixture[],
-  clubSlug = undefined as string | undefined,
   locked = false,
   unplacedTeams = undefined as string[] | undefined,
   notes = undefined as string[] | undefined,
@@ -136,7 +138,7 @@ export const renderClubReport = ({
       club={{ ...club, ...(unplacedTeams ? { unplacedTeams } : {}), ...(notes ? { notes } : {}) }}
       saved={{ ...saved, ...(locked ? { locked } : {}), ...(transfers ? { transfers } : {}) }}
       fixtures={[...fixtures, ...extraFixtures]}
-      clubSlug={clubSlug}
+      playerHref={playerHref}
     />,
     reportProblem ? { ...routes, reportProblem } : routes,
   );
