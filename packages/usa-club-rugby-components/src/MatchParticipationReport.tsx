@@ -5,9 +5,6 @@ import {
   Button,
   Card,
   CardContent,
-  Dialog,
-  DialogContent,
-  DialogTitle,
   Link as MuiLink,
   Stack,
   TextField,
@@ -90,8 +87,8 @@ export function MatchParticipationReport({ loadFixtures }: MatchParticipationRep
   const [csvText, setCsvText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [csvRows, setCsvRows] = useState<PlayerRow[] | null>(null);
-  const [activeSide, setActiveSide] = useState(0);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [ranAt, setRanAt] = useState(() => new Date());
 
   const clubs = useMemo(() => (csvRows ? clubsInRows(csvRows) : []), [csvRows]);
   const club = clubs.find((candidate) => candidate.name === csvClubName) ?? (clubs.length === 1 ? clubs[0] : null);
@@ -126,11 +123,12 @@ export function MatchParticipationReport({ loadFixtures }: MatchParticipationRep
         setLoading(false);
       }
       setCsvRows(rows);
+      setRanAt(new Date());
     } catch (err) {
       setCsvRows(null);
       setError(err instanceof Error ? err.message : 'Could not read the CSV.');
     }
-    setDialogOpen(false);
+    setEditing(false);
   };
 
   const handleClear = () => {
@@ -138,7 +136,7 @@ export function MatchParticipationReport({ loadFixtures }: MatchParticipationRep
     setFileName('');
     setError(null);
     setCsvRows(null);
-    setDialogOpen(false);
+    setEditing(false);
   };
 
   const handleTextChange = (value: string) => {
@@ -164,10 +162,7 @@ export function MatchParticipationReport({ loadFixtures }: MatchParticipationRep
           sx={{ maxWidth: 420, mb: 2 }}
           options={clubs}
           value={club}
-          onChange={(_, next) => {
-            setCsvClubName(next?.name ?? '');
-            setActiveSide(0);
-          }}
+          onChange={(_, next) => setCsvClubName(next?.name ?? '')}
           getOptionLabel={(option) => option.name}
           isOptionEqualToValue={(option, value) => option.name === value.name}
           renderInput={(params) => <TextField {...params} label={`Club in this report (${clubs.length})`} />}
@@ -202,35 +197,36 @@ export function MatchParticipationReport({ loadFixtures }: MatchParticipationRep
       )}
 
       {breakdown && club && (
-        <EligibilityReportView
-          source="csv"
-          club={club}
-          breakdown={breakdown}
-          activeSide={activeSide}
-          onActiveSideChange={setActiveSide}
-          actions={
-            <Button variant="outlined" size="small" onClick={() => setDialogOpen(true)}>
-              Edit Report Data
-            </Button>
-          }
-        />
-      )}
-
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Edit Report Data</DialogTitle>
-        <DialogContent dividers>
-          <CsvForm
-            csvText={csvText}
-            fileName={fileName}
-            canClear={Boolean(csvText) || Boolean(csvRows)}
-            loading={loading}
-            onFile={handleFile}
-            onTextChange={handleTextChange}
-            onRun={handleRun}
-            onClear={handleClear}
+        <Stack spacing={2} useFlexGap>
+          <EligibilityReportView
+            source="csv"
+            club={club}
+            breakdown={breakdown}
+            now={ranAt}
+            actions={
+              <Button variant="outlined" size="small" onClick={() => setEditing((open) => !open)} aria-expanded={editing}>
+                Edit Report Data
+              </Button>
+            }
           />
-        </DialogContent>
-      </Dialog>
+          {editing && (
+            <Card component="section" aria-label="Edit Report Data">
+              <CardContent>
+                <CsvForm
+                  csvText={csvText}
+                  fileName={fileName}
+                  canClear={Boolean(csvText) || Boolean(csvRows)}
+                  loading={loading}
+                  onFile={handleFile}
+                  onTextChange={handleTextChange}
+                  onRun={handleRun}
+                  onClear={handleClear}
+                />
+              </CardContent>
+            </Card>
+          )}
+        </Stack>
+      )}
     </>
   );
 }

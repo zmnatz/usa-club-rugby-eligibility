@@ -5,7 +5,6 @@ export interface EligibilityStatusChipProps {
   player: Pick<PlayerEligibility, 'eligible' | 'pending' | 'cautions'>;
   /** Names the side, e.g. "D1", where more than one verdict is shown. */
   sideLabel?: string;
-  onClick?: () => void;
 }
 
 const CHIPS: Record<VerdictStatus, { color: 'error' | 'warning' | 'success'; text: string }> = {
@@ -17,9 +16,9 @@ const CHIPS: Record<VerdictStatus, { color: 'error' | 'warning' | 'success'; tex
 
 /** A verdict as a chip: ineligible, caution (one upper-side match from losing the
  *  side for the season), on track (still needs matches) or eligible. */
-export function EligibilityStatusChip({ player, sideLabel, onClick }: EligibilityStatusChipProps) {
+export function EligibilityStatusChip({ player, sideLabel }: EligibilityStatusChipProps) {
   const { color, text } = CHIPS[verdictStatus(player)];
-  return <Chip size="small" color={color} label={sideLabel ? `${sideLabel} ${text}` : text} onClick={onClick} />;
+  return <Chip size="small" color={color} label={sideLabel ? `${sideLabel} ${text}` : text} />;
 }
 
 /** Marks a player who also played for another club that season. */

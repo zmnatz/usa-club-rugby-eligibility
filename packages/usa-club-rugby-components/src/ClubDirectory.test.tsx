@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { fireEvent, render, screen } from '@testing-library/react';
 import type { PublishedClub } from '@zmnatz/usa-club-rugby-data';
 import { ClubDirectory } from './ClubDirectory.tsx';
 import { EligibilityLinksProvider, type EligibilityRoutes, useEligibilityLinks } from './links.tsx';
@@ -20,12 +17,13 @@ const routes: EligibilityRoutes = {
 
 const renderDirectory = (props: { autoFocus?: boolean; clubHref?: (key: string) => string } = {}) =>
   render(
-    <ThemeProvider theme={createTheme()}>
-      <EligibilityLinksProvider Link="a" routes={routes}>
-        <ClubDirectory clubs={clubs} {...props} />
-      </EligibilityLinksProvider>
-    </ThemeProvider>,
+    <EligibilityLinksProvider Link="a" routes={routes}>
+      <ClubDirectory clubs={clubs} {...props} />
+    </EligibilityLinksProvider>,
   );
+
+/** A host's Link, marked so a test can tell it from a plain anchor. */
+const HostLink = (props: { href: string }) => <a data-host-link {...props} />;
 
 function PlayerLink({ id }: { id: string }) {
   const { Link, routes: hostRoutes } = useEligibilityLinks();
@@ -45,18 +43,20 @@ describe('ClubDirectory', () => {
     expect(link.getAttribute('href')).toBe('/teams/harbor-city.html');
   });
 
-  it('filters by name or side', async () => {
-    const user = userEvent.setup();
-    renderDirectory();
-    await user.type(screen.getByRole('textbox', { name: 'Find a club' }), 'MD2');
-    expect(screen.queryByRole('link', { name: /Harbor City/ })).toBeNull();
-    expect(screen.getByRole('link', { name: /Bayside/ })).toBeTruthy();
-    expect(screen.getByText('1 of 2 clubs')).toBeTruthy();
+  it("renders plain anchors, not the host's Link, which costs more to hydrate", () => {
+    render(
+      <EligibilityLinksProvider Link={HostLink} routes={routes}>
+        <ClubDirectory clubs={clubs} />
+      </EligibilityLinksProvider>,
+    );
+    const link = screen.getByRole('link', { name: /Bayside/ });
+    expect(link.hasAttribute('data-host-link')).toBe(false);
+    expect(link.getAttribute('href')).toBe('/teams/bayside.html');
   });
 
   it('puts the cursor in the filter when asked to', () => {
     renderDirectory({ autoFocus: true });
-    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Find a club' }));
+    expect(document.activeElement).toBe(screen.getByRole('searchbox', { name: 'Find a club' }));
   });
 
   it('leaves focus alone by default', () => {
@@ -65,54 +65,29 @@ describe('ClubDirectory', () => {
   });
 });
 
-describe('ClubDirectory without React', () => {
-  /** The static HTML with its script run, and a way to type in the filter. */
-  function loadStaticPage() {
-    const page = document.createElement('div');
-    page.innerHTML = renderToStaticMarkup(
-      <ThemeProvider theme={createTheme()}>
-        <EligibilityLinksProvider Link="a" routes={routes}>
-          <ClubDirectory clubs={clubs} staticFilter />
-        </EligibilityLinksProvider>
-      </ThemeProvider>,
-    );
-    document.body.append(page);
-    new Function(page.querySelector('script')?.textContent ?? '')();
-    const input = page.querySelector('input') as HTMLInputElement;
-    const type = (value: string) => {
-      input.value = value;
-      input.dispatchEvent(new Event('input'));
-    };
-    const shown = () =>
-      [...page.querySelectorAll('li')].filter((club) => !club.hidden).map((club) => club.querySelector('a')?.getAttribute('href'));
-    const text = (selector: string) => page.querySelector(selector) as HTMLElement;
-    return { page, type, shown, count: text('[data-club-count]'), none: text('[data-no-club]') };
-  }
+describe('the directory filter', () => {
+  const type = (value: string) => {
+    const input = screen.getByRole('searchbox', { name: 'Find a club' });
+    fireEvent.change(input, { target: { value } });
+  };
+  const shown = () => screen.queryAllByRole('link').map((link) => link.getAttribute('href'));
 
-  it('filters by name or side, the same as React', () => {
-    const { page, type, shown, count, none } = loadStaticPage();
+  it('filters by name or side', () => {
+    renderDirectory();
     type('  md2 ');
     expect(shown()).toEqual(['/teams/bayside.html']);
-    expect(count.textContent).toBe('1 of 2 clubs');
-    expect(none.hidden).toBe(true);
-    page.remove();
+    expect(screen.getByText('1 of 2 clubs')).toBeTruthy();
+    expect(screen.queryByText('No club matches that search.')).toBeNull();
   });
 
   it('says when nothing matches, and restores the list when cleared', () => {
-    const { page, type, shown, count, none } = loadStaticPage();
+    renderDirectory();
     type('nowhere');
     expect(shown()).toEqual([]);
-    expect(none.hidden).toBe(false);
+    expect(screen.getByText('No club matches that search.')).toBeTruthy();
     type('');
     expect(shown()).toHaveLength(2);
-    expect(count.textContent).toBe('2 of 2 clubs');
-    expect(none.hidden).toBe(true);
-    page.remove();
-  });
-
-  it('adds no script unless asked to', () => {
-    const { container } = renderDirectory();
-    expect(container.querySelector('script')).toBeNull();
+    expect(screen.getByText('2 of 2 clubs')).toBeTruthy();
   });
 });
 
