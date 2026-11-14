@@ -29,12 +29,27 @@ export default function App({ Component, pageProps }: AppProps) {
             <PageLink href="/" className="brand">
               USA Club Rugby Eligibility
             </PageLink>
-            <PageLink href="/unreported">Unreported games</PageLink>
-            <PageLink href="/changes">Data changes</PageLink>
-            <PageLink href="/methodology">Methodology</PageLink>
-            <a href={ISSUES_URL} target="_blank" rel="noopener noreferrer">
-              Report a problem
-            </a>
+            {/* A <details>, so it opens with no script. Keyed on the URL, so it closes
+                after a link in it moves the page on. */}
+            <details key={router.asPath} className="site-menu">
+              <summary>Menu</summary>
+              <ul>
+                <li>
+                  <PageLink href="/unreported">Unreported games</PageLink>
+                </li>
+                <li>
+                  <PageLink href="/changes">Data changes</PageLink>
+                </li>
+                <li>
+                  <PageLink href="/methodology">Methodology</PageLink>
+                </li>
+                <li>
+                  <a href={ISSUES_URL} target="_blank" rel="noopener noreferrer">
+                    Report a problem
+                  </a>
+                </li>
+              </ul>
+            </details>
           </nav>
         </header>
         <main className={narrow ? "narrow" : undefined}>
