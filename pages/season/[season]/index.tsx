@@ -3,7 +3,7 @@ import Head from 'next/head';
 import { ClubDirectory, ReportProblemNote, SeasonRules } from '@zmnatz/usa-club-rugby-html';
 import type { PublishedSeasonFile } from '@zmnatz/usa-club-rugby-data';
 import { Crumbs, PageLink } from '@/components/Crumbs';
-import { seasonClubPath, seasonsPath, statsPath } from '@/utils/paths';
+import { pageHref, seasonClubPath, seasonsPath, statsPath } from '@/utils/paths';
 import { lockedSeason } from '@/utils/published';
 
 /** What the season's page shows: its clubs, without their files or the fixtures. */
@@ -41,7 +41,7 @@ export default function SeasonPage({ season, slug, clubs, unplacedTeams }: Seaso
           Season Stats
         </PageLink>
       </div>
-      <ClubDirectory clubs={clubs} autoFocus clubHref={(key) => seasonClubPath(slug, key)} />
+      <ClubDirectory clubs={clubs} autoFocus clubHref={(key) => pageHref(seasonClubPath(slug, key))} />
       {unplacedTeams.length > 0 && (
         <section className="section-gap">
           <h2>Not matched to a division</h2>

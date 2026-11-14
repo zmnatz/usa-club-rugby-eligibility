@@ -2,7 +2,7 @@ import type { GetStaticProps } from 'next';
 import Head from 'next/head';
 import { ClubDirectory } from '@zmnatz/usa-club-rugby-html';
 import { PageLink } from '@/components/Crumbs';
-import { seasonPath, seasonsPath, statsPath } from '@/utils/paths';
+import { clubPath, pageHref, seasonPath, seasonsPath, statsPath } from '@/utils/paths';
 import { published, type PublishedClub, type PublishedSeason } from '@/utils/published';
 
 interface HomeProps {
@@ -74,7 +74,7 @@ export default function HomePage({ clubs, season, generatedAt, pastSeasons }: Ho
           Check a Match Participation Report (CSV)
         </PageLink>
       </p>
-      <ClubDirectory clubs={clubs} autoFocus />
+      <ClubDirectory clubs={clubs} autoFocus clubHref={(key) => pageHref(clubPath(key))} />
     </>
   );
 }

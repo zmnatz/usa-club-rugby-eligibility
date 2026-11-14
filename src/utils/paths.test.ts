@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'bun:test';
 import {
+  clubPath,
   legacyRedirect,
+  pageHref,
   playerPath,
   playerSeasonPath,
   reportProblemUrl,
@@ -39,6 +41,13 @@ describe('player paths', () => {
   it('gives each player a page of their own, and one for each Locked Season they are in', () => {
     expect(playerPath('27ZCFXTnfWs8iEaz9')).toBe('/player/27ZCFXTnfWs8iEaz9');
     expect(playerSeasonPath('27ZCFXTnfWs8iEaz9', '2024-25')).toBe('/player/27ZCFXTnfWs8iEaz9/2024-25');
+  });
+});
+
+describe('pageHref', () => {
+  it("ends a page's path in the slash its page is served at, for a plain anchor", () => {
+    expect(pageHref(clubPath('harbor-city'))).toBe('/club/harbor-city/');
+    expect(pageHref(seasonClubPath('2024-25', 'harbor-city'))).toBe('/season/2024-25/harbor-city/');
   });
 });
 

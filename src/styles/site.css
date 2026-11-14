@@ -33,6 +33,35 @@ main p.small { color: var(--ec-muted); font-size: 0.875rem; margin-bottom: 16px;
 .site-header a { color: inherit; }
 .site-header .brand { flex-grow: 1; font-size: 1.25rem; font-weight: 500; text-decoration: none; }
 .site-header a:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+/* The site's pages, in a menu at the header's end that opens over the page below it. */
+.site-menu { position: relative; }
+.site-menu summary {
+  cursor: pointer;
+  padding: 4px 12px;
+  border: 1px solid currentColor;
+  border-radius: var(--ec-radius);
+  list-style: none;
+}
+.site-menu summary::-webkit-details-marker { display: none; }
+.site-menu summary::after { content: " ▾"; }
+.site-menu[open] summary::after { content: " ▴"; }
+.site-menu summary:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.site-menu ul {
+  position: absolute;
+  right: 0;
+  z-index: 10;
+  min-width: 200px;
+  margin: 8px 0 0;
+  padding: 8px 0;
+  list-style: none;
+  background: var(--ec-surface);
+  border: 1px solid var(--ec-border);
+  border-radius: var(--ec-radius);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.2);
+}
+.site-menu a { display: block; padding: 8px 16px; color: var(--ec-fg); text-decoration: none; }
+.site-menu a:hover { background: var(--ec-hover); }
+.site-menu a:focus-visible { outline-color: var(--ec-primary); outline-offset: -2px; }
 main { flex-grow: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
 main.narrow { max-width: 900px; }
 .site-footer { padding: 24px 16px; color: var(--ec-muted); font-size: 0.875rem; text-align: center; }

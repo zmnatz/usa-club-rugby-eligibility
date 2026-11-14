@@ -2,6 +2,10 @@
 
 import type { EligibilityRoutes, ProblemReport } from '@zmnatz/usa-club-rugby-html';
 
+/** A page's path as a plain anchor's href. Next adds the trailing slash its pages are served
+ *  at only to its own links, so an anchor without it would go through a redirect. */
+export const pageHref = (path: string): string => `${path}/`;
+
 export const clubPath = (clubKey: string): string => `/club/${clubKey}`;
 
 /** A player's page is not under a club: they can play for several over time. It shows
@@ -24,7 +28,6 @@ export const seasonClubPath = (slug: string, clubKey: string): string =>
 export const legacyRedirect = (pathname: string, search: string): string | null => {
   const query = new URLSearchParams(search);
   const param = (key: string) => query.get(key) || null;
-  const page = (path: string) => `${path}/`;
   let parts: string[];
   try {
     parts = pathname.split('/').filter(Boolean).map(decodeURIComponent);
@@ -39,19 +42,19 @@ export const legacyRedirect = (pathname: string, search: string): string | null 
     const slug = param('season');
     if (!slug) return null;
     const club = param('club');
-    if (player) return page(playerSeasonPath(player, slug));
-    return page(club ? seasonClubPath(slug, club) : seasonPath(slug));
+    if (player) return pageHref(playerSeasonPath(player, slug));
+    return pageHref(club ? seasonClubPath(slug, club) : seasonPath(slug));
   }
-  if (route === 'season' && parts.length === 3 && player) return page(playerSeasonPath(player, first));
-  if (route === 'club' && parts.length === 2 && player) return page(playerPath(player));
+  if (route === 'season' && parts.length === 3 && player) return pageHref(playerSeasonPath(player, first));
+  if (route === 'club' && parts.length === 2 && player) return pageHref(playerPath(player));
   if (route === 'player' && parts.length === 1) {
     const id = param('id');
-    return id ? page(playerPath(id)) : null;
+    return id ? pageHref(playerPath(id)) : null;
   }
   if (route === 'player' && parts.length === 2) {
     const season = param('season');
     if (!season) return null;
-    return page(season === 'current' ? playerPath(first) : playerSeasonPath(first, season));
+    return pageHref(season === 'current' ? playerPath(first) : playerSeasonPath(first, season));
   }
   return null;
 };

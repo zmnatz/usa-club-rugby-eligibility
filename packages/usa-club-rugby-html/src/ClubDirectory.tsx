@@ -7,7 +7,8 @@ export interface ClubDirectoryProps {
   /** Put the cursor in the filter when the directory appears. For a page that is
    *  mainly the directory. Off by default. */
   autoFocus?: boolean;
-  /** Where each club links, when not the host's club route: a past season's pages. */
+  /** Where each club links, when not the host's club route: a past season's pages. Used
+   *  as given, in a plain anchor (see below), so give the URL the host serves. */
   clubHref?: (clubKey: string) => string;
 }
 
@@ -15,9 +16,11 @@ export interface ClubDirectoryProps {
 const searchText = (club: PublishedClub) =>
   [club.name, ...club.sides.map((side) => side.teamName)].join('\n').toLowerCase();
 
-/** Every club, as links, with a filter by club or team name. */
+/** Every club, as links, with a filter by club or team name. The links are plain anchors,
+ *  not the host's Link: a directory can list hundreds of clubs, and each Link adds to the
+ *  work of hydrating the page, where an anchor adds almost none. */
 export function ClubDirectory({ clubs, autoFocus = false, clubHref }: ClubDirectoryProps) {
-  const { Link, routes } = useEligibilityLinks();
+  const { routes } = useEligibilityLinks();
   const [query, setQuery] = useState('');
   const sorted = [...clubs].sort((a, b) => a.name.localeCompare(b.name));
   const term = query.trim().toLowerCase();
@@ -46,10 +49,10 @@ export function ClubDirectory({ clubs, autoFocus = false, clubHref }: ClubDirect
       <ul className="ec-clubs">
         {shown.map((club) => (
           <li key={club.key}>
-            <Link href={(clubHref ?? routes.club)(club.key)}>
+            <a href={(clubHref ?? routes.club)(club.key)}>
               {club.name}
               <span>{club.sides.map((side) => side.label).join(' · ')}</span>
-            </Link>
+            </a>
           </li>
         ))}
       </ul>
