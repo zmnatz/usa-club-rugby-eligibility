@@ -22,6 +22,9 @@ const renderDirectory = (props: { autoFocus?: boolean; clubHref?: (key: string) 
     </EligibilityLinksProvider>,
   );
 
+/** A host's Link, marked so a test can tell it from a plain anchor. */
+const HostLink = (props: { href: string }) => <a data-host-link {...props} />;
+
 function PlayerLink({ id }: { id: string }) {
   const { Link, routes: hostRoutes } = useEligibilityLinks();
   return <Link href={hostRoutes.player(id)}>Player</Link>;
@@ -38,6 +41,17 @@ describe('ClubDirectory', () => {
     const link = screen.getByRole('link', { name: /Harbor City/ });
     expect(link.tagName).toBe('A');
     expect(link.getAttribute('href')).toBe('/teams/harbor-city.html');
+  });
+
+  it("renders plain anchors, not the host's Link, which costs more to hydrate", () => {
+    render(
+      <EligibilityLinksProvider Link={HostLink} routes={routes}>
+        <ClubDirectory clubs={clubs} />
+      </EligibilityLinksProvider>,
+    );
+    const link = screen.getByRole('link', { name: /Bayside/ });
+    expect(link.hasAttribute('data-host-link')).toBe(false);
+    expect(link.getAttribute('href')).toBe('/teams/bayside.html');
   });
 
   it('puts the cursor in the filter when asked to', () => {

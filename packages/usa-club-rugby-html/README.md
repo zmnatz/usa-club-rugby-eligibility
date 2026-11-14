@@ -35,7 +35,7 @@ export function App({ children }: { children: React.ReactNode }) {
 }
 ```
 
-`Link` is rendered for every internal link and receives `href` and `children`: pass `"a"`, or your router's link if it takes `href`. A route is any function returning a URL, so query strings work. Include any base path your Link doesn't add for you.
+`Link` is rendered for every internal link and receives `href` and `children`: pass `"a"`, or your router's link if it takes `href`. A route is any function returning a URL, so query strings work. Include any base path your Link doesn't add for you. The club directory is the exception: its links are plain anchors, so a list of hundreds of clubs costs little to hydrate, and its hrefs (`routes.club`, or its `clubHref`) are used as given, so return the URL your server serves, trailing slash and all.
 
 `reportProblem` is optional. Give it and every club report says where to report a verdict that looks wrong: Rugby Xplorer first, then your address. Called with no argument, it returns your general address. For a Locked Season it is called with a `ProblemReport` (`kind`, `season` and, on a club report, `club`). Leave it out and no note shows.
 
