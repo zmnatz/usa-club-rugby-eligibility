@@ -50,7 +50,7 @@ NCS player eligibility for every USA Club Rugby senior club, from the Rugby Xplo
 
 ## Pull Requests
 
-- CI screenshots each PR at desktop and mobile sizes and keeps one comment on it up to date, from a build made inside the job and served with `next start`. The job is the shared workflow in `zmnatz/code-review`, called from `.github/workflows/ci.yml`; its README documents the inputs. For a PR that changes UI, add a `## Screenshots` section to the description listing the pages to capture, one path per line (e.g. `/csv/`). Any club or player page can be listed (`/club/<club-key>/`, `/player/<cms-id>/`), since they are generated on request.
+- CI screenshots each PR at desktop and mobile sizes and keeps one comment on it up to date, from a build made inside the job and served with `next start`. The job is the shared workflow in `zmnatz/github-workflows`, called from `.github/workflows/ci.yml`; its README documents the inputs. For a PR that changes UI, add a `## Screenshots` section to the description listing the pages to capture, one path per line (e.g. `/csv/`). Any club or player page can be listed (`/club/<club-key>/`, `/player/<cms-id>/`), since they are generated on request.
 - Add `wait: <selector>` or `delay: <ms>` after a path for pages that fill in after load.
 - Without the section the run captures `/` plus any routes mapped from changed files in `.github/screenshots/rules.yml`.
 - The `data-diff` job builds `public/data` from the PR's base and head and keeps one comment on the PR up to date with what changed, from `test/ci/data-diff.ts`. It detects its comment by `<!-- pr-data-diff -->`. The nightly job appends the same report to `pages/changes.mdx`, keeping the last 14 entries.
