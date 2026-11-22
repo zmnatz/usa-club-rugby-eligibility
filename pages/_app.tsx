@@ -5,6 +5,7 @@ import { EligibilityLinksProvider, SkipToFirstPlayer } from "@zmnatz/usa-club-ru
 import "@zmnatz/usa-club-rugby-html/styles.css";
 import "@/styles/site.css";
 import { PageLink } from "@/components/Crumbs";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { ISSUES_URL, routes } from "@/utils/paths";
 
 const DESCRIPTION =
@@ -22,6 +23,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta name="description" content={DESCRIPTION} />
         <title>USA Club Rugby Eligibility</title>
       </Head>
+      <GoogleAnalytics />
       <div className="site">
         {clubReport && <SkipToFirstPlayer />}
         <header className="site-header">
