@@ -36,6 +36,8 @@ bun run test       # the package's tests
 bun run snapshot   # refresh the data from the CMS
 ```
 
+Google Analytics loads only when `NEXT_PUBLIC_GOOGLE_ANALYTICS` (a GA4 measurement ID, `G-…`) is set at build time; it is set in Netlify, so local and CI builds send nothing. See [ADR 021](docs/adr/021-google-analytics.md).
+
 ## Corrections
 
 If a verdict looks wrong, first check the match reports linked on the player's page: most errors are lineups or substitutions missing in Rugby Xplorer, and correcting them there fixes the count the next night. Otherwise, open an issue with the club and player.
