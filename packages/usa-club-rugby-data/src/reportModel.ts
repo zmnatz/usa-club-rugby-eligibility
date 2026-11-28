@@ -107,7 +107,12 @@ export function statusGroups(player: PlayerEligibility): string {
 
 /** A gap in the match record, in the words shown on the page and in the export. */
 export function gapText(gap: ParticipationGap): string {
-  const problem = gap.kind === 'no-lineup' ? 'no lineup recorded' : 'no substitutions recorded';
+  const problem =
+    gap.kind === 'no-lineup'
+      ? 'no lineup recorded'
+      : gap.kind === 'substitution-missing-on'
+        ? 'a player came off but no replacement was recorded'
+        : 'no substitutions recorded';
   return `${gap.teamName} v ${gap.opponent} (${formatDate(gap.dateTime)}): ${problem}`;
 }
 

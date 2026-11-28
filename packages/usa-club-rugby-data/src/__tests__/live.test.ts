@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { listClubs } from '../clubFixtures.ts';
 import { leagueResults, loadClubRecord } from '../live.ts';
+import type { MatchCentreData } from '../playerHistory.ts';
 import { buildParticipationSnapshot, type ParticipationSnapshot } from '../snapshot.ts';
 import { SEASON, game, history, baseConfig, row, fixtureOf } from './participationFixtures.ts';
 
@@ -202,9 +203,46 @@ describe('loadClubRecord', () => {
       ],
       gaps: [],
     };
-    const pulling = (fetched: string[]) => async (fixture: { id: string }) => {
+    const pulling = (
+      fetched: string[],
+      makeMatch: (fixture: { id: string }) => MatchCentreData | null = (fixture) => matchFor(fixture.id),
+    ) => async (fixture: { id: string }) => {
       fetched.push(fixture.id);
-      return matchFor(fixture.id);
+      return makeMatch(fixture);
+    };
+
+    const rival = {
+      id: 'rival__1',
+      name: 'Rival Prop',
+      position: '1',
+      shirtNumber: '1',
+      isHome: false,
+    };
+
+    const gapOf = (
+      overrides: Partial<ParticipationSnapshot['gaps'][number]> = {},
+    ): ParticipationSnapshot['gaps'][number] => ({
+      kind: 'no-lineup',
+      fixtureId: 'old',
+      teamName: 'NOVA MD1',
+      opponent: 'Rocky Gorge MD1',
+      competition: 'MAC Men D1',
+      dateTime: '2026-10-03T17:00:00Z',
+      ...overrides,
+    });
+
+    const savedWithGap = (
+      gap: ParticipationSnapshot['gaps'][number],
+      rows: ParticipationSnapshot['rows'] = [
+        row({ playerId: 'sam', teamName: 'NOVA MD1' }),
+        row({ playerId: 'other', teamName: 'NOVA MD3', competition: 'Capital Men D3', played: 1 }),
+      ],
+    ): ParticipationSnapshot => ({ ...bothSides, resultIds: ['old'], rows, gaps: [gap] });
+
+    const scoredOld = {
+      dateTime: '2026-10-03T17:00:00Z',
+      homeTeam: { name: 'NOVA MD1', score: '10' },
+      awayTeam: { name: 'Rocky Gorge MD1', score: '5' },
     };
 
     it('makes no requests when every played fixture already has a result', async () => {
@@ -259,15 +297,9 @@ describe('loadClubRecord', () => {
       expect(record.snapshot.rows.find((item) => item.playerId === 'other')).toMatchObject({ played: 1 });
     });
 
-    it('keeps saved gaps and adds new ones', async () => {
-      const savedGap = {
-        kind: 'no-lineup' as const,
-        fixtureId: 'old',
-        teamName: 'NOVA MD1',
-        opponent: 'X',
-        competition: 'MAC Men D1',
-        dateTime: '2026-10-03T17:00:00Z',
-      };
+    it('keeps saved gaps for fixtures absent from the fixture list and adds new ones', async () => {
+      const savedGap = gapOf();
+      const fetched: string[] = [];
       const record = await loadClubRecord(
         club,
         deps({
@@ -278,12 +310,178 @@ describe('loadClubRecord', () => {
             }),
           ],
           loadSaved: async () => ({ ...bothSides, gaps: [savedGap] }),
-          fetchMatch: async () => null,
+          fetchMatch: pulling(fetched),
         }),
       );
 
-      expect(record.snapshot.gaps.map((gap) => gap.fixtureId)).toContain('old');
-      expect(record.snapshot.gaps.map((gap) => gap.fixtureId)).toContain('new');
+      expect(fetched).toEqual(['new']);
+      expect(record.snapshot.gaps).toEqual([savedGap, expect.objectContaining({ fixtureId: 'new' })]);
+    });
+
+    it('re-pulls a saved gap and replaces that result instead of counting it twice', async () => {
+      const fetched: string[] = [];
+      const staleResult = savedWithGap(gapOf(), [
+        row({
+          playerId: 'sam',
+          teamName: 'NOVA MD1',
+          appearances: 2,
+          played: 2,
+          rounds: { old: 'Start', older: 'Start' },
+        }),
+        row({ playerId: 'other', teamName: 'NOVA MD3', competition: 'Capital Men D3', played: 1 }),
+      ]);
+      const record = await loadClubRecord(
+        club,
+        deps({
+          fixtures: [scheduled('old', scoredOld)],
+          loadSaved: async () => staleResult,
+          fetchMatch: pulling(fetched, (fixture) => {
+            const match = matchFor(fixture.id);
+            return { ...match, players: [...match.players, rival] };
+          }),
+        }),
+      );
+
+      expect(fetched).toEqual(['old']);
+      expect(record).toMatchObject({ source: 'live', asOf: NOW.toISOString() });
+      expect(record.snapshot.resultIds).toEqual(['old']);
+      expect(record.snapshot.gaps).toEqual([]);
+      expect(record.snapshot.rows.find((item) => item.playerId === 'sam')).toMatchObject({
+        appearances: 2,
+        played: 2,
+        substitute: 0,
+        rounds: { older: 'Start', old: 'Start' },
+      });
+      expect(record.snapshot.rows.find((item) => item.playerId === 'other')).toMatchObject({ played: 1 });
+    });
+
+    it('re-pulls a no-substitutions gap when a substitute came on in the CMS', async () => {
+      const fetched: string[] = [];
+      const staleResult = savedWithGap(gapOf({ kind: 'no-substitutions', rostered: 1 }), [
+        row({ playerId: 'sam', teamName: 'NOVA MD1', appearances: 1, played: 1, rounds: { old: 'Start' } }),
+        row({ playerId: 'other', teamName: 'NOVA MD3', competition: 'Capital Men D3', played: 1 }),
+      ]);
+      const record = await loadClubRecord(
+        club,
+        deps({
+          fixtures: [scheduled('old', scoredOld)],
+          loadSaved: async () => staleResult,
+          fetchMatch: pulling(fetched, (fixture) => {
+            const match = matchFor(fixture.id);
+            return {
+              ...match,
+              players: [...match.players, rival],
+              substitutes: [
+                { id: 'sub__1', name: 'Tess Sub', position: '9', shirtNumber: '20', isHome: true },
+              ],
+              commentary: [
+                {
+                  id: 'substitution',
+                  minute: '60',
+                  type: 'Substitution - Tactical',
+                  comment: 'Substitution - Tactical Off: Sam Hooker, On: Tess Sub',
+                },
+              ],
+            };
+          }),
+        }),
+      );
+
+      expect(fetched).toEqual(['old']);
+      expect(record.snapshot.gaps).toEqual([]);
+      expect(record.snapshot.rows.find((item) => item.playerId === 'sam')).toMatchObject({
+        appearances: 1,
+        played: 1,
+        substitute: 0,
+        rounds: { old: 'Start' },
+      });
+      expect(record.snapshot.rows.find((item) => item.playerId === 'sub')).toMatchObject({
+        playerId: 'sub',
+        teamName: 'NOVA MD1',
+        appearances: 1,
+        played: 0,
+        substitute: 1,
+        rounds: { old: 'Sub' },
+      });
+      expect(record.snapshot.rows.find((item) => item.playerId === 'other')).toMatchObject({ played: 1 });
+    });
+
+    it('reports a saved gap again when the CMS still has no correction', async () => {
+      const fetched: string[] = [];
+      const gap = gapOf();
+      const staleResult = savedWithGap(gap);
+      const record = await loadClubRecord(
+        club,
+        deps({
+          fixtures: [scheduled('old', scoredOld)],
+          loadSaved: async () => staleResult,
+          fetchMatch: pulling(fetched, () => null),
+        }),
+      );
+
+      expect(fetched).toEqual(['old']);
+      expect(record.source).toBe('live');
+      expect(record.snapshot.resultIds).toEqual(['old']);
+      expect(record.snapshot.gaps).toEqual([gap]);
+    });
+
+    it('keeps the saved fixture when the CMS record comes back unscored', async () => {
+      const gap = gapOf();
+      const staleResult = savedWithGap(gap, [
+        row({ playerId: 'sam', teamName: 'NOVA MD1', appearances: 1, played: 1, rounds: { old: 'Start' } }),
+        row({ playerId: 'other', teamName: 'NOVA MD3', competition: 'Capital Men D3', played: 1 }),
+      ]);
+      const fetched: string[] = [];
+      const record = await loadClubRecord(
+        club,
+        deps({
+          fixtures: [scheduled('old', scoredOld)],
+          loadSaved: async () => staleResult,
+          fetchMatch: pulling(fetched, (fixture) => matchFor(fixture.id, '')),
+        }),
+      );
+
+      expect(fetched).toEqual(['old']);
+      expect(record.snapshot.resultIds).toEqual(['old']);
+      expect(record.snapshot.gaps).toEqual([gap]);
+      expect(record.snapshot.rows.find((item) => item.playerId === 'sam')).toMatchObject({
+        appearances: 1,
+        played: 1,
+        rounds: { old: 'Start' },
+      });
+    });
+
+    it('keeps a saved gap when its fixture no longer has a score', async () => {
+      const fetched: string[] = [];
+      const staleResult = savedWithGap(gapOf());
+      const record = await loadClubRecord(
+        club,
+        deps({
+          fixtures: [scheduled('old')],
+          loadSaved: async () => staleResult,
+          fetchMatch: pulling(fetched),
+        }),
+      );
+
+      expect(fetched).toEqual([]);
+      expect(record.snapshot).toBe(staleResult);
+    });
+
+    it('falls back to the saved gap when a re-pull fails', async () => {
+      const staleResult = savedWithGap(gapOf());
+      const record = await loadClubRecord(
+        club,
+        deps({
+          fixtures: [scheduled('old', scoredOld)],
+          loadSaved: async () => staleResult,
+          fetchMatch: async () => {
+            throw new Error('Request failed: 429');
+          },
+        }),
+      );
+
+      expect(record).toMatchObject({ source: 'saved', liveFailed: true, asOf: staleResult.generatedAt });
+      expect(record.snapshot).toBe(staleResult);
     });
 
     it('pulls everything when the snapshot is from another season', async () => {

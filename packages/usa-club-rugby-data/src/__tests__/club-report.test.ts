@@ -278,6 +278,27 @@ describe('playerRounds', () => {
     expect(round).toMatchObject({ status: 'unused', substitutionsMissing: true });
   });
 
+  it('says when a round is short because the player on was not marked', () => {
+    const [round] = rounds([fixture('f3', 'Round 3', '2026-09-30')], {
+      gaps: [
+        {
+          kind: 'substitution-missing-on',
+          fixtureId: 'f3',
+          teamName: 'Loudoun MD3',
+          opponent: 'Frederick MD3',
+          competition: 'Capital Men D3',
+          dateTime: '2026-09-30T17:00:00Z',
+        },
+      ],
+    });
+
+    expect(round).toMatchObject({
+      status: 'unused',
+      substitutionsMissing: true,
+      substitutionGap: 'substitution-missing-on',
+    });
+  });
+
   it('labels a round with no name by its date', () => {
     const [round] = rounds([fixture('f1', '', '2026-09-10')]);
 

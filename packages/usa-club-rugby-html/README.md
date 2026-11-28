@@ -51,7 +51,7 @@ A player's detail opens in a dialog that your URL controls, so the component hol
 
 ## Unreported games
 
-`UnreportedGames` lists the games `unreportedGames` (from the data package) finds: no result, or a side with no lineup or no substitutions, past the leeway after kickoff. They are grouped by competition in collapsible sections, with Expand all, Collapse all and a switch to one table. They can be filtered by division, by any part of a competition's name (with suggestions), and by reason. Each reason is a toggle: a game shows when any of its reasons is on, and every game when none is. Each reason has a colour, on its text, its toggle and the cell it marks: the side a gap names, or the date for a missing result.
+`UnreportedGames` lists the games `unreportedGames` (from the data package) finds: no result, or a side with no lineup, no substitutions or a substitution whose player on wasn't recorded, past the leeway after kickoff. They are grouped by competition in collapsible sections, with Expand all, Collapse all and a switch to one table. They can be filtered by division, by any part of a competition's name (with suggestions), and by reason. Each reason is a toggle: a game shows when any of its reasons is on, and every game when none is. Each reason has a colour, on its text, its toggle and the cell it marks: the side a gap names, or the date for a missing result.
 
 ```tsx
 <UnreportedGames games={games} filters={filters} onFiltersChange={setFilters} />

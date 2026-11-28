@@ -71,7 +71,14 @@ describe('UnreportedGames', () => {
   });
 
   it('offers the divisions, competitions and reasons the games have', () => {
-    renderGames([game, { ...game, fixtureId: 'f2', competition: 'Capital Men D3', divisions: ['M3'] }]);
+    const missingOn = {
+      ...game,
+      fixtureId: 'f3',
+      competition: 'Capital Men D3',
+      divisions: ['M3'],
+      reasons: [{ kind: 'substitution-missing-on' as const, teamName: 'Bayside MD2' }],
+    };
+    renderGames([game, { ...game, fixtureId: 'f2', competition: 'Capital Men D3', divisions: ['M3'] }, missingOn]);
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Division' }));
     expect(within(screen.getByRole('listbox')).getAllByRole('option').map((option) => option.getAttribute('data-value'))).toEqual([
       'all',
@@ -89,7 +96,10 @@ describe('UnreportedGames', () => {
       'All',
       'No lineup',
       'No substitutions',
+      'Sub on not recorded',
     ]);
+    fireEvent.click(reason('Sub on not recorded'));
+    expect(screen.getByText('Sub on not recorded: Bayside MD2')).toBeTruthy();
   });
 
   it('filters by division, by any part of a competition name, and by reasons, and counts the games left', () => {

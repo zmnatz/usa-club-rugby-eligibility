@@ -31,6 +31,7 @@ export const UNREPORTED_REASONS: [UnreportedReasonKind, string][] = [
   ['no-result', 'No result'],
   ['no-lineup', 'No lineup'],
   ['no-substitutions', 'No substitutions'],
+  ['substitution-missing-on', 'Sub on not recorded'],
 ];
 
 /** Each reason's severity, most serious first: a missing lineup changes verdicts, missing
@@ -38,6 +39,7 @@ export const UNREPORTED_REASONS: [UnreportedReasonKind, string][] = [
 export const UNREPORTED_TONES: [UnreportedReasonKind, 'error' | 'warning' | 'info'][] = [
   ['no-lineup', 'error'],
   ['no-substitutions', 'warning'],
+  ['substitution-missing-on', 'warning'],
   ['no-result', 'info'],
 ];
 

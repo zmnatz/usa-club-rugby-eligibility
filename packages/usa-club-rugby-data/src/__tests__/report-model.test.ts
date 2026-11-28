@@ -155,6 +155,9 @@ describe('gapText', () => {
   it('names the match and the problem', () => {
     expect(gapText(gap)).toBe('Harbor City MD1 v Visitors MD1 (9/5/2026): no lineup recorded');
     expect(gapText({ ...gap, kind: 'no-substitutions' })).toContain('no substitutions recorded');
+    expect(gapText({ ...gap, kind: 'substitution-missing-on' })).toContain(
+      'a player came off but no replacement was recorded',
+    );
   });
 });
 

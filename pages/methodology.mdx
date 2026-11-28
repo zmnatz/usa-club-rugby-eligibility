@@ -149,12 +149,13 @@ The API allows each address about 500 requests, refilling at about 4 a second, a
 
 **Hidden profiles.** The CMS shows a player whose profile isn't public as "Name Withheld". Profiles should be public for qualifying matches and must be for playoffs and the National Championship Series (Reg 3.2(i), 3.4.1(i), 3.4.2(d)), although a player can hold an approved exemption. We can't tell who a hidden profile belongs to, so it isn't included in the report. A player with an exemption won't appear, so their club needs to check them separately.
 
-**Known gaps.** The report flags two problems beside the verdicts, because either can make a count too low:
+**Known gaps.** The report flags three problems beside the verdicts, because each can make a count too low:
 
 - **No lineup recorded:** a match has a result but no lineup for that side.
 - **No substitutions recorded:** a side listed substitutes but none came on, which usually means substitutions weren't entered.
+- **Sub on not recorded:** the timeline names a player coming off in a substitution but no player coming on, which usually means the replacement wasn't marked. This is called out separately from a side with no substitutions at all, and is identified only when the player off can be matched to a listed player and so to a side.
 
-A correction in Rugby Xplorer clears these gaps. They don't catch everything, so a count can be low with no flag: a side may have entered only some of its substitutions, or a substitution may name a player who can't be matched to exactly one listed substitute.
+A correction in Rugby Xplorer clears these gaps. They don't catch everything, so a count can be low with no flag: a side may have entered only some of its substitutions, or a substitution may name a player who can't be matched to exactly one listed player when working out its side or its replacement.
 
 ## Unreported games
 
@@ -163,6 +164,7 @@ The [unreported games](/unreported) page lists this season's games whose record 
 - **No result:** the fixture still has no score. Cancelled and postponed fixtures and byes aren't listed.
 - **No lineup:** a result is entered but a side has no players listed.
 - **No substitutions:** a result is entered and a side listed more than 15 players, starters and substitutes, but none of its substitutes is recorded coming on. A side that listed 15 or fewer had no substitute to bring on, so it isn't listed, though the report beside a club's verdicts still flags it if it listed any substitutes. This is a flag to check, not a proven error: a side can use none of its substitutes.
+- **Sub on not recorded:** a result is entered and the timeline names a player off in a substitution but no player on. Unlike no substitutions, this is listed however many players the side rostered and even if other substitutes are recorded coming on.
 
 Forfeits aren't listed at all, as the forfeit is the result. When both sides of a game have a gap, its row lists both. A lineup or substitution gap is only known for a side of a club listed here, so an opponent that isn't one shows no gap. Only Qualifying Matches with at least one side the report assesses are listed, so friendlies, 7s, crossovers, Men's Division IV and Women's Division III aren't, and nor are past seasons, which are locked. The list is worked out each night when the site is built.
 

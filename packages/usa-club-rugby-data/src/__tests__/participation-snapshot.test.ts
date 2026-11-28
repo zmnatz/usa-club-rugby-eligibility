@@ -126,6 +126,28 @@ describe('buildParticipationSnapshot', () => {
     expect(snapshot.gaps).toEqual([expect.objectContaining({ kind: 'no-substitutions', rostered: 3 })]);
   });
 
+  it('names a missing replacement even when another substitute did come on', () => {
+    const snapshot = buildParticipationSnapshot(
+      [
+        history('sam', 'Sam Hooker', [game('f1', { substitutionMissingOn: true })]),
+        history('joe', 'Joe Bench', [
+          game('f1', { starter: false, played: true, substitutionMissingOn: true }),
+        ]),
+        history('kai', 'Kai Bench', [game('f1', { starter: false, played: false })]),
+        history('nia', 'Nia Prop', [game('f1', { teamName: 'NOVA MD1', opponent: 'Rocky Gorge MD1' })]),
+      ],
+      [result('f1')],
+    );
+
+    expect(snapshot.gaps).toEqual([
+      expect.objectContaining({
+        kind: 'substitution-missing-on',
+        teamName: 'Rocky Gorge MD1',
+        rostered: 3,
+      }),
+    ]);
+  });
+
   it('ignores fixtures dated after the snapshot, which can carry placeholder scores', () => {
     const snapshot = buildParticipationSnapshot(
       [history('sam', 'Sam Hooker', [game('f1')]), history('nia', 'Nia Prop', [game('f1', { teamName: 'NOVA MD1', opponent: 'Rocky Gorge MD1', starter: true })])],
@@ -163,6 +185,21 @@ describe('buildParticipationSnapshot', () => {
       const snapshot = buildParticipationSnapshot(histories, [forfeit('0', '49')]);
 
       expect(snapshot.rows.map((row) => row.playerId)).toEqual(['lee']);
+    });
+
+    it('does not flag a missing replacement on a forfeit', () => {
+      const snapshot = buildParticipationSnapshot(
+        [
+          history('sam', 'Sam Hooker', [game('f1', { substitutionMissingOn: true })]),
+          history('kim', 'Kim Lock', [
+            game('f1', { starter: false, played: false, substitutionMissingOn: true }),
+          ]),
+          history('lee', 'Lee Prop', [game('f1', { teamName: 'NOVA MD1', opponent: 'Rocky Gorge MD1' })]),
+        ],
+        [forfeit('49', '0')],
+      );
+
+      expect(snapshot.gaps).toEqual([]);
     });
 
     it("flags the non-forfeiting side when it entered no roster, as the match then doesn't count", () => {

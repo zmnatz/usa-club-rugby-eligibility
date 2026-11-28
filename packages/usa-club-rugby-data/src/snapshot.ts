@@ -26,16 +26,18 @@ export function forfeitWinner(fixture: ResultFixture): string | null {
 
 /** A result whose record can't be trusted to give a side's full participation:
  *  `no-lineup` has no players listed, `no-substitutions` lists substitutes but
- *  none came on, which usually means the match's substitutions weren't entered. */
+ *  none came on, and `substitution-missing-on` names a player off without the
+ *  player who replaced them. */
 export interface ParticipationGap {
-  kind: 'no-lineup' | 'no-substitutions';
+  kind: 'no-lineup' | 'no-substitutions' | 'substitution-missing-on';
   fixtureId: string;
   teamName: string;
   opponent: string;
   competition: string;
   dateTime: string;
-  /** `no-substitutions` only: how many players the side listed, starters and
-   *  substitutes. With 15 or fewer, no substitute was available to come on. */
+  /** How many players the side listed, starters and substitutes. With 15 or
+   *  fewer, no substitute was available to come on, so `no-substitutions` is
+   *  not listed as an unreported game. */
   rostered?: number;
 }
 
@@ -82,7 +84,10 @@ export function buildParticipationSnapshot(
 
   const rows = new Map<string, PlayerRow>();
   // Playing appearances per fixture and side, to spot gaps in the record.
-  const listed = new Map<string, { rostered: number; substitutes: number; cameOn: number }>();
+  const listed = new Map<
+    string,
+    { rostered: number; substitutes: number; cameOn: number; missingOn: boolean }
+  >();
 
   for (const history of histories) {
     for (const game of history.games) {
@@ -113,8 +118,9 @@ export function buildParticipationSnapshot(
       rows.set(rowKey, row);
 
       const sideKey = `${game.fixtureId}\0${game.teamName}`;
-      const side = listed.get(sideKey) ?? { rostered: 0, substitutes: 0, cameOn: 0 };
+      const side = listed.get(sideKey) ?? { rostered: 0, substitutes: 0, cameOn: 0, missingOn: false };
       side.rostered += 1;
+      if (game.substitutionMissingOn) side.missingOn = true;
       if (!counted.starter) {
         side.substitutes += 1;
         if (counted.played) side.cameOn += 1;
@@ -136,9 +142,11 @@ export function buildParticipationSnapshot(
       const side = listed.get(`${fixture.id}\0${teamName}`);
       const kind = !side
         ? 'no-lineup'
-        : side.substitutes > 0 && side.cameOn === 0
-          ? 'no-substitutions'
-          : null;
+        : side.missingOn && !isForfeit(fixture)
+          ? 'substitution-missing-on'
+          : side.substitutes > 0 && side.cameOn === 0
+            ? 'no-substitutions'
+            : null;
       if (kind) {
         gaps.push({
           kind,
@@ -147,7 +155,7 @@ export function buildParticipationSnapshot(
           opponent,
           competition: fixture.compName,
           dateTime: fixture.dateTime,
-          ...(kind === 'no-substitutions' && side ? { rostered: side.rostered } : {}),
+          ...(side && kind !== 'no-lineup' ? { rostered: side.rostered } : {}),
         });
       }
     }

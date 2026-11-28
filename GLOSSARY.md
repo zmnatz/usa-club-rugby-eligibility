@@ -24,7 +24,7 @@ The Rugby Xplorer CSV export, one row per player per team and competition, carry
 _Avoid_: roster dump, match report
 
 **Match Record**:
-The lineups and substitutions the CMS holds for each result. It carries no USA IDs or registration data, and it can have gaps: a side with no lineup, or with no substitutions entered.
+The lineups and substitutions the CMS holds for each result. It carries no USA IDs or registration data, and it can have gaps: a side with no lineup, with no substitutions entered, or with a substitution off whose player on wasn't recorded.
 
 **Match Participation**:
 The number of NCS Qualifying Matches a player entered as a starter or substitute, from the `Played` and `Substitute` columns of a Match Participation Report or counted from the Match Record. The value every eligibility threshold checks.
@@ -65,7 +65,7 @@ A player in a Locked Season who played for more than one club that season. Shown
 A game one side didn't play: marked Forfeit in Rugby Xplorer, or entered as a result where one side scored nothing and every score was a penalty try, at least three of them. It counts for the winning side's rostered players and no one else (Reg 3.4(h)).
 
 **Unreported Game**:
-A current-season NCS Qualifying Match more than 14 days past kickoff with no result, a result with no lineup for a side, or a side that listed more than 15 players with no substitute recorded coming on. Listed on the unreported games page for chasing; the last is a flag to check, not a proven error.
+A current-season NCS Qualifying Match more than 14 days past kickoff with no result, a result with no lineup for a side, a side that listed more than 15 players with no substitute recorded coming on, or a side whose timeline names a player off without the player on. Listed on the unreported games page for chasing; the two substitution gaps are flags to check, not proven errors.
 
 **National Championship Series (NCS)**:
 USA Rugby's postseason competition for Men's Divisions I, II and III and Women's Divisions I and II.
