@@ -149,14 +149,26 @@ async function pullClubParticipation(
     club.sides.every((side) => saved.rows.some((row) => row.teamName === side.teamName))
       ? saved
       : null;
+  const involvesClub = (fixture: ScheduledFixture) =>
+    isClubSide(club, fixture.homeTeam.name) || isClubSide(club, fixture.awayTeam.name);
+  const isStartedClubFixture = (fixture: ScheduledFixture) =>
+    fixture.season === season && fixture.status !== 'Postponed' && involvesClub(fixture);
   const known = new Set(base?.resultIds);
-  const own = started.filter(
-    (fixture) =>
-      fixture.season === season &&
-      !known.has(fixture.id) &&
-      fixture.status !== 'Postponed' &&
-      (isClubSide(club, fixture.homeTeam.name) || isClubSide(club, fixture.awayTeam.name)),
+  // A result can be listed but still carry a gap: the CMS had no full record
+  // when the snapshot was written. Re-read it while it's still a played fixture
+  // in this season, so a late lineup can replace the gap.
+  const scoredClubFixtureIds = new Set(
+    started
+      .filter((fixture) => isStartedClubFixture(fixture) && isScored(fixture))
+      .map((fixture) => fixture.id),
   );
+  const gapsToRePull = new Set(
+    (base?.gaps ?? [])
+      .filter((gap) => scoredClubFixtureIds.has(gap.fixtureId) && known.has(gap.fixtureId))
+      .map((gap) => gap.fixtureId),
+  );
+  for (const id of gapsToRePull) known.delete(id);
+  const own = started.filter((fixture) => isStartedClubFixture(fixture) && !known.has(fixture.id));
   // Every played fixture already has a result, so no requests are needed.
   if (base && own.length === 0) {
     return null;
@@ -174,11 +186,18 @@ async function pullClubParticipation(
     throw new Error(`${failed.length} of ${toFetch.length} matches could not be fetched`);
   }
 
-  // A lineup can be posted before kickoff, so only scored matches count.
+  // A lineup can be posted before kickoff, so only scored matches count. A gap
+  // whose CMS record is still scored replaces the saved fixture; one that comes
+  // back empty keeps its saved contribution and gap.
   const played = matches.filter((match) => isScored(match.fixture));
   const playedIds = new Set(played.map((match) => match.fixture.id));
+  const replaced = new Set([...gapsToRePull].filter((id) => playedIds.has(id)));
   const results = markForfeits(
-    own.filter((fixture) => playedIds.has(fixture.id) || isScored(fixture)),
+    own.filter(
+      (fixture) =>
+        (!gapsToRePull.has(fixture.id) || replaced.has(fixture.id)) &&
+        (playedIds.has(fixture.id) || isScored(fixture)),
+    ),
     played,
   );
 
@@ -186,7 +205,36 @@ async function pullClubParticipation(
     ...buildParticipationSnapshot(aggregatePlayerHistory(played).values(), results, now),
     season,
   };
-  return base ? addParticipation(base, pulled) : pulled;
+  return base ? addParticipation(withoutFixtures(base, replaced), pulled) : pulled;
+}
+
+/** Drops fixtures whose corrected records were pulled, so their old rows and
+ *  gaps are replaced rather than added to. */
+function withoutFixtures(snapshot: ParticipationSnapshot, ids: Set<string>): ParticipationSnapshot {
+  const rows = snapshot.rows.flatMap((row) => {
+    const removed = Object.entries(row.rounds).filter(([fixtureId]) => ids.has(fixtureId));
+    if (removed.length === 0) return [row];
+    let { appearances, played, substitute } = row;
+    for (const [, round] of removed) {
+      if (round === 'Start') {
+        appearances -= 1;
+        played -= 1;
+      } else if (round === 'Sub') {
+        appearances -= 1;
+        substitute -= 1;
+      }
+    }
+    const rounds = Object.fromEntries(
+      Object.entries(row.rounds).filter(([fixtureId]) => !ids.has(fixtureId)),
+    );
+    return Object.keys(rounds).length === 0 ? [] : [{ ...row, appearances, played, substitute, rounds }];
+  });
+  return {
+    ...snapshot,
+    resultIds: (snapshot.resultIds ?? []).filter((id) => !ids.has(id)),
+    rows,
+    gaps: snapshot.gaps.filter((gap) => !ids.has(gap.fixtureId)),
+  };
 }
 
 /** Adds newly pulled matches to a snapshot's totals. */
