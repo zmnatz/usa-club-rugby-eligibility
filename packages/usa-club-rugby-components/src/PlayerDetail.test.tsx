@@ -177,4 +177,29 @@ describe('PlayerDetailBody', () => {
     expect(screen.getByText("On the roster as a substitute, didn't come on")).toBeTruthy();
     expect(screen.queryByText(/Not on the roster this season for/)).toBeNull();
   });
+
+  it('calls out a substitution off with no player on recorded', () => {
+    const withGap: PlayerRecordInput = {
+      ...record,
+      snapshot: {
+        ...record.snapshot,
+        gaps: [
+          {
+            kind: 'substitution-missing-on',
+            fixtureId: 'b1',
+            teamName: TEAM,
+            opponent: 'Visitors MD3',
+            competition: COMP,
+            dateTime: '2026-09-11T17:00:00Z',
+          },
+        ],
+      },
+    };
+    render(
+      <EligibilityLinksProvider Link="a" routes={routes}>
+        <PlayerDetailBody player={player} source="record" ownLabel="D3" fixtures={playerFixtures(player, withGap)} />
+      </EligibilityLinksProvider>,
+    );
+    expect(screen.getByText('A player came off but no replacement was recorded')).toBeTruthy();
+  });
 });

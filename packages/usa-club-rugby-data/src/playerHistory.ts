@@ -25,6 +25,9 @@ export interface PlayerGameLog {
   played: boolean;
   // Listed only as a coach for this game, so not a playing appearance.
   coach: boolean;
+  /** This side's commentary names a player off but no player on, so a substitute
+   *  appearance may be missing from the record. */
+  substitutionMissingOn?: boolean;
 }
 
 export interface PlayerScoringEvent {
@@ -126,6 +129,27 @@ function substitutesWhoCameOn(
   return cameOn;
 }
 
+// Which sides have a substitution that names the player off but no player on.
+// Commentary doesn't name a side, so the player off supplies it when their name
+// appears on exactly one side's roster. A fully entered substitution, with `On:`,
+// is not a gap: `substitutesWhoCameOn` accounts for it.
+function sidesWithSubstitutionMissingOn(
+  players: MatchPlayer[],
+  substitutes: MatchPlayer[],
+  commentary: MatchCentreData['commentary']
+): Set<boolean> {
+  const lineup = [...players, ...substitutes];
+  const sides = new Set<boolean>();
+  for (const event of commentary) {
+    if (!event.type.toLowerCase().includes('substitut') || /\bon:/i.test(event.comment)) continue;
+    const off = event.comment.match(/\boff:\s*(.+?)\s*$/i)?.[1]?.trim().toLowerCase();
+    if (!off) continue;
+    const named = new Set(lineup.filter((player) => player.name.toLowerCase() === off).map((player) => player.isHome));
+    if (named.size === 1) sides.add([...named][0]);
+  }
+  return sides;
+}
+
 export function aggregatePlayerHistory(
   matches: MatchCentreData[]
 ): Map<string, PlayerHistory> {
@@ -143,6 +167,7 @@ export function aggregatePlayerHistory(
     const roster = [...players, ...substitutes, ...coaches];
     const starterIds = new Set(players.map((player) => playerKey(player.id)));
     const cameOnIds = substitutesWhoCameOn(players, substitutes, commentary);
+    const missingOnSides = sidesWithSubstitutionMissingOn(players, substitutes, commentary);
 
     // Roster order puts playing roles first, so a player-coach listed twice
     // gets one game, recorded as the player.
@@ -189,6 +214,7 @@ export function aggregatePlayerHistory(
         starter: isStarter,
         played: cameOn,
         coach: isCoach,
+        ...(missingOnSides.has(isHome) && !isCoach ? { substitutionMissingOn: true } : {}),
       });
 
       const name = player.name.toLowerCase();

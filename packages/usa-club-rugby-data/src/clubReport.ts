@@ -124,6 +124,9 @@ export interface PlayerRound {
   counted: boolean;
   /** The side listed substitutes but none came on, so a reserve may have played. */
   substitutionsMissing: boolean;
+  /** Which substitution gap applies: none came on, or a player came off with no
+   *  player on recorded. Absent when the round has no substitution gap. */
+  substitutionGap?: 'no-substitutions' | 'substitution-missing-on';
 }
 
 interface PlayerRoundsInput {
@@ -189,6 +192,9 @@ export function playerRounds({
         ? [fixture.homeTeam, fixture.awayTeam]
         : [fixture.awayTeam, fixture.homeTeam];
       const status = statusOf(fixture);
+      const substitutionGap = (['substitution-missing-on', 'no-substitutions'] as const).find((kind) =>
+        hasGap(fixture.id, kind),
+      );
       return {
         fixtureId: fixture.id,
         round: fixture.round || fixture.dateTime.slice(0, 10),
@@ -199,7 +205,8 @@ export function playerRounds({
         scoreAgainst: other.score,
         status,
         counted: status === 'started' || status === 'substitute' || status === 'forfeit-rostered',
-        substitutionsMissing: hasGap(fixture.id, 'no-substitutions'),
+        substitutionsMissing: substitutionGap !== undefined,
+        ...(substitutionGap ? { substitutionGap } : {}),
       };
     });
 }

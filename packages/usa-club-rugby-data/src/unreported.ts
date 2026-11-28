@@ -24,7 +24,7 @@ const SETTLED_STATUSES = new Set(['Cancelled', 'Postponed']);
 
 export type UnreportedReason =
   | { kind: 'no-result' }
-  | { kind: 'no-lineup' | 'no-substitutions'; teamName: string };
+  | { kind: 'no-lineup' | 'no-substitutions' | 'substitution-missing-on'; teamName: string };
 
 export interface UnreportedSide {
   teamName: string;

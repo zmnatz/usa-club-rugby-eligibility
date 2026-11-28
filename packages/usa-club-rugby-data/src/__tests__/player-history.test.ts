@@ -362,6 +362,39 @@ describe('aggregatePlayerHistory substitute matching', () => {
       cameOn([sub('kyle', 'Kyle Henry', true), sub('sidney', 'Sidney Henry', false)], ['K Henry']),
     ).toEqual([false, false]);
   });
+
+  it('marks a side whose substitution names the player off but not the player on', () => {
+    const histories = aggregatePlayerHistory([
+      {
+        fixture: fixture('game1', '15', '22'),
+        commentary: [
+          {
+            id: 'c1',
+            minute: '50',
+            type: 'Substitution - Tactical',
+            comment: 'Substitution - Tactical Off: Home Starter',
+          },
+          {
+            id: 'c2',
+            minute: '55',
+            type: 'Substitution - Injury',
+            comment: 'Substitution - Injury Off: Away Starter, On: Away Bench',
+          },
+        ],
+        players: [
+          { id: 'home-starter__1', name: 'Home Starter', position: '1', shirtNumber: '1', isHome: true },
+          { id: 'away-starter__1', name: 'Away Starter', position: '1', shirtNumber: '1', isHome: false },
+        ],
+        substitutes: [sub('home-bench', 'Home Bench', true), sub('away-bench', 'Away Bench', false)],
+        coaches: [],
+      },
+    ]);
+
+    expect(histories.get('home-starter')?.games[0].substitutionMissingOn).toBe(true);
+    expect(histories.get('home-bench')?.games[0].substitutionMissingOn).toBe(true);
+    expect(histories.get('away-starter')?.games[0].substitutionMissingOn).toBeUndefined();
+    expect(histories.get('away-bench')?.games[0].substitutionMissingOn).toBeUndefined();
+  });
 });
 
 describe('fetchMatches', () => {

@@ -55,6 +55,11 @@ const ROSTERED: ReadonlySet<PlayerRoundStatus> = new Set([
 
 const isRostered = (round: PlayerRound) => ROSTERED.has(round.status);
 
+const substitutionText = (round: PlayerRound) =>
+  round.substitutionGap === 'substitution-missing-on'
+    ? 'A player came off but no replacement was recorded'
+    : 'No substitutions recorded for this match';
+
 /** One team's games for one player: every one they were on the roster for, each linked
  *  to its Rugby Xplorer report. A game they were listed for but didn't come on in is
  *  marked, and isn't counted. */
@@ -103,7 +108,7 @@ function TeamRounds({
                   {ROUND_STATUS[round.status]}
                   {round.substitutionsMissing && (
                     <div className="ec-caption" style={{ color: 'var(--ec-warning)' }}>
-                      No substitutions recorded for this match
+                      {substitutionText(round)}
                     </div>
                   )}
                 </td>

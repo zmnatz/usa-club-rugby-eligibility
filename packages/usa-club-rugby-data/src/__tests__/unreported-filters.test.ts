@@ -6,6 +6,7 @@ import {
   toggleUnreportedReason,
   unreportedReasonText,
   unreportedSideTone,
+  unreportedTone,
 } from '../unreportedFilters.ts';
 
 const side = (clubName: string, teamName: string) => ({ teamName, clubKey: null, clubName });
@@ -65,5 +66,20 @@ describe('the reasons', () => {
     expect(unreportedSideTone(games[0], 'NOVA MD3')).toBe('error');
     expect(unreportedSideTone(games[0], 'Potomac MD3')).toBeNull();
     expect(unreportedSideTone(games[2], 'NOVA MD3')).toBeNull();
+  });
+
+  it('offers and words a missing replacement as its own reason', () => {
+    const missingOn = game('d', '2027 Capital Men D3', ['M3'], [
+      { kind: 'substitution-missing-on', teamName: 'NOVA MD3' },
+    ]);
+    expect(filterUnreported([missingOn], DEFAULT_UNREPORTED).reasons).toContainEqual([
+      'substitution-missing-on',
+      'Sub on not recorded',
+    ]);
+    expect(unreportedReasonText({ kind: 'substitution-missing-on', teamName: 'NOVA MD3' })).toBe(
+      'Sub on not recorded: NOVA MD3',
+    );
+    expect(unreportedTone('substitution-missing-on')).toBe('warning');
+    expect(unreportedSideTone(missingOn, 'NOVA MD3')).toBe('warning');
   });
 });

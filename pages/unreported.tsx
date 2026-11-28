@@ -84,8 +84,9 @@ export default function UnreportedPage({ games, season, builtAt }: UnreportedPro
       <h1>Unreported games</h1>
       <p className="lead">
         {season} games whose record in Rugby Xplorer still needs entering, more than {UNREPORTED_LEEWAY_DAYS} days
-        after kickoff: no result, a result with no lineup for a side, or a side that listed more than {FULL_SIDE} players with
-        no substitute recorded coming on. A missing substitution is a flag to check, not a proven error.{' '}
+        after kickoff: no result, a result with no lineup for a side, a side that listed more than {FULL_SIDE} players with
+        no substitute recorded coming on, or a substitution that names a player off without the player on. A missing
+        substitution is a flag to check, not a proven error.{' '}
         <PageLink href="/methodology">How this list is worked out</PageLink>.
       </p>
       <p className="small">

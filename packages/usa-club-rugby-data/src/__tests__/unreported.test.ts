@@ -92,6 +92,13 @@ describe('unreportedGames', () => {
     ]);
   });
 
+  it('lists a missing replacement however many were rostered', () => {
+    const missingOn = gap('f1', { kind: 'substitution-missing-on', rostered: 15 });
+    expect(run([fixture('f1')], [missingOn]).map((game) => game.reasons)).toEqual([
+      [{ kind: 'substitution-missing-on', teamName: 'Rocky Gorge MD1' }],
+    ]);
+  });
+
   it('lists a gap once even when two club files carry it', () => {
     expect(run([fixture('f1')], [gap('f1'), gap('f1')]).map((game) => game.reasons)).toEqual([
       [{ kind: 'no-lineup', teamName: 'Rocky Gorge MD1' }],
